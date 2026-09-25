@@ -1,20 +1,24 @@
 {
   "id": "example-story-note",
-  "name": "Story Note / 叙事便签示例",
-  "description": "演示通过 PostContextAssembly 为 story 提示词追加一句叙事建议。",
+  "name": "Story Note Example",
+  "description": "Demonstrates adding a narrative suggestion to story prompts through PostContextAssembly.",
   "maintainer": "official",
   "author": "covel-ai",
   "repository": "https://github.com/covel-ai/covel-plugins",
   "path": "examples/story-note",
   "ref": "main",
   "category": "authoring",
-  "locales": [
-    "zh-CN",
-    "en-US"
-  ],
+  "locales": ["zh-CN", "en-US"],
   "license": "MIT",
   "covelVersion": "0.0.39",
   "status": "active",
   "demo": "https://github.com/covel-ai/covel-plugins/blob/main/examples/story-note/README.md",
-  "notes": "官方开发示例，默认不启用；安装后仍需会话代码授权。适配当前公共 hook 契约。"
+  "notes": "Official authoring example, disabled by default. Requires session code approval after installation. Uses the current public hook contract.",
+  "translations": {
+    "zh-CN": {
+      "name": "Story Note / 叙事便签示例",
+      "description": "演示通过 PostContextAssembly 为 story 提示词追加一句叙事建议。",
+      "notes": "官方开发示例，默认不启用；安装后仍需会话代码授权。适配当前公共 hook 契约。"
+    }
+  }
 }

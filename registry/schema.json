@@ -34,10 +34,7 @@
       "minLength": 1
     },
     "maintainer": {
-      "enum": [
-        "official",
-        "community"
-      ]
+      "enum": ["official", "community"]
     },
     "author": {
       "type": "string",
@@ -57,14 +54,7 @@
       "pattern": "^[A-Za-z0-9_./-]+$"
     },
     "category": {
-      "enum": [
-        "narrative",
-        "gameplay",
-        "world",
-        "media",
-        "tools",
-        "authoring"
-      ]
+      "enum": ["narrative", "gameplay", "world", "media", "tools", "authoring"]
     },
     "locales": {
       "type": "array",
@@ -76,35 +66,47 @@
       }
     },
     "license": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "minLength": 1
     },
     "covelVersion": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "minLength": 1
     },
     "status": {
-      "enum": [
-        "active",
-        "pending",
-        "archived"
-      ]
+      "enum": ["active", "pending", "archived"]
     },
     "demo": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "pattern": "^https://"
     },
     "notes": {
       "type": "string"
+    },
+    "translations": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2})?$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "notes": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
     }
   }
 }

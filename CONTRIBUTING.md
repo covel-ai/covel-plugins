@@ -1,13 +1,17 @@
-# 提交插件
+# Contributing plugins
 
-1. 在自己的公开 GitHub 仓库发布可运行插件，并提供 README、明确许可证、支持的 Covel 版本和联系方式。
-2. README 说明功能、使用方法、数据读写、网络访问、服务端代码、模型费用和已知限制；演示可用截图、视频或文档链接。
-3. 在 `registry/plugins/<id>.json` 添加条目，字段见 `registry/schema.json`。`maintainer` 使用 `community`；`official` 仅由 Covel 维护者授予。
-4. 优先用发布 tag 或完整 commit 固定收录版本；`main` 等分支允许用于早期开发，但用户安装时仍固定提交。`path` 是插件包目录，不是具体文件。
-5. 运行 README 中的生成、校验和测试命令后提交 PR。
+**English** · [简体中文](CONTRIBUTING.zh-CN.md)
 
-插件 ID 必须与清单身份一致且不能冒用内置 ID，建议加作者前缀。分类选 narrative、gameplay、world、media、tools、authoring；语言使用标准 locale。明确缺少许可证或适配版本的候选填写 null 并使用 pending，不能标为 active。
+1. Publish a runnable plugin in your public GitHub repository with a README, an explicit license, supported Covel versions, and contact information.
+2. Document functionality, setup, data access, network requests, server-side code, model costs, and known limitations. Screenshots, recordings, or documentation links can serve as demos.
+3. Add `registry/plugins/<id>.json` following `registry/schema.json`. Use `community` for `maintainer`; only Covel maintainers assign `official` status.
+4. Prefer a release tag or full commit for `ref`. Branches such as `main` are allowed during early development; installations still resolve to a fixed commit. Set `path` to the plugin package directory, not a file.
+5. Run the generation, validation, and test commands in the README, then open a pull request.
 
-维护者检查身份、授权、功能说明、可安装布局和版本信息；合并不意味着逐行安全审计。作者维护代码和版本，官方维护目录与下架决定。仓库转移、作者变化、权限扩大及归档应更新条目并重新审核。
+The plugin ID must match its manifest identity and must not impersonate a builtin plugin. An author prefix is recommended. Choose a category from narrative, gameplay, world, media, tools, and authoring. Use standard locale identifiers for supported plugin languages. If a candidate's license or Covel compatibility is unknown, set the corresponding field to `null` and its status to `pending`, not `active`.
 
-请勿在 PR 中提交密钥、用户存档或私人截图。不要把第三方完整源码复制进本仓。CI 只检查索引和生成内容，不拉取、安装或执行社区插件。运行本仓测试前，维护者应先审查脚本和示例变更。
+Write the base `name`, `description`, and `notes` in English. Optional `translations` provide localized fields, with missing fields falling back to English. README navigation and tables are generated together; see [Localization](docs/localization.md) to add a language. An entry's `locales` describe languages supported by the plugin, independently of homepage translations.
+
+Maintainers review identity, licensing, feature descriptions, installable layout, and version information. Acceptance does not imply a line-by-line security audit. Authors maintain their code and releases; Covel maintains directory inclusion and removal decisions. Repository transfers, author changes, expanded permissions, and archival require an entry update and renewed review.
+
+Do not submit secrets, user saves, or private screenshots. Do not copy complete third-party source trees into this repository. Directory CI checks metadata and generated content without downloading, installing, or executing submitted plugins. Maintainers should review script and example changes before running this repository's full test suite.

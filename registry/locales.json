@@ -1,0 +1,54 @@
+[
+  {
+    "locale": "en-US",
+    "label": "English",
+    "readme": "README.md",
+    "official": "Official plugins",
+    "community": "Community plugins",
+    "columns": [
+      "Plugin",
+      "Description",
+      "Author",
+      "Covel version",
+      "Status",
+      "Demo",
+      "Install source"
+    ],
+    "status": {
+      "active": "Available",
+      "pending": "Pending review",
+      "archived": "Archived"
+    },
+    "unknownVersion": "Not confirmed",
+    "demo": "Demo",
+    "install": "Install source",
+    "source": "Source",
+    "empty": "No plugins listed yet."
+  },
+  {
+    "locale": "zh-CN",
+    "label": "简体中文",
+    "readme": "README.zh-CN.md",
+    "official": "官方插件",
+    "community": "社区插件",
+    "columns": [
+      "插件",
+      "功能",
+      "作者",
+      "Covel 版本",
+      "状态",
+      "演示",
+      "安装来源"
+    ],
+    "status": {
+      "active": "可用",
+      "pending": "待确认",
+      "archived": "已归档"
+    },
+    "unknownVersion": "待确认",
+    "demo": "演示",
+    "install": "安装来源",
+    "source": "来源",
+    "empty": "暂无收录的插件。"
+  }
+]

@@ -1,70 +1,85 @@
 # Covel Plugins
 
-Covel 官方维护的插件目录、官方可选扩展与开发示例。社区插件代码由作者自己的仓库托管，欢迎通过 PR 提交收录。
+<!-- languages:start -->
+**English** · [简体中文](README.zh-CN.md)
+<!-- languages:end -->
 
-## 插件分层
+The official Covel plugin directory, optional extensions, and authoring examples. Community authors host their own code and can submit a pull request to list their plugins here.
 
-| 分组 | 用途 | 维护位置 |
+Quick links: [Official plugins](#official-plugins) · [Community plugins](#community-plugins) · [Installation](#installation) · [Contributing](#contributing)
+
+## Plugin groups
+
+| Group | Purpose | Maintained in |
 | --- | --- | --- |
-| 核心插件 | 默认游戏流程和框架契约的必要实现 | [Covel 主仓](https://github.com/ackness/covel) |
-| 官方扩展 | 官方维护的按需功能 | 本仓 `plugins/` |
-| 社区插件 | 第三方玩法、文风及工具 | 作者仓库，本仓仅收录索引 |
+| Core plugins | Essential implementations for the default game flow and framework contracts | [Covel main repository](https://github.com/ackness/covel) |
+| Official plugins | Optional features and examples maintained by the Covel team | This repository's `plugins/` and `examples/` directories |
+| Community plugins | Third-party gameplay, narrative styles, and tools | Authors' repositories; this repository maintains the index |
 
-官方维护、功能分类、运行信任是三个独立概念。外部安装的官方扩展和社区插件都遵循 Covel 的社区代码授权规则。
+Maintenance, feature category, and runtime trust are separate concepts. All externally installed plugins, including official ones, follow Covel's community code approval rules.
 
-## 插件目录
+## Plugin directory
 
-表格从 `registry/plugins/*.json` 生成，请修改条目而非直接编辑表格。
+Official plugins appear first, followed by a separate community list. Tables in every language are generated from `registry/plugins/*.json`; edit the entries rather than the tables.
 
 <!-- registry:start -->
-| 插件 | 功能 | 维护者 | Covel 版本 | 状态 | 演示 | 安装来源 |
+### Official plugins
+
+| Plugin | Description | Author | Covel version | Status | Demo | Install source |
 | --- | --- | --- | --- | --- | --- | --- |
-| [Anti-AI-Flavor / 去 AI 味](https://github.com/charlesli1989/anti-ai-flavor) | 按中英文会话语言注入可配置的叙事文风约束。 | 社区 · charlesli1989 | 待确认 | 待确认 | — | [来源](https://github.com/charlesli1989/anti-ai-flavor) |
-| [DashScope 剧情生图](https://github.com/covel-ai/covel-plugins) | LLM 提示词、万相图像生成与持久化画廊的两段式流水线。 | 官方 · covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/dashscope-image-gen/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen) |
-| [Story Note / 叙事便签示例](https://github.com/covel-ai/covel-plugins) | 演示通过 PostContextAssembly 为 story 提示词追加一句叙事建议。 | 官方 · covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/story-note/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/story-note) |
-| [Jev 选项推荐 Demo](https://github.com/covel-ai/covel-plugins) | 复杂开发示例：类型化输入、evaluation 模型、公共服务与舞台概率 UI。 | 官方 · covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/jev-choice-demo/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo) |
-| [MiMo 旁白朗读](https://github.com/covel-ai/covel-plugins) | 自动或手动朗读剧情，演示自定义 speech wire、后台任务与音轨面板。 | 官方 · covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/mimo-tts/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts) |
-| [OpenAI 兼容剧情生图](https://github.com/covel-ai/covel-plugins) | 通过 OpenAI 兼容图像管线生成剧情插图并展示画廊。 | 官方 · covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/openai-image-gen/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen) |
+| [DashScope Images](https://github.com/covel-ai/covel-plugins) | A two-stage workflow combining LLM prompts, Wan image generation, and a persistent gallery. | covel-ai | 0.0.39 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/plugins/dashscope-image-gen/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen) |
+| [Story Note Example](https://github.com/covel-ai/covel-plugins) | Demonstrates adding a narrative suggestion to story prompts through PostContextAssembly. | covel-ai | 0.0.39 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/examples/story-note/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/examples/story-note) |
+| [Jev Choice Recommendations Demo](https://github.com/covel-ai/covel-plugins) | An advanced example combining typed inputs, evaluation models, public services, and a stage probability UI. | covel-ai | 0.0.39 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/examples/jev-choice-demo/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo) |
+| [MiMo Narration](https://github.com/covel-ai/covel-plugins) | Automatic and manual narration with a custom speech wire, background jobs, and an audio panel. | covel-ai | 0.0.39 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/plugins/mimo-tts/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts) |
+| [OpenAI Images](https://github.com/covel-ai/covel-plugins) | Generates story illustrations through the OpenAI-compatible image pipeline and displays a gallery. | covel-ai | 0.0.39 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/plugins/openai-image-gen/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen) |
+
+### Community plugins
+
+| Plugin | Description | Author | Covel version | Status | Demo | Install source |
+| --- | --- | --- | --- | --- | --- | --- |
+| [Anti-AI-Flavor](https://github.com/charlesli1989/anti-ai-flavor) | Adds configurable narrative style constraints for English and Chinese sessions. | charlesli1989 | Not confirmed | Pending review | — | [Source](https://github.com/charlesli1989/anti-ai-flavor) |
 <!-- registry:end -->
 
-“待确认”条目用于跟踪投稿，不作为可安装推荐；“已归档”不再维护。
+Pending entries track submissions awaiting confirmation and are not installation recommendations. Archived entries are no longer maintained.
 
-## 安装
+## Installation
 
-支持 GitHub 安装的 Covel 版本中，打开 **设置 → 插件 → 安装与管理**，粘贴目录里的安装来源链接，解析插件、核对版本和风险后确认安装。仓库包含多个插件时可选择子目录。安装完成后重启后端，再在会话中选择插件并授权。
+In a Covel version that supports GitHub installation, open **Settings → Plugins → Install & manage**, paste an install source link, review the plugin version and risks, and confirm installation. Repository links discover packages in `plugins/`, `examples/`, and other subdirectories. Select and install each desired package separately, reviewing its risks each time. You can also paste a `/tree/main/plugins` link to limit discovery, or a direct package link to select one plugin. Restart the backend, then enable the plugin and approve its code in your session.
 
-- 普通仓库链接固定为解析时的默认分支提交；`/tree/<tag-or-commit>/<path>` 可以选择版本和子目录。
-- 分支名含 `/` 时，在链接的 ref 段写成 `%2F`，或使用提交 SHA。
-- 首期支持公开 GitHub 源码仓库中可直接运行的插件；不自动执行依赖安装、构建或生命周期脚本。Release 附件可先下载为 ZIP，再通过本地导入安装。
-- ZIP 顶层需要 `package.json` 和 `PLUGIN.md`，或 `runtimes/<name>/PLUGIN.md`。不要额外包一层目录。
-- 旧版 Covel 可将插件目录放到 `~/.covel/plugins/<id>`，然后重启。自定义插件目录以部署配置为准。
-- GitHub 解析与下载遵循 Covel 设置中的网络代理，支持系统代理、HTTP(S) 和 SOCKS5。
-- 桌面安装写入本机后端；连接远程服务器时写入远程后端，需管理员权限。
+- A repository link resolves to a fixed commit on its default branch. Use `/tree/<tag-or-commit>/<path>` to select a version and package directory.
+- Encode `/` inside a branch name as `%2F` in the ref segment, or use a commit SHA.
+- GitHub installation supports directly runnable plugins in public repositories. It does not install dependencies, build code, or run lifecycle scripts. Release assets can be downloaded separately and imported as a local ZIP.
+- A ZIP must contain `package.json` and `PLUGIN.md`, or `runtimes/<name>/PLUGIN.md`, at its root without an extra wrapper directory.
+- On older Covel versions, copy the plugin directory to `~/.covel/plugins/<id>` and restart. Custom deployments may use a different plugin directory.
+- GitHub metadata requests and downloads follow Covel's network proxy settings, including system, HTTP(S), and SOCKS5 proxies.
+- Desktop installation writes to the local backend. When connected to a remote server, installation writes to that backend and requires administrator access.
 
-## 信任与风险
+## Trust and risks
 
-**官方收录不代表安全审计，也不授予内置插件权限。** 插件的服务端 JavaScript 不运行在进程沙箱中，允许执行后可能访问后端进程可访问的文件、环境变量和网络。提示词插件也可能影响模型行为、发送到模型的数据与调用费用。仅安装信任的作者和版本。
+**Directory inclusion does not constitute a security audit or grant builtin privileges.** Plugin server-side JavaScript does not run in a process sandbox. Once approved, it may access files, environment variables, and networks available to the backend process. Prompt-only plugins can also affect model behavior, the data sent to models, and usage costs. Install only authors and versions you trust.
 
-官方目录不托管或执行投稿代码。在线 demo 只考虑由官方选择、独立部署的插件；目前采用说明、截图和录屏链接。
+The directory does not host or execute submitted third-party code. Demos currently use documentation, screenshots, or recordings; any future hosted demos would be selected and deployed separately by the official team.
 
-## 投稿与开发
+## Contributing
 
-参见 [投稿规范](CONTRIBUTING.md)、[安全说明](SECURITY.md)、[发布规范](docs/publishing.md)、[叙事便签示例](examples/story-note/README.md) 和 [Jev 复杂示例](examples/jev-choice-demo/README.md)。
+See the [contribution guide](CONTRIBUTING.md), [security policy](SECURITY.md) (Chinese), [publishing contract](docs/publishing.md) (Chinese), [Story Note example](examples/story-note/README.md) (Chinese), and [advanced Jev example](examples/jev-choice-demo/README.md) (Chinese).
 
-只检查目录无需安装依赖：
+Directory checks require no dependency installation:
 
 ```sh
-node scripts/registry.mjs          # Generate README table
+node scripts/registry.mjs          # Generate navigation and all README tables
 node scripts/registry.mjs --check  # Validate entries and generated output
-node --test scripts/registry.test.mjs examples/story-note/tests/*.test.js
+node --test scripts/registry.test.mjs
 ```
 
-官方插件开发：Node 26+ / pnpm 11.22，运行 `pnpm install --frozen-lockfile` 和 `pnpm test`。Jev 随包包含 Zod，更新依赖后运行 `pnpm build:vendor` 并提交生成产物与许可证。静态目录 CI 不执行 PR 提供的插件代码；维护者审核后本地运行完整测试。
+For official plugin development, use Node 26+ and pnpm 11.22, then run `pnpm install --frozen-lockfile` and `pnpm test`. Jev includes bundled Zod; after updating that dependency, run `pnpm build:vendor` and commit the generated artifact and license. Directory CI performs static checks without executing submitted plugin code. Maintainers run the full tests locally after reviewing changes.
 
-Agent 开发技能位于 [`.agents/skills/create-plugin/SKILL.md`](.agents/skills/create-plugin/SKILL.md)，支持发现该目录的 Agent 可直接使用 `$create-plugin`。
+The authoring skill lives at [`.agents/skills/create-plugin/SKILL.md`](.agents/skills/create-plugin/SKILL.md). Agents that discover this directory can use `$create-plugin`.
 
-JSON 条目是唯一索引来源；后续网页和应用内目录可直接复用。当前不提供自动更新、评分、账号或在线执行服务。
+To translate the homepage or add a language, see [Localization](docs/localization.md). Documentation languages are independent of the languages supported by a plugin.
+
+JSON entries are the single index source and can later power a website or in-app directory. Automatic updates, ratings, accounts, and online execution are not currently provided.
 
 ## License
 
-本仓原创文档、工具和示例使用 [MIT](LICENSE)。被收录的第三方插件遵循作者自己的许可证；目录收录不改变其授权。
+Original documentation, tools, and examples use [MIT](LICENSE). Listed third-party plugins retain their authors' licenses; directory inclusion does not change their licensing.

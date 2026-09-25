@@ -1,20 +1,24 @@
 {
   "id": "mimo-tts",
-  "name": "MiMo 旁白朗读",
-  "description": "自动或手动朗读剧情，演示自定义 speech wire、后台任务与音轨面板。",
+  "name": "MiMo Narration",
+  "description": "Automatic and manual narration with a custom speech wire, background jobs, and an audio panel.",
   "maintainer": "official",
   "author": "covel-ai",
   "repository": "https://github.com/covel-ai/covel-plugins",
   "path": "plugins/mimo-tts",
   "ref": "main",
   "category": "media",
-  "locales": [
-    "zh-CN",
-    "en-US"
-  ],
+  "locales": ["zh-CN", "en-US"],
   "license": "MIT",
   "covelVersion": "0.0.39",
   "status": "active",
   "demo": "https://github.com/covel-ai/covel-plugins/blob/main/plugins/mimo-tts/README.md",
-  "notes": "从 Covel 主仓迁移的官方可选插件；安装后重启并在会话中授权。需要配置对应模型用途。"
+  "notes": "Official optional plugin moved from the Covel main repository. Restart and grant session code approval after installation. Requires a configured model role.",
+  "translations": {
+    "zh-CN": {
+      "name": "MiMo 旁白朗读",
+      "description": "自动或手动朗读剧情，演示自定义 speech wire、后台任务与音轨面板。",
+      "notes": "从 Covel 主仓迁移的官方可选插件；安装后重启并在会话中授权。需要配置对应模型用途。"
+    }
+  }
 }

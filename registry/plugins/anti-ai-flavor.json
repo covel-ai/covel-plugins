@@ -1,20 +1,24 @@
 {
   "id": "anti-ai-flavor",
-  "name": "Anti-AI-Flavor / 去 AI 味",
-  "description": "按中英文会话语言注入可配置的叙事文风约束。",
+  "name": "Anti-AI-Flavor",
+  "description": "Adds configurable narrative style constraints for English and Chinese sessions.",
   "maintainer": "community",
   "author": "charlesli1989",
   "repository": "https://github.com/charlesli1989/anti-ai-flavor",
   "path": "",
   "ref": "main",
   "category": "narrative",
-  "locales": [
-    "zh-CN",
-    "en-US"
-  ],
+  "locales": ["zh-CN", "en-US"],
   "license": null,
   "covelVersion": null,
   "status": "pending",
   "demo": null,
-  "notes": "来源：ackness/covel#81。作者已同意目录收录；许可证和适配版本待作者确认，暂不列为可安装推荐。未复制或重新许可上游代码。"
+  "notes": "Source: ackness/covel#81. The author agreed to directory inclusion; license and Covel compatibility await confirmation. Not recommended for installation yet. Upstream code has not been copied or relicensed.",
+  "translations": {
+    "zh-CN": {
+      "name": "Anti-AI-Flavor / 去 AI 味",
+      "description": "按中英文会话语言注入可配置的叙事文风约束。",
+      "notes": "来源：ackness/covel#81。作者已同意目录收录；许可证和适配版本待作者确认，暂不列为可安装推荐。未复制或重新许可上游代码。"
+    }
+  }
 }

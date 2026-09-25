@@ -1,20 +1,24 @@
 {
   "id": "jev-choice-demo",
-  "name": "Jev 选项推荐 Demo",
-  "description": "复杂开发示例：类型化输入、evaluation 模型、公共服务与舞台概率 UI。",
+  "name": "Jev Choice Recommendations Demo",
+  "description": "An advanced example combining typed inputs, evaluation models, public services, and a stage probability UI.",
   "maintainer": "official",
   "author": "covel-ai",
   "repository": "https://github.com/covel-ai/covel-plugins",
   "path": "examples/jev-choice-demo",
   "ref": "main",
   "category": "authoring",
-  "locales": [
-    "zh-CN",
-    "en-US"
-  ],
+  "locales": ["zh-CN", "en-US"],
   "license": "MIT",
   "covelVersion": "0.0.39",
   "status": "active",
   "demo": "https://github.com/covel-ai/covel-plugins/blob/main/examples/jev-choice-demo/README.md",
-  "notes": "从 Covel 主仓迁移的官方可选插件；安装后重启并在会话中授权。需要配置对应模型用途。"
+  "notes": "Official optional plugin moved from the Covel main repository. Restart and grant session code approval after installation. Requires a configured model role.",
+  "translations": {
+    "zh-CN": {
+      "name": "Jev 选项推荐 Demo",
+      "description": "复杂开发示例：类型化输入、evaluation 模型、公共服务与舞台概率 UI。",
+      "notes": "从 Covel 主仓迁移的官方可选插件；安装后重启并在会话中授权。需要配置对应模型用途。"
+    }
+  }
 }
