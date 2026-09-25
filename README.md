@@ -64,7 +64,7 @@ The directory does not host or execute submitted third-party code. Demos current
 
 ## Contributing
 
-See the [contribution guide](CONTRIBUTING.md), [security policy](SECURITY.md) (Chinese), [publishing contract](docs/publishing.md) (Chinese), [Story Note example](examples/story-note/README.md) (Chinese), and [advanced Jev example](examples/jev-choice-demo/README.md) (Chinese).
+See the [contribution guide](CONTRIBUTING.md), [security policy](SECURITY.md), [publishing contract](docs/publishing.md), [Story Note example](examples/story-note/README.md), and [advanced Jev example](examples/jev-choice-demo/README.md). These guides and the [official plugin READMEs](plugins/README.md) are available in English and Simplified Chinese, with English as the default.
 
 Directory checks require no dependency installation:
 
@@ -78,7 +78,7 @@ For official plugin development, use Node 26+ and pnpm 11.22, then run `pnpm ins
 
 The authoring skill lives at [`.agents/skills/create-plugin/SKILL.md`](.agents/skills/create-plugin/SKILL.md). Agents that discover this directory can use `$create-plugin`.
 
-To translate the homepage or add a language, see [Localization](docs/localization.md). Documentation languages are independent of the languages supported by a plugin.
+To translate documentation or add a homepage language, see [Localization](docs/localization.md). Documentation languages are independent of the languages supported by a plugin.
 
 JSON entries are the single index source and can later power a website or in-app directory. Automatic updates, ratings, accounts, and online execution are not currently provided.
 

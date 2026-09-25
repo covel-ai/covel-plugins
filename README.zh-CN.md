@@ -66,7 +66,7 @@ Covel 官方维护的插件目录、官方可选扩展与开发示例。社区�
 
 ## 投稿与开发
 
-参见 [投稿规范](CONTRIBUTING.zh-CN.md)、[安全说明](SECURITY.md)、[发布规范](docs/publishing.md)、[叙事便签示例](examples/story-note/README.md) 和 [Jev 复杂示例](examples/jev-choice-demo/README.md)。
+参见 [投稿规范](CONTRIBUTING.zh-CN.md)、[安全说明](SECURITY.zh-CN.md)、[发布规范](docs/publishing.zh-CN.md)、[叙事便签示例](examples/story-note/README.zh-CN.md) 和 [Jev 复杂示例](examples/jev-choice-demo/README.zh-CN.md)。这些指南和[官方插件说明](plugins/README.zh-CN.md)均提供英文与简体中文，默认入口为英文。
 
 只检查目录无需安装依赖：
 
@@ -80,7 +80,7 @@ node --test scripts/registry.test.mjs
 
 Agent 开发技能位于 [`.agents/skills/create-plugin/SKILL.md`](.agents/skills/create-plugin/SKILL.md)，支持发现该目录的 Agent 可直接使用 `$create-plugin`。
 
-翻译首页或新增语言，请参见 [多语言维护](docs/localization.md)。页面语言与插件本身支持的语言独立。
+翻译文档或新增首页语言，请参见 [多语言维护](docs/localization.zh-CN.md)。页面语言与插件本身支持的语言独立。
 
 JSON 条目是唯一索引来源；后续网页和应用内目录可直接复用。当前不提供自动更新、评分、账号或在线执行服务。
 

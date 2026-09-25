@@ -1,7 +1,9 @@
-# 安全与信任
+# Security and trust
 
-目录元数据是展示信息，不是运行权限声明。官方来源由维护者审核；包内同名字段不能授予信任。服务端 JavaScript 不是进程沙箱，manifest 的网络声明只约束公共 API，不是对任意 JavaScript 的完整隔离。
+**English** · [简体中文](SECURITY.zh-CN.md)
 
-发现疑似恶意插件时，请通过仓库 Security 页可用的私密报告渠道联系维护者；如未启用，请在 issue 中只提供插件 ID、仓库链接和不含敏感数据的摘要。不要公开密钥、用户数据或可利用的漏洞细节。
+Directory metadata describes plugins; it does not grant runtime permissions. Maintainers review official sources, and fields inside a package cannot grant trust. Server-side JavaScript does not run in a process sandbox. Manifest network declarations constrain public APIs, not arbitrary JavaScript execution.
 
-维护者可立即将条目标记 archived 并注明原因、移除推荐。目录下架不等于自动卸载或撤销已经安装的代码，用户需自行禁用、卸载并重启后端。版本更新必须由用户重新检查来源并确认，不能继承为静默更新。
+If you discover a potentially malicious plugin, contact the maintainers through the private reporting channel available on the repository's Security page. If private reporting is not enabled, open an issue containing only the plugin ID, repository link, and a summary without sensitive data. Do not publish keys, user data, or exploitable vulnerability details.
+
+Maintainers may immediately mark an entry as `archived`, explain why, and remove its recommendation. Removing a directory entry does not automatically uninstall or revoke code that users have already installed. Users must disable or uninstall it and restart the backend themselves. Updates require users to review the source and confirm again; prior approval does not authorize silent updates.

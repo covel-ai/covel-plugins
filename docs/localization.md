@@ -1,6 +1,24 @@
 # Localizing the plugin directory
 
+**English** · [简体中文](localization.zh-CN.md)
+
 English is the default homepage (`README.md`). Published translations use `README.<locale>.md`, such as `README.zh-CN.md`. Every homepage links to all published languages and lists official plugins before community plugins.
+
+## Documentation and plugin READMEs
+
+The same English-first convention applies to repository guides and plugin documentation: keep English in the unsuffixed file, and Simplified Chinese in a sibling with the `.zh-CN.md` suffix. For example, use `SECURITY.md` / `SECURITY.zh-CN.md`, `docs/publishing.md` / `docs/publishing.zh-CN.md`, and `plugins/<id>/README.md` / `plugins/<id>/README.zh-CN.md`.
+
+Add a language switch immediately below the title, with English first:
+
+```md
+**English** · [简体中文](README.zh-CN.md)
+```
+
+In the Chinese file, use `[English](README.md) · **简体中文**`. Adjust filenames for guides other than README. Link to the same-language version of another local guide when available; otherwise use its default English file. Shared registry demo URLs continue to open the default English README, where readers can switch languages.
+
+Translate the full instructions, including setup, settings, permissions, costs, limitations, and tests. Keep identifiers, configuration keys and values, commands, and API shapes unchanged; write code comments in English. Update both versions together when behavior or configuration changes. These are manually maintained document pairs; only the root README navigation and directory tables are generated.
+
+`PLUGIN.md` and runtime `PLUGIN.md` files are executable manifests and may contain agent prompts. Do not create translated manifests or alter prompts merely to translate a README. Keep manifest display names and descriptions bilingual through their existing localization fields; documentation translation does not change runtime behavior or plugin language support.
 
 ## Add a homepage language
 
@@ -35,4 +53,4 @@ Commit the locale configuration, translated prose, entry translations, and gener
 
 ## Plugin languages are separate
 
-An entry's `locales` field describes languages supported by the plugin itself. Adding a homepage translation does not claim that the plugin supports that language. Individual plugin READMEs and manifests can be translated separately.
+An entry's `locales` field describes languages supported by the plugin itself. Adding a homepage or plugin README translation does not claim that the plugin supports that language. Manifest and prompt localization is a separate runtime change.

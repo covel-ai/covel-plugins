@@ -12,6 +12,8 @@ The plugin ID must match its manifest identity and must not impersonate a builti
 
 Write the base `name`, `description`, and `notes` in English. Optional `translations` provide localized fields, with missing fields falling back to English. README navigation and tables are generated together; see [Localization](docs/localization.md) to add a language. An entry's `locales` describe languages supported by the plugin, independently of homepage translations.
 
+For documentation maintained in this repository, keep the default file in English and provide a Simplified Chinese sibling, such as `README.md` and `README.zh-CN.md`, with language links at the top. Update both versions together when changing installation, configuration, or behavior descriptions.
+
 Maintainers review identity, licensing, feature descriptions, installable layout, and version information. Acceptance does not imply a line-by-line security audit. Authors maintain their code and releases; Covel maintains directory inclusion and removal decisions. Repository transfers, author changes, expanded permissions, and archival require an entry update and renewed review.
 
 Do not submit secrets, user saves, or private screenshots. Do not copy complete third-party source trees into this repository. Directory CI checks metadata and generated content without downloading, installing, or executing submitted plugins. Maintainers should review script and example changes before running this repository's full test suite.
