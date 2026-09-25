@@ -20,7 +20,11 @@ Covel 官方维护的插件目录、官方可选扩展与开发示例。社区�
 | 插件 | 功能 | 维护者 | Covel 版本 | 状态 | 演示 | 安装来源 |
 | --- | --- | --- | --- | --- | --- | --- |
 | [Anti-AI-Flavor / 去 AI 味](https://github.com/charlesli1989/anti-ai-flavor) | 按中英文会话语言注入可配置的叙事文风约束。 | 社区 · charlesli1989 | 待确认 | 待确认 | — | [来源](https://github.com/charlesli1989/anti-ai-flavor) |
+| [DashScope 剧情生图](https://github.com/covel-ai/covel-plugins) | LLM 提示词、万相图像生成与持久化画廊的两段式流水线。 | 官方 · covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/dashscope-image-gen/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen) |
 | [Story Note / 叙事便签示例](https://github.com/covel-ai/covel-plugins) | 演示通过 PostContextAssembly 为 story 提示词追加一句叙事建议。 | 官方 · covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/story-note/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/story-note) |
+| [Jev 选项推荐 Demo](https://github.com/covel-ai/covel-plugins) | 复杂开发示例：类型化输入、evaluation 模型、公共服务与舞台概率 UI。 | 官方 · covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/jev-choice-demo/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo) |
+| [MiMo 旁白朗读](https://github.com/covel-ai/covel-plugins) | 自动或手动朗读剧情，演示自定义 speech wire、后台任务与音轨面板。 | 官方 · covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/mimo-tts/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts) |
+| [OpenAI 兼容剧情生图](https://github.com/covel-ai/covel-plugins) | 通过 OpenAI 兼容图像管线生成剧情插图并展示画廊。 | 官方 · covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/openai-image-gen/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen) |
 <!-- registry:end -->
 
 “待确认”条目用于跟踪投稿，不作为可安装推荐；“已归档”不再维护。
@@ -45,15 +49,19 @@ Covel 官方维护的插件目录、官方可选扩展与开发示例。社区�
 
 ## 投稿与开发
 
-参见 [投稿规范](CONTRIBUTING.md)、[安全说明](SECURITY.md)、[发布规范](docs/publishing.md) 和 [叙事便签示例](examples/story-note/README.md)。
+参见 [投稿规范](CONTRIBUTING.md)、[安全说明](SECURITY.md)、[发布规范](docs/publishing.md)、[叙事便签示例](examples/story-note/README.md) 和 [Jev 复杂示例](examples/jev-choice-demo/README.md)。
 
-无需安装依赖：
+只检查目录无需安装依赖：
 
 ```sh
 node scripts/registry.mjs          # Generate README table
 node scripts/registry.mjs --check  # Validate entries and generated output
 node --test scripts/registry.test.mjs examples/story-note/tests/*.test.js
 ```
+
+官方插件开发：Node 26+ / pnpm 11.22，运行 `pnpm install --frozen-lockfile` 和 `pnpm test`。Jev 随包包含 Zod，更新依赖后运行 `pnpm build:vendor` 并提交生成产物与许可证。静态目录 CI 不执行 PR 提供的插件代码；维护者审核后本地运行完整测试。
+
+Agent 开发技能位于 [`.agents/skills/create-plugin/SKILL.md`](.agents/skills/create-plugin/SKILL.md)，支持发现该目录的 Agent 可直接使用 `$create-plugin`。
 
 JSON 条目是唯一索引来源；后续网页和应用内目录可直接复用。当前不提供自动更新、评分、账号或在线执行服务。
 

@@ -1,0 +1,20 @@
+{
+  "name": "@covel/plugin-dashscope-image-gen",
+  "version": "0.0.39",
+  "private": true,
+  "type": "module",
+  "description": "DashScope story illustrations using prompt tools, background generation, and a persistent gallery.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=26"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/covel-ai/covel-plugins.git",
+    "directory": "plugins/dashscope-image-gen"
+  }
+}

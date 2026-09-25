@@ -1,0 +1,20 @@
+{
+  "id": "openai-image-gen",
+  "name": "OpenAI 兼容剧情生图",
+  "description": "通过 OpenAI 兼容图像管线生成剧情插图并展示画廊。",
+  "maintainer": "official",
+  "author": "covel-ai",
+  "repository": "https://github.com/covel-ai/covel-plugins",
+  "path": "plugins/openai-image-gen",
+  "ref": "main",
+  "category": "media",
+  "locales": [
+    "zh-CN",
+    "en-US"
+  ],
+  "license": "MIT",
+  "covelVersion": "0.0.39",
+  "status": "active",
+  "demo": "https://github.com/covel-ai/covel-plugins/blob/main/plugins/openai-image-gen/README.md",
+  "notes": "从 Covel 主仓迁移的官方可选插件；安装后重启并在会话中授权。需要配置对应模型用途。"
+}

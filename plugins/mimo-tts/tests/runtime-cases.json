@@ -1,0 +1,21 @@
+{
+  "cases": [
+    {
+      "name": "mock-manual-reports-unavailable-speech-pipeline",
+      "mode": "mock",
+      "runtimeId": "mimo-tts/manual-narrate",
+      "payload": {
+        "text": "测试朗读文本。"
+      },
+      "expect": {
+        "runtimeResults": [
+          {
+            "runtimeId": "mimo-tts/manual-narrate",
+            "status": "failed",
+            "errorIncludes": "ctx.speech is unavailable"
+          }
+        ]
+      }
+    }
+  ]
+}

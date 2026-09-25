@@ -5,9 +5,19 @@
   "scripts": {
     "check": "node scripts/registry.mjs --check",
     "generate": "node scripts/registry.mjs",
-    "test": "node --test scripts/registry.test.mjs examples/story-note/tests/*.test.js"
+    "test": "pnpm run check:vendor && pnpm run test:registry && pnpm run test:plugins",
+    "build:vendor": "node scripts/build-vendor.mjs",
+    "test:registry": "node --test scripts/*.test.mjs examples/story-note/tests/*.test.js",
+    "test:plugins": "vitest run",
+    "check:vendor": "node scripts/build-vendor.mjs --check"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=26"
+  },
+  "packageManager": "pnpm@11.22.0",
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "vitest": "4.1.11",
+    "zod": "4.4.3"
   }
 }
