@@ -59,18 +59,17 @@ const result = await ctx.services.call({
 
 服务只计算值，持久化与玩法效果由调用方决定。同一服务也可供 NPC 决策、候选排序等插件使用。扩展 Boolean/Score 或接入新协议时可在自己的插件里注册另一个服务和组件，详见 [插件扩展契约](https://github.com/ackness/covel/blob/main/docs/reference/plugin-extensions.md)。
 
-## 验证与限制
+## 测试与限制
 
 以下 `pnpm exec vitest` 命令在本仓根目录执行，首次先运行 `pnpm install --frozen-lockfile`。
 
 ```bash
 pnpm exec vitest run examples/jev-choice-demo/tests
-
 ```
 
-插件单元测试使用合成模型响应，覆盖概率校验、服务调用、取消和数据归属；Covel 主仓另用合成夹具验证调度绑定、提交和浏览器宿主契约。迁移时另行验证真实插件的主仓加载与服务链路；不测量 Jev 线上中文准确率、校准程度、价格或延迟。演示对状态文本做长度限制，单次评估超时 10 秒，插件上限 15 秒；生产策略应按自己的样本与预算调整。
+单元测试使用合成模型响应，覆盖概率校验、服务调用、取消和数据归属，不评估线上模型的准确率、校准程度、价格或延迟。
 
-2026-09-21 已通过 Ego Lite 手动验证 TypeSafe 官方连接：`https://api.typesafe.ai/v1`、`typesafe-systemone-v1`、`jev-latest`（返回 `jev-1.13.0`）。新建遥风学园会话后，真实中文候选经调度输入、公共服务、evaluation gateway 和提交链路进入插件，舞台与右侧面板均显示五项概率。该验证仅确认一次完整调用与展示，不代表推荐质量或延迟保证。
+演示对状态文本做长度限制，单次评估超时 10 秒，插件上限 15 秒；请按自己的样本与预算调整。
 
 本插件默认关闭，需玩家手动启用或世界/组合包显式列出；`role:demo` 不参与标签、能力匹配或无策略世界的自动选择。舞台提供当前回合及已提交重试的归属、当前选项；插件同时核对回合、选项 ID 和文本，过期或不匹配的结果会隐藏。
 

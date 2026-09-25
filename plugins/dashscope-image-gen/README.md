@@ -129,17 +129,10 @@ pnpm exec vitest run plugins/dashscope-image-gen/tests
 
 ### Live 模式
 
-只跑 `mode: "live"` 的 case：真实调用 DeepSeek + DashScope，自动下载生成的 PNG 到 `tests/tmp/`。
+只跑 `mode: "live"` 的 case：调用已配置的提示词模型和图像模型，生成的 PNG 保存到 `tests/tmp/`，可能产生模型调用费用。
 
 ```bash
 pnpm --dir "$COVEL_REPO" test:runtime -- dashscope-image-gen --plugins-dir "$PWD/plugins" --mode live --pretty
-```
-
-预期：
-
-```text
-live-text-cyberpunk-shrine         passed   (~30s)  → tests/tmp/live-text-cyberpunk-shrine-img-*.png
-live-image-json-cyberpunk-shrine   passed   (~30s)  → tests/tmp/live-image-json-cyberpunk-shrine-img-*.png
 ```
 
 只跑单条：
@@ -168,8 +161,7 @@ pnpm --dir "$COVEL_REPO" test:runtime -- dashscope-image-gen/image-generator \
 | `text`       | 自然语言段落                     | 描述场景、氛围和主要对象           |
 | `image-json` | 将结构化对象序列化为 prompt 文本 | 显式整理镜头、光照、构图与对象约束 |
 
-两种格式最终都由图像模型解释，结构化文本不保证每个字段都被遵守。上面的 live 命令可在本地
-生成对比样本；`tests/tmp/` 中的临时产物不随插件分发，因此这里不引用个人测试截图。
+两种格式最终都由图像模型解释，结构化文本不保证每个字段都被遵守。可使用上面的 live 命令生成对比样本；`tests/tmp/` 中的临时产物不随插件分发。
 
 ## 注意事项
 

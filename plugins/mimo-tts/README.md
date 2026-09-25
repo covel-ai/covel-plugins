@@ -101,7 +101,7 @@ pnpm exec vitest run plugins/mimo-tts/tests   # vitest run，覆盖 wire + 两�
 ## 参考
 
 - MiMo 官方文档：[OpenAI 兼容 API](https://mimo.mi.com/docs/api/chat/openai-api) · [语音合成](https://mimo.mi.com/docs/usage-guide/speech-synthesis)
-- 框架文档：[docs/guide/plugin-authoring.md](https://github.com/your-org/covel/blob/main/docs/guide/plugin-authoring.md) · [docs/reference/media-store.md](https://github.com/your-org/covel/blob/main/docs/reference/media-store.md) · [docs/reference/ui-components.md](https://github.com/your-org/covel/blob/main/docs/reference/ui-components.md)
+- 框架文档：[docs/guide/plugin-authoring.md](https://github.com/ackness/covel/blob/main/docs/guide/plugin-authoring.md) · [docs/reference/media-store.md](https://github.com/ackness/covel/blob/main/docs/reference/media-store.md) · [docs/reference/ui-components.md](https://github.com/ackness/covel/blob/main/docs/reference/ui-components.md)
 
 ## 数据、网络与许可
 

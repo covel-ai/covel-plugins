@@ -54,6 +54,8 @@ In a Covel version that supports GitHub installation, open **Settings → Plugin
 - GitHub metadata requests and downloads follow Covel's network proxy settings, including system, HTTP(S), and SOCKS5 proxies.
 - Desktop installation writes to the local backend. When connected to a remote server, installation writes to that backend and requires administrator access.
 
+For installed plugins, use **Check for updates** in settings. Branch installations track their branch; tag/commit installations stay pinned until you choose another version URL. Review changed files and confirm; the update is staged until the next backend restart. Local package edits block replacement, and code execution requires fresh approval after restart.
+
 ## Trust and risks
 
 **Directory inclusion does not constitute a security audit or grant builtin privileges.** Plugin server-side JavaScript does not run in a process sandbox. Once approved, it may access files, environment variables, and networks available to the backend process. Prompt-only plugins can also affect model behavior, the data sent to models, and usage costs. Install only authors and versions you trust.
