@@ -1,0 +1,13 @@
+{
+  "name": "covel-plugin-directory",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/registry.mjs --check",
+    "generate": "node scripts/registry.mjs",
+    "test": "node --test scripts/registry.test.mjs examples/story-note/tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
