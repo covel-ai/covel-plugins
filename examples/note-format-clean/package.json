@@ -1,0 +1,16 @@
+{
+  "name": "note-format-clean",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=26" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/covel-ai/covel-plugins.git",
+    "directory": "examples/note-format-clean"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}

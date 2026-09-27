@@ -1,0 +1,24 @@
+{
+  "id": "note-format-outline",
+  "name": "Outline Note Example",
+  "description": "Entry-only note formatter that turns nonblank lines into a plain-text bullet list.",
+  "maintainer": "official",
+  "author": "covel-ai",
+  "repository": "https://github.com/covel-ai/covel-plugins",
+  "path": "examples/note-format-outline",
+  "ref": "main",
+  "category": "authoring",
+  "locales": ["zh-CN", "en-US"],
+  "license": "MIT",
+  "covelVersion": null,
+  "status": "pending",
+  "demo": "https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-outline/README.md",
+  "notes": "Official composable-notes example. Targets the public service contract in Covel development PR #86; released-host compatibility remains unconfirmed. Install independently and approve server code per session.",
+  "translations": {
+    "zh-CN": {
+      "name": "笔记大纲示例",
+      "description": "纯 entry 格式化服务：将非空行整理成纯文本项目符号列表。",
+      "notes": "官方组合记录示例；针对 Covel PR #86 的开发服务契约，尚未确认已发布宿主兼容性。须单独安装并在会话中授权服务端代码。"
+    }
+  }
+}

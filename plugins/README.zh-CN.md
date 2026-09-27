@@ -10,4 +10,4 @@
 | [OpenAI Images](openai-image-gen/README.zh-CN.md)       | OpenAI 兼容剧情插图 | 统一图像管线、设置、持久化画廊               |
 | [MiMo TTS](mimo-tts/README.zh-CN.md)                    | 自动和手动朗读      | 自定义 speech wire、后台回合任务、音轨 UI    |
 
-复杂开发示例见 [Jev 选项推荐](../examples/jev-choice-demo/README.zh-CN.md)；入门示例见 [Story Note](../examples/story-note/README.zh-CN.md)。安装链接在[根 README](../README.zh-CN.md) 的生成表格中。
+开发示例还包括 [Jev 选项推荐](../examples/jev-choice-demo/README.zh-CN.md)、[Story Note](../examples/story-note/README.zh-CN.md)，以及三插件组合的[记录工作台](../examples/notes-workbench/README.zh-CN.md)。独立的[笔记清理](../examples/note-format-clean/README.zh-CN.md)和[笔记大纲](../examples/note-format-outline/README.zh-CN.md)展示服务发现。安装链接与兼容状态见[根 README](../README.zh-CN.md)的生成表格。

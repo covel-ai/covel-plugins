@@ -1,0 +1,24 @@
+{
+  "id": "note-format-clean",
+  "name": "Clean Note Example",
+  "description": "Entry-only note formatter that trims line whitespace and excess blank lines while preserving paragraphs.",
+  "maintainer": "official",
+  "author": "covel-ai",
+  "repository": "https://github.com/covel-ai/covel-plugins",
+  "path": "examples/note-format-clean",
+  "ref": "main",
+  "category": "authoring",
+  "locales": ["zh-CN", "en-US"],
+  "license": "MIT",
+  "covelVersion": null,
+  "status": "pending",
+  "demo": "https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-clean/README.md",
+  "notes": "Official composable-notes example. Targets the public service contract in Covel development PR #86; released-host compatibility remains unconfirmed. Install independently and approve server code per session.",
+  "translations": {
+    "zh-CN": {
+      "name": "笔记清理示例",
+      "description": "纯 entry 格式化服务：清理行首行尾空白与多余空行，保留段落。",
+      "notes": "官方组合记录示例；针对 Covel PR #86 的开发服务契约，尚未确认已发布宿主兼容性。须单独安装并在会话中授权服务端代码。"
+    }
+  }
+}

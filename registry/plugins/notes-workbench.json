@@ -1,0 +1,24 @@
+{
+  "id": "notes-workbench",
+  "name": "Notes Workbench Example",
+  "description": "A notes panel that discovers independent formatter services and saves results after successful processing.",
+  "maintainer": "official",
+  "author": "covel-ai",
+  "repository": "https://github.com/covel-ai/covel-plugins",
+  "path": "examples/notes-workbench",
+  "ref": "main",
+  "category": "authoring",
+  "locales": ["zh-CN", "en-US"],
+  "license": "MIT",
+  "covelVersion": null,
+  "status": "pending",
+  "demo": "https://github.com/covel-ai/covel-plugins/blob/main/examples/notes-workbench/README.md",
+  "notes": "Official composable-notes example. Targets manual runtimes, services, and HTML webview in Covel development PR #86; released-host compatibility remains unconfirmed. Works alone for raw notes.",
+  "translations": {
+    "zh-CN": {
+      "name": "记录工作台示例",
+      "description": "记录面板发现独立格式化服务，处理成功后保存结果。",
+      "notes": "官方组合记录示例；针对 Covel PR #86 的手动 runtime、服务与 HTML 面板开发契约，尚未确认已发布宿主兼容性。可单独安装用于原样保存。"
+    }
+  }
+}

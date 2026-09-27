@@ -7,7 +7,7 @@
     "generate": "node scripts/registry.mjs",
     "test": "pnpm run check:vendor && pnpm run test:registry && pnpm run test:plugins",
     "build:vendor": "node scripts/build-vendor.mjs",
-    "test:registry": "node --test scripts/*.test.mjs examples/story-note/tests/*.test.js",
+    "test:registry": "node --test scripts/*.test.mjs examples/story-note/tests/*.test.js examples/notes-workbench/tests/*.test.js examples/note-format-clean/tests/*.test.js examples/note-format-outline/tests/*.test.js",
     "test:plugins": "vitest run",
     "check:vendor": "node scripts/build-vendor.mjs --check"
   },
