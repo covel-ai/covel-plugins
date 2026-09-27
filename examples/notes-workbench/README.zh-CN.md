@@ -23,6 +23,8 @@ https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-outline
 
 输入 `/notes` 或打开插件侧栏面板。输入记录后可选“原样保存”；点击“刷新处理方式”后可选择格式化插件。只有格式化成功才会提交记录。选中的插件被禁用、失去授权、超时或返回无效结果时，草稿保留且不会创建记录；可以改选处理方式或明确选择原样保存。`/plugins notes-workbench` 可查看服务调用状态，诊断历史不记录正文。
 
+草稿文字和所选处理方式通过宿主的临时 `uiState` 缓存，在当前会话侧栏内切换标签后保留。刷新页面或离开会话会清除缓存，只有“保存记录”会持久保存。返回选用了处理方式的草稿后，请刷新处理方式以重新确认可用性。
+
 ## 组合边界
 
 工作台发现当前活跃的 `examples/note-format@1` 服务，再调用用户选择的 `format-note`。输入和输出均为 `{ "text": "..." }`；输入必须包含非空白文字且最多 4000 个 UTF-16 单元，输出必须包含非空白文字且最多 8000 个。下拉列表显示服务描述。其他插件实现同名同契约后，无须修改工作台即可加入。
@@ -31,7 +33,7 @@ https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-outline
 
 ## 兼容性与验证
 
-本示例针对 Covel **[PR #86](https://github.com/ackness/covel/pull/86) 开发分支**上的公共服务和手动 runtime 契约（开发时宿主包版本为 `0.0.40`）。尚未确认已发布宿主版本的兼容性，因此目录条目标记为待确认。仅凭包版本号不能证明宿主支持。
+本示例针对 Covel **[PR #86](https://github.com/ackness/covel/pull/86) 开发分支**上的公共服务、手动 runtime 和 webview 临时 UI 状态契约（开发时宿主包版本为 `0.0.40`）。尚未确认已发布宿主版本的兼容性，因此目录条目标记为待确认。仅凭包版本号不能证明宿主支持。
 
 在本仓根目录运行 `pnpm test`。要用兼容的 Covel checkout 验证，先将 `COVEL_REPO` 设为其绝对路径，再运行：
 

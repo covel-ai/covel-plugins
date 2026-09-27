@@ -23,6 +23,8 @@ These `main` links become installable after this example is merged and published
 
 Enter `/notes` or open the plugin side panel. Type a note and choose **Save as written**, or select a processor after **Refresh processors**. A save commits only after formatting succeeds. If the selected processor is disabled, loses approval, times out, or returns invalid output, the draft remains and no note is created. Choose another processor or explicitly save as written. `/plugins notes-workbench` shows service activity without recording note bodies in diagnostics.
 
+Draft text and the selected processor survive sidebar tab changes within the mounted session sidebar through the host’s temporary `uiState` cache. Refreshing the page or leaving the session clears that cache; only **Save note** persists a note. After returning to a processed draft, refresh processors to check availability again.
+
 ## How composition works
 
 The workbench discovers active services under `examples/note-format@1`, then calls the selected plugin's `format-note` service. Input and output are `{ "text": "..." }`; input must contain nonblank text and have at most 4,000 UTF-16 code units, and output must contain nonblank text and have at most 8,000. The processor description appears in the dropdown. Another plugin can join by implementing the same contract without changing the workbench.
@@ -31,7 +33,7 @@ The workbench writes its own session-scoped `notes` plugin data only after a suc
 
 ## Compatibility and validation
 
-This example targets the public service and manual runtime contract on Covel's **development branch in [PR #86](https://github.com/ackness/covel/pull/86)** (host package version `0.0.40` at development time). Released-host compatibility has not been confirmed, so the directory entry remains pending. A package version alone does not establish host support.
+This example targets the public service, manual runtime, and temporary webview UI state contracts on Covel's **development branch in [PR #86](https://github.com/ackness/covel/pull/86)** (host package version `0.0.40` at development time). Released-host compatibility has not been confirmed, so the directory entry remains pending. A package version alone does not establish host support.
 
 From this repository root, run `pnpm test`. To validate against a compatible Covel checkout, set `COVEL_REPO` to its absolute path, then run:
 

@@ -163,6 +163,8 @@
           failed:
             "The operation failed. Check that the selected processor is enabled and approved, then retry. Your draft is unchanged.",
           cancelled: "Permission was not granted. Your draft is unchanged.",
+          cacheFailed:
+            "Could not retain the current draft across panels. Keep this panel open until you save.",
           unavailable: "Unavailable",
           locked: "Wait for the current action to finish.",
           invalid: "Enter a note between 1 and 4,000 characters.",
@@ -189,6 +191,7 @@
           failed:
             "操作失败。请确认所选处理插件已启用并获得授权，然后重试。草稿已保留。",
           cancelled: "尚未获得操作授权，草稿已保留。",
+          cacheFailed: "当前草稿无法跨面板保留，请保持此面板打开直至保存。",
           unavailable: "当前不可用",
           locked: "请等待当前操作完成。",
           invalid: "请输入 1 到 4000 个字符的记录。",
@@ -204,7 +207,9 @@
       let locale = "en",
         ready = false,
         locked = false,
-        busy = false;
+        busy = false,
+        hydrated = false,
+        chosenProvider = "";
       let providers = [],
         records = {},
         statusKey = "ready",
@@ -227,7 +232,7 @@
         text.disabled = locked || busy;
       }
       function renderProviders() {
-        const chosen = select.value;
+        const chosen = chosenProvider;
         select.replaceChildren(new Option(t("raw"), ""));
         for (const provider of providers) {
           select.add(
@@ -245,6 +250,15 @@
         }
         select.value = chosen;
         controls();
+      }
+      async function retainDraft() {
+        try {
+          await window.covel.invoke("setUiState", {
+            value: { text: text.value, providerPluginId: chosenProvider },
+          });
+        } catch {
+          showStatus("cacheFailed", true);
+        }
       }
       function renderNotes() {
         const list = document.getElementById("notes");
@@ -341,6 +355,7 @@
             // Only a committed successful runtime response may clear the draft.
             if (text.value === draft) text.value = "";
             showStatus("saved");
+            await retainDraft();
           }
         } catch {
           showStatus("failed", true);
@@ -349,10 +364,29 @@
           controls();
         }
       });
-      text.addEventListener("input", controls);
-      select.addEventListener("change", controls);
+      text.addEventListener("input", () => {
+        controls();
+        void retainDraft();
+      });
+      select.addEventListener("change", () => {
+        chosenProvider = select.value;
+        controls();
+        void retainDraft();
+      });
       window.covel.subscribe((state) => {
         ready = typeof state.locale === "string";
+        if (ready && !hydrated) {
+          hydrated = true;
+          const draft = state.uiState;
+          if (
+            draft &&
+            typeof draft.text === "string" &&
+            draft.text.length <= 4000
+          )
+            text.value = draft.text;
+          if (draft && typeof draft.providerPluginId === "string")
+            chosenProvider = draft.providerPluginId;
+        }
         locale = state.locale?.toLowerCase().startsWith("zh") ? "zh" : "en";
         locked = state.locked === true;
         records =
