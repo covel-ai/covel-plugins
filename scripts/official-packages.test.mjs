@@ -21,6 +21,9 @@ async function modules(dir) {
 for (const folder of [
   "examples/story-note",
   "examples/jev-choice-demo",
+  "examples/notes-workbench",
+  "examples/note-format-clean",
+  "examples/note-format-outline",
   "plugins/dashscope-image-gen",
   "plugins/openai-image-gen",
   "plugins/mimo-tts",

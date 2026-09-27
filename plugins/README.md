@@ -10,4 +10,4 @@ These optional features are maintained by the Covel team and installed and appro
 | [OpenAI Images](openai-image-gen/README.md) | OpenAI-compatible story illustrations | Unified image pipeline, settings, persistent gallery |
 | [MiMo TTS](mimo-tts/README.md) | Automatic and manual narration | Custom speech wire, background turn jobs, audio UI |
 
-See [Jev Choice Recommendations](../examples/jev-choice-demo/README.md) for an advanced authoring example and [Story Note](../examples/story-note/README.md) for a minimal example. Installation links are in the generated tables in the [root README](../README.md).
+For authoring examples, see [Jev Choice Recommendations](../examples/jev-choice-demo/README.md), [Story Note](../examples/story-note/README.md), and the three-package [Notes Workbench](../examples/notes-workbench/README.md) composition demo. Its independent [Clean Note](../examples/note-format-clean/README.md) and [Outline Note](../examples/note-format-outline/README.md) processors illustrate service discovery. Installation links and compatibility status are in the generated tables in the [root README](../README.md).
