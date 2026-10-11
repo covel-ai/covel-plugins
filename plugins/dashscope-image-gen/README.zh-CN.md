@@ -8,7 +8,7 @@
 
 ## 安装与授权
 
-这是官方维护的社区插件，适配 Covel `0.0.39` 当前开发契约，不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
+这是官方维护的社区插件，适配 Covel `0.0.50` 开发契约（`PLUGIN.md` 里的 `covel: ">=0.0.50"`；范围之外的宿主不加载它），不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen
@@ -18,39 +18,57 @@ https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen
 
 从内置版本迁移时，插件 ID、runtime ID 和设置键保持不变；已有会话需安装后重新授权。迁移不会主动删除存档、配置或媒体，不会自动把旧的内置信任转成社区授权。
 
+## 包结构
+
+```text
+dashscope-image-gen/
+├── PLUGIN.md                       # id、版本、covel 范围、工具、media.image-flow@1、设置、UI
+├── locales/zh.yaml                 # 中文标签与界面文字（locales/lock.json 记录对应的英文原文）
+├── server/index.js                 # entry：注册两个提交工具和 image-flow 扩展
+├── tools/submit-image-prompt.js
+├── lib/covel-helpers.js            # 随包的 SDK 辅助函数（图像生成、proposal、工具结果）
+└── runtimes/
+    ├── prompt-generator/           # agent：RUNTIME.md（英文）、RUNTIME.zh.md、output.schema.json、ui/
+    └── image-generator/            # function：RUNTIME.md、handler.js、ui/
+```
+
+0.1.0 版把插件迁到 Covel 0.0.50 格式：runtime 改为 `runtimes/<id>/RUNTIME.md` 并使用分组字段；设置和 UI spec 只在根 `contributes` 声明一次；标签和界面文字写英文，中文译文放在 `locales/zh.yaml`；提示词正文以英文为准，简体中文变体在 `RUNTIME.zh.md`。插件、runtime、工具和设置的 ID 都不变。更新已安装的副本后，重启后端，并像新安装一样在会话中授权。
+
 ## 用途
 
-- 玩家在剧情任意时刻点击「生成图片」按钮，根据当前氛围生成一张「此刻画面」或一页「多格漫画」
+- 玩家在剧情任意时刻点击右侧面板的「生成图片」按钮（或宿主自己的生图按钮，宿主通过 `media.image-flow@1` 找到本插件），根据当前氛围生成一张「此刻画面」或一页「多格漫画」
 - 两条正交的画面控制轴：
   - **composition**：`single-scene`（单一画面）/ `comic-strip`（多格漫画时间线）
   - **promptMode**：`text`（自然语言段落）/ `image-json`（结构化 JSON）
 - 漫画模式下支持「严格网格 / 动态跨格 / 大跨页主导」三种排版风格，可选 2-6 格
 - 所有模式默认带上 4K / ultra detailed / masterpiece 等画质关键词，让模型按最高品质渲染
+- 每个会话只有一个插画流程：本插件提供单提供者扩展点 `media.image-flow@1`，所以同一会话不能同时启用本插件和 `openai-image-gen`（或其他插画流程）。两者可以都安装，每个会话选一个
+- 所选 `modelPresetId` 用途不存在或不是图像模型时，`image-generator` 在写画廊记录、发请求之前返回 `skipped`
 - 想在 `qwen-image-3.0-pro` / `wan2.6-t2i` / `wan2.6-image` / `wan2.7-image` / `wan2.7-image-pro` 等模型间切换，加一个新 `llm.toml` slot 再改 `modelPresetId`（见「废弃字段」）。选型速记：**`qwen-image-3.0-pro` 是当前旗舰**——同步接口（无异步轮询、出图等待最短）、支持 `negative_prompt`、一次最多 6 张；`wan2.6-t2i` 纯文生图且支持 `negative_prompt`；`wan2.7-image` 快、`wan2.7-image-pro` 支持 4K 文生图，但两者都**不支持 `negative_prompt`**（wire 自动剥离）；wan2.6/wan2.7 一次最多 4 张（`n`）
 
 ## 组成
 
-| Runtime                                | 类型                  | 触发                             | 职责                                                                                                                                                                                      |
-| -------------------------------------- | --------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dashscope-image-gen/prompt-generator` | agent (background)    | manual                           | 后台读取最近的 prompt 历史，按 `promptMode` 调用对应提交工具；工具统一留档并发出 `image.generate.requested`，唤醒下游                                                                     |
-| `dashscope-image-gen/image-generator`  | function (background) | event:`image.generate.requested` | 调用 `ctx.images.generate()`（框架选 wire、发请求、落 MediaStore、按 promptHash 去重）→ 拿到 `MediaRef[]` 后写索引记录（含 `ref`）进 `images` 命名空间，并 emit `asset.generate` proposal |
+| Runtime                                | 类型                  | 触发                             | 职责                                                                                                                                                                                                                                    |
+| -------------------------------------- | --------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dashscope-image-gen/prompt-generator` | agent (background)    | manual                           | 后台读取最近的 prompt 历史，按 `promptMode` 调用对应提交工具；工具统一留档并发出 `image.generate.requested`，唤醒下游。`media.image-flow@1` 的入口 runtime                                                                              |
+| `dashscope-image-gen/image-generator`  | function (background) | event:`image.generate.requested` | 调用 `ctx.images.generate()`（框架选 wire、发请求、落 MediaStore、按 promptHash 去重）→ 拿到 `MediaRef[]` 后写索引记录（含 `ref`）进 `images` 命名空间，每张图返回一条 `assetGenerations[]` effect。`media.image-flow@1` 的资产 runtime |
 
-## userSettings
+## 设置
 
-prompt-generator：
+所有设置只在根 `PLUGIN.md`（`contributes.settings`）声明一次，两个 runtime 都从 `ctx.userSettings` 读取。prompt-generator 使用：
 
-| Key                | 类型   | 默认           | 说明                                                                                                                                                    |
-| ------------------ | ------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `composition`      | select | `single-scene` | `single-scene` 画一张单一时刻画面；`comic-strip` 把整页当一张图，按时间线刻画多格连续瞬间                                                               |
-| `comicPanels`      | select | `auto`         | 仅 `comic-strip` 生效。`auto` 让模型自定 2-6 格；其余值锁定 2/3/4/6 格                                                                                  |
-| `comicLayoutStyle` | select | `dynamic`      | 仅 `comic-strip` 生效。`strict-grid` 规整网格、统一边框；`dynamic` 允许跨格构图、人物/动作打破 gutter；`splash-led` 一格大跨页占主导 + 小格作为时间锚点 |
-| `promptMode`       | select | `text`         | `text` 输出 140-240 字（漫画模式 240-420 字）自然语言；`image-json` 输出结构化 JSON 控制镜头/光照/主体/风格/分格                                        |
+| Key                | 类型   | 默认          | 说明                                                                                                                                                                                     |
+| ------------------ | ------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `composition`      | select | `comic-strip` | `single-scene` 画一张单一时刻画面；`comic-strip` 把整页当一张图，按时间线刻画多格连续瞬间                                                                                                |
+| `comicPanels`      | select | `auto`        | 仅 `comic-strip` 生效。`auto` 让模型自定 2-6 格；其余值锁定 2/3/4/6 格                                                                                                                   |
+| `comicLayoutStyle` | select | `dynamic`     | 仅 `comic-strip` 生效。`strict-grid` 规整网格、统一边框；`dynamic` 允许跨格构图、人物/动作打破 gutter；`splash-led` 一格大跨页占主导 + 小格作为时间锚点                                  |
+| `promptMode`       | select | `text`        | `text` 输出自然语言段落（中文提示词 `RUNTIME.zh.md` 为 140-240 字、漫画 240-420 字；英文提示词约 80-150 词、漫画 150-260 词）；`image-json` 输出结构化 JSON 控制镜头/光照/主体/风格/分格 |
 
-> **画质保证**：所有模式都强制要求模型在 prompt 末尾或 `quality` 字段带上 `4K, 8K, ultra HD, ultra detailed, highly detailed, masterpiece, best quality, sharp focus, intricate details` 等关键词；漫画模式额外追加 `crisp ink lines, clean panel borders, professional manga / comic page composition`。这是写在 PLUGIN.md 里的硬规则，不是 image-generator 适配器层的拼接。
+> **画质保证**：所有模式都强制要求模型在 prompt 末尾或 `quality` 字段带上 `4K, 8K, ultra HD, ultra detailed, highly detailed, masterpiece, best quality, sharp focus, intricate details` 等关键词；漫画模式额外追加 `crisp ink lines, clean panel borders, professional manga / comic page composition`。这是写在 prompt-generator 提示词（`RUNTIME.md` / `RUNTIME.zh.md`）里的硬规则，不是 image-generator 适配器层的拼接。
 >
 > **漫画模式建议尺寸**：在 image-generator 把 `imageSize` 切到 `1440x720`（横向条漫）/ `720x1440`（竖向卷轴）/ `1024x1024`（方形格）之一，避免方块裁切毁掉构图（统一写 `x` 分隔形式，wire 负责转换成 DashScope 的 `*` 形式）。
 
-image-generator：
+image-generator 使用：
 
 | Key                | 类型     | 默认                                                                     | 说明                                                                                                                                                                         |
 | ------------------ | -------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -63,7 +81,7 @@ image-generator：
 
 ### 废弃字段
 
-统一图像管线上线前，`image-generator` 曾提供 `model`（per-call 模型覆盖）设置，现已从 PLUGIN.md 中移除：
+统一图像管线上线前，`image-generator` 曾提供 `model`（per-call 模型覆盖）设置，现已不再声明：
 
 - **`model`**：框架的 `ctx.images.generate()` 只接受 `presetId`，不再接受 per-call 模型覆盖——想在 `wan2.7-image` / `wan2.7-image-pro` 之间切换，加一个新 `[covel.<slot>]` 再改 `modelPresetId`，而不是在同一个 slot 里临时换模型。
 
@@ -119,11 +137,11 @@ pnpm --dir "$COVEL_REPO" test:runtime -- dashscope-image-gen --plugins-dir "$PWD
 
 预期：全部 `mock-*` case passed（文本 / 结构化工具提交、参数修复和未调用工具的可见失败，具体清单见 runtime-cases.json）。
 
-正向 case 模拟 `prompt-generator` 调用提交工具；工具以固定 topic 发出 `image.generate.requested`，框架自动唤醒 `image-generator` follower。mock harness 不装配 `ctx.images`（没有真实 gateway/MediaStore），follower 在拿到 `ctx.images` 之前直接返回可见失败（`status: "failed"`），这是预期行为、不是回归。断言验证：提示词已留档、事件已触发、follower 失败被正确记录。
+正向 case 模拟 `prompt-generator` 调用提交工具；工具以固定 topic 发出 `image.generate.requested`，框架以后台任务唤醒 `image-generator` follower。mock harness 没有图像模型，follower 的可用性检查返回 `skipped`（`image model unavailable`），不写画廊记录，这是预期行为、不是回归。断言验证：提示词已留档、事件已触发、follower 被跳过；失败 case 检查 `_runtime_jobs` 中失败的后台任务。
 
 ### 单元测试（handler 入参断言）
 
-`tests/handler.test.js` 直接 import `handler.js`，用手写的 mock `ctx.images.generate` 断言 wire 调用入参（`negativePrompt` 透传、`size` 保持原始 `x` 分隔形态不做本地转换、`n`/`quality`/`metadata` 等字段）。
+`tests/handler.test.js` 直接 import `handler.js`，用手写的 mock `ctx.images`（`isAvailable` 与 `generate`）断言可用性跳过、wire 调用入参（`negativePrompt` 透传、`size` 保持原始 `x` 分隔形态不做本地转换、`n`/`quality`/`metadata` 等字段）、记录 key 和 `assetGenerations`。`tests/submit-image-prompt.test.js` 检查提交工具返回的显式工具结果，`tests/entry.test.js` 检查 entry 恰好注册了声明的工具和 `media.image-flow@1` 扩展。
 
 ```bash
 pnpm exec vitest run plugins/dashscope-image-gen/tests
@@ -168,7 +186,8 @@ pnpm --dir "$COVEL_REPO" test:runtime -- dashscope-image-gen/image-generator \
 ## 注意事项
 
 - DashScope wan2.x 的 OSS 结果 URL 24h 后过期；`ctx.images.generate()` 内部把字节拉进框架的 `MediaStore` 并返回 `MediaRef`（`{ id, mime, size }`），永久内容寻址，画廊不会再出现 24h 后断图
-- handler 同时 emit 一条 `asset.generate` proposal（`{ ref, modality: 'image', meta }`），由 kernel 落 trace + SSE，前端 `<Media>` / `AssetRender` 自动解析
+- handler 每张图同时返回一条 `assetGenerations[]` effect（`{ ref, modality: 'image', meta }`），由 kernel 作为 `asset.generate` proposal 提交，前端 `<Media>` / `AssetRender` 自动解析；`meta.prompt` 是之后回合里写故事的模型在图片位置读到的说明
+- 一次生成多张时，第一张写入 `images.<imageId>`（替换预写的 pending 记录），其余写入 `images.<imageId>-2`、`images.<imageId>-3`……
 - `wan2.7-image` 系列模型不支持 `negative_prompt`，框架的 `dashscope-wan` wire 自动剥离并返回一条 warning（不会报错），warning 会附在 `_logs` 的 `image.generate.completed` 条目和对应 `images` 记录的 `warnings` 字段上
 - `image-json` 模式下 `prompt` 字段值是已经 stringify 的 JSON 字符串，DashScope 会把它当作 prompt 文本送入模型
 - 相同参数（`presetId` + `prompt` + `negativePrompt` + `size` + `quality` + `n` + `background`）重复调用会命中框架的 promptHash 去重缓存，不会重新发起 DashScope 任务；命中时记录带 `cached: true`
@@ -193,7 +212,7 @@ pnpm --dir "$COVEL_REPO" test:runtime -- dashscope-image-gen/image-generator \
 
 框架调用模型后，如果结果为 URL，下载图片仍受该 runtime 的 `permissions.http` 限制；返回 base64/bytes 的模型不经过远程图片下载。不要通过提高信任等级或绕过 SSRF 检查解决下载失败。
 
-使用返回 URL 的兼容服务或其他区域时，确认其官方文档中的图片域名，在安装目录的 `runtimes/image-generator/PLUGIN.md` 声明准确的 HTTPS origin 和 GET 方法，然后重启并重新授权。重定向链中的每个 origin 都需声明，不能填通配符或完整签名 URL。例如：
+使用返回 URL 的兼容服务或其他区域时，确认其官方文档中的图片域名，在安装目录的 `runtimes/image-generator/RUNTIME.md` 声明准确的 HTTPS origin 和 GET 方法，然后重启并重新授权。重定向链中的每个 origin 都需声明，不能填通配符或完整签名 URL。例如：
 
 ```yaml
 permissions:

@@ -10,15 +10,15 @@
   "category": "media",
   "locales": ["zh-CN", "en-US"],
   "license": "MIT",
-  "covelVersion": "0.0.39",
+  "covelVersion": "0.0.50",
   "status": "active",
   "demo": "https://github.com/covel-ai/covel-plugins/blob/main/plugins/dashscope-image-gen/README.md",
-  "notes": "Official optional plugin moved from the Covel main repository. Restart and grant session code approval after installation. Requires a configured model role.",
+  "notes": "Official optional plugin moved from the Covel main repository. Restart and grant session code approval after installation. Requires a configured model role. Only one illustration flow (DashScope or OpenAI Images) can be active in a session.",
   "translations": {
     "zh-CN": {
       "name": "DashScope 剧情生图",
       "description": "LLM 提示词、万相图像生成与持久化画廊的两段式流水线。",
-      "notes": "从 Covel 主仓迁移的官方可选插件；安装后重启并在会话中授权。需要配置对应模型用途。"
+      "notes": "从 Covel 主仓迁移的官方可选插件；安装后重启并在会话中授权。需要配置对应模型用途。同一会话只能启用一个插图流程（DashScope 或 OpenAI 图片二选一）。"
     }
   }
 }

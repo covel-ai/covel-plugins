@@ -8,7 +8,7 @@ OpenAI Images API 图像生成插件。生成走框架统一的 `ctx.images.gene
 
 ## 安装与授权
 
-这是官方维护的社区插件，适配 Covel `0.0.39` 当前开发契约，不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
+这是官方维护的社区插件，适配 Covel `0.0.50` 开发契约（`PLUGIN.md` 里的 `covel: ">=0.0.50"`；范围之外的宿主不加载它），不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen
@@ -17,6 +17,22 @@ https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen
 解析与下载使用 Covel 设置中的网络代理。确认来源和服务端代码风险后安装，重启后端，再在会话中启用并授权。官方维护不免除社区代码授权；模型调用可能产生费用。包内 JavaScript 可直接运行，无需安装依赖或构建。
 
 从内置版本迁移时，插件 ID、runtime ID 和设置键保持不变；已有会话需安装后重新授权。迁移不会主动删除存档、配置或媒体，不会自动把旧的内置信任转成社区授权。
+
+## 包结构
+
+```text
+openai-image-gen/
+├── PLUGIN.md                       # id、版本、covel 范围、工具、media.image-flow@1、设置、UI
+├── locales/zh.yaml                 # 中文标签与界面文字（locales/lock.json 记录对应的英文原文）
+├── server/index.js                 # entry：注册两个提交工具和 image-flow 扩展
+├── tools/submit-image-prompt.js
+├── lib/covel-helpers.js            # 随包的 SDK 辅助函数（图像生成、proposal、工具结果）
+└── runtimes/
+    ├── prompt-generator/           # agent：RUNTIME.md（英文）、RUNTIME.zh.md、output.schema.json、ui/
+    └── image-generator/            # function：RUNTIME.md、handler.js、ui/
+```
+
+0.1.0 版把插件迁到 Covel 0.0.50 格式：runtime 改为 `runtimes/<id>/RUNTIME.md` 并使用分组字段；设置和 UI spec 只在根 `contributes` 声明一次；标签和界面文字写英文，中文译文放在 `locales/zh.yaml`；提示词正文以英文为准，简体中文变体在 `RUNTIME.zh.md`。插件、runtime、工具和设置的 ID 都不变。更新已安装的副本后，重启后端，并像新安装一样在会话中授权。
 
 ## 与 dashscope-image-gen 的差异
 
@@ -27,7 +43,9 @@ https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen
 | 事件 topic | `openai-image.generate.requested`                              | `image.generate.requested`                              |
 | 凭据来源   | `~/.covel/llm.toml` 的 `[covel.<slot>]`（默认 `openai-image`） | `~/.covel/llm.toml` 的 `[covel.<slot>]`（默认 `image`） |
 
-两个插件可以同时启用，事件 topic 不同所以不会双触发，画廊也各自独立（`pluginData` 按 `pluginId` 隔离）。两者的 wire 都由框架的 image-wire 注册表处理，插件本身没有任何 HTTP / SDK 依赖。
+两个插件可以同时安装，但一个会话只用其中一个：两者都提供单提供者扩展点 `media.image-flow@1`（宿主通过它找到插画流程，用于自己的生图按钮），会话解析器每个会话只接受一个插画流程。两者的事件 topic 和画廊本来也各自独立（`pluginData` 按 `pluginId` 隔离）。两者的 wire 都由框架的 image-wire 注册表处理，插件本身没有任何 HTTP / SDK 依赖。
+
+所选 `modelPresetId` 用途不存在或不是图像模型时，`image-generator` 在写画廊记录、发请求之前返回 `skipped`。
 
 ## 配置 llm.toml + keys.env
 
@@ -56,7 +74,7 @@ OPENAI_API_KEY=sk-xxx
 
 第三方 key + baseUrl **必须同时**给——两行同时改。
 
-### 同时启用两个图像插件
+### 为两个图像插件配置用途
 
 ```toml
 [covel.image]                              # DashScope wan2.7
@@ -78,18 +96,18 @@ tag      = "image"
 output   = ["image"]
 ```
 
-dashscope-image-gen 默认 `modelPresetId = "image"` → wan2.7；openai-image-gen 默认 `modelPresetId = "openai-image"` → gpt-image-2。前端右侧面板各有独立的「生成」按钮和画廊。
+dashscope-image-gen 默认 `modelPresetId = "image"` → wan2.7；openai-image-gen 默认 `modelPresetId = "openai-image"` → gpt-image-2。每个会话选择其中一个插件，右侧面板显示它的「生成」按钮和画廊。
 
 ## 组成
 
-| Runtime                             | 类型                  | 触发                                    | 职责                                                                                                                                                                                      |
-| ----------------------------------- | --------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `openai-image-gen/prompt-generator` | agent (background)    | manual                                  | 后台读取最近 prompt 历史，按 `composition` × `promptMode` 组合写出图像 prompt，并调用对应提交工具统一留档、发出固定事件、唤醒下游                                                         |
-| `openai-image-gen/image-generator`  | function (background) | event:`openai-image.generate.requested` | 调用 `ctx.images.generate()`（框架选 wire、发请求、落 MediaStore、按 promptHash 去重）→ 拿到 `MediaRef[]` 后写索引记录（含 `ref`）进 `images` 命名空间，并 emit `asset.generate` proposal |
+| Runtime                             | 类型                  | 触发                                    | 职责                                                                                                                                                                                                                                    |
+| ----------------------------------- | --------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `openai-image-gen/prompt-generator` | agent (background)    | manual                                  | 后台读取最近 prompt 历史，按 `composition` × `promptMode` 组合写出图像 prompt，并调用对应提交工具统一留档、发出固定事件、唤醒下游。`media.image-flow@1` 的入口 runtime                                                                  |
+| `openai-image-gen/image-generator`  | function (background) | event:`openai-image.generate.requested` | 调用 `ctx.images.generate()`（框架选 wire、发请求、落 MediaStore、按 promptHash 去重）→ 拿到 `MediaRef[]` 后写索引记录（含 `ref`）进 `images` 命名空间，每张图返回一条 `assetGenerations[]` effect。`media.image-flow@1` 的资产 runtime |
 
-## userSettings
+## 设置
 
-prompt-generator（与 dashscope 同构，便于熟悉的玩家无缝切换）：
+所有设置只在根 `PLUGIN.md`（`contributes.settings`）声明一次，两个 runtime 都从 `ctx.userSettings` 读取。prompt-generator 使用（与 dashscope 同构，便于熟悉的玩家无缝切换）：
 
 | Key                | 类型   | 默认          | 说明                                                      |
 | ------------------ | ------ | ------------- | --------------------------------------------------------- |
@@ -98,7 +116,7 @@ prompt-generator（与 dashscope 同构，便于熟悉的玩家无缝切换）�
 | `comicLayoutStyle` | select | `dynamic`     | `strict-grid` / `dynamic` / `splash-led`                  |
 | `promptMode`       | select | `text`        | `text` 自然语言 / `image-json` 结构化 JSON                |
 
-image-generator：
+image-generator 使用：
 
 | Key             | 类型   | 默认           | 说明                                                                                                                           |
 | --------------- | ------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -108,11 +126,11 @@ image-generator：
 | `quality`       | text   | `low`          | GPT Image 可填 `low` / `medium` / `high` / `auto`                                                                              |
 | `style`         | text   | _(空)_         | 可选；没有独立的 wire 参数，会拼进 prompt 文案末尾（`<prompt>, style: <style>`）                                               |
 
-> **画质保证**：4K / ultra detailed / masterpiece 等关键词写在 prompt-generator 的 PLUGIN.md 系统提示里，模型在每条 prompt 末尾或 `quality` 字段强制带上。漫画模式额外追加 `crisp ink lines, clean panel borders, professional manga / comic page composition`。
+> **画质保证**：4K / ultra detailed / masterpiece 等关键词写在 prompt-generator 的提示词（`RUNTIME.md` / `RUNTIME.zh.md`）里，模型在每条 prompt 末尾或 `quality` 字段强制带上。漫画模式额外追加 `crisp ink lines, clean panel borders, professional manga / comic page composition`。
 
 ### 废弃字段
 
-统一图像管线上线前，`image-generator` 曾提供 `model`（per-call 模型覆盖）、`maxRetries`（失败重试次数）、`extraProviderOptions`（透传额外 JSON 参数）三个设置。现已从 PLUGIN.md 中移除：
+统一图像管线上线前，`image-generator` 曾提供 `model`（per-call 模型覆盖）、`maxRetries`（失败重试次数）、`extraProviderOptions`（透传额外 JSON 参数）三个设置。现已不再声明：
 
 - **`model`**：框架的 `ctx.images.generate()` 只接受 `presetId`，不再接受 per-call 模型覆盖——想换模型，加一个新 `[covel.<slot>]` 再切 `modelPresetId`。
 - **`maxRetries`**：迁移前就是死字段（handler 从未真正实现过重试逻辑），移除是诚实化，不是功能回归。
@@ -137,8 +155,9 @@ moderation = "low"
 
 ```bash
 # Mock mode: verify tool submission and fixed events without real API calls.
-# ctx.images is unavailable to image-generator in mock mode;
-# status: failed is expected, not a regression.
+# The mock harness has no image model, so image-generator returns
+# skipped (image model unavailable); this is expected, not a regression.
+# Unit tests: pnpm exec vitest run plugins/openai-image-gen/tests
 pnpm --dir "$COVEL_REPO" test:runtime -- openai-image-gen --plugins-dir "$PWD/plugins" --pretty
 
 # Live mode: requires OPENAI_API_KEY in keys.env and an openai-image slot in llm.toml.
@@ -159,7 +178,7 @@ Fireworks 当前使用模型 workflow 端点且响应形状不同，fal.ai 当�
 
 - `gpt-image-2` 是 OpenAI 默认模型。使用第三方服务时，必须改成该服务实际提供的模型 ID。`gpt-image-1` 已弃用，`dall-e-3` 已从 API 移除，不再作为可用备选；参见 [OpenAI GPT Image 2](https://developers.openai.com/api/docs/models/gpt-image-2)。
 - SSRF 守卫、baseUrl 校验、重试都由框架的 `ctx.images.generate()` 统一处理，插件不再自己做这些检查
-- 画廊 UI 接 `images` 命名空间；`ctx.images.generate()` 已经把字节落进 MediaStore 并返回 `MediaRef[]`，handler 只需把 `ref` 写进 `images.<imageId>` 记录；多图请求会发布 `images.<imageId>-1`、`images.<imageId>-2` 这类独立记录，SSE `plugin-data.changed` 自动刷新；前端用 `<Media src={ref}>` 组件解析
+- 画廊 UI 接 `images` 命名空间；`ctx.images.generate()` 已经把字节落进 MediaStore 并返回 `MediaRef[]`，handler 只需把 `ref` 写进 `images.<imageId>` 记录；多图请求的第一张写入 `images.<imageId>`（替换预写的 pending 记录），其余写入 `images.<imageId>-2`、`images.<imageId>-3`……；每张图同时作为 `assetGenerations[]` effect 返回，其 `meta.prompt` 是之后回合里写故事的模型在图片位置读到的说明，SSE `plugin-data.changed` 自动刷新；前端用 `<Media src={ref}>` 组件解析
 - **凭据流向**：插件**不**持久化 apiKey/baseUrl 在 settings.json；`ctx.images.generate()` 内部通过 `modelPresetId` 从框架解析 slot，与 dashscope-image-gen 完全同模式
 - 本插件不引入第三方 HTTP SDK；依赖由 Covel 根 workspace 统一安装。
 
@@ -173,7 +192,7 @@ Fireworks 当前使用模型 workflow 端点且响应形状不同，fal.ai 当�
 
 框架调用模型后，如果结果为 URL，下载图片仍受该 runtime 的 `permissions.http` 限制；返回 base64/bytes 的模型不经过远程图片下载。不要通过提高信任等级或绕过 SSRF 检查解决下载失败。
 
-使用返回 URL 的兼容服务或其他区域时，确认其官方文档中的图片域名，在安装目录的 `runtimes/image-generator/PLUGIN.md` 声明准确的 HTTPS origin 和 GET 方法，然后重启并重新授权。重定向链中的每个 origin 都需声明，不能填通配符或完整签名 URL。例如：
+使用返回 URL 的兼容服务或其他区域时，确认其官方文档中的图片域名，在安装目录的 `runtimes/image-generator/RUNTIME.md` 声明准确的 HTTPS origin 和 GET 方法，然后重启并重新授权。重定向链中的每个 origin 都需声明，不能填通配符或完整签名 URL。例如：
 
 ```yaml
 permissions:

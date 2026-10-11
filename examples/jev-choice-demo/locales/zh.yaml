@@ -1,0 +1,19 @@
+# Chinese text of the jev-choice-demo plugin.
+# A section named after a manifest file translates its labels, under the same keys.
+# messages translates the UI: English text, then its translation.
+PLUGIN.md:
+  displayName: Jev 选项推荐 Demo
+  description: 用 evaluation 模型评估当前快捷选项，在舞台展示推荐概率；供插件开发者参考。
+  contributes:
+    settings:
+      - key: evaluationSlot
+        label: 评估模型用途
+        description: 选择绑定了 evaluation 模型的用途，例如 evaluation 或 intent。支持 Jev 及同能力模型。
+      - key: goal
+        label: 推荐目标
+        description: 可选。描述希望优先考虑的目标；留空时按玩家最新意图和当前场景推荐。
+  runtime:
+    description: 用评估模型为当前建议行动排序，并把结果写入本插件的 recommendations 命名空间。
+messages:
+  Jev Recommendations Demo: Jev 推荐 Demo
+  Recommendations appear after the next suggested actions are evaluated.: 下一组建议行动评估完成后，推荐结果会显示在这里。

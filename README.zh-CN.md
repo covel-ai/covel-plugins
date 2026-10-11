@@ -27,14 +27,14 @@ Covel 官方维护的插件目录、官方可选扩展与开发示例。社区�
 
 | 插件 | 功能 | 作者 | Covel 版本 | 状态 | 演示 | 安装来源 |
 | --- | --- | --- | --- | --- | --- | --- |
-| [DashScope 剧情生图](https://github.com/covel-ai/covel-plugins) | LLM 提示词、万相图像生成与持久化画廊的两段式流水线。 | covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/dashscope-image-gen/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen) |
-| [Story Note / 叙事便签示例](https://github.com/covel-ai/covel-plugins) | 演示通过 PostContextAssembly 为 story 提示词追加一句叙事建议。 | covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/story-note/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/story-note) |
-| [Jev 选项推荐 Demo](https://github.com/covel-ai/covel-plugins) | 复杂开发示例：类型化输入、evaluation 模型、公共服务与舞台概率 UI。 | covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/jev-choice-demo/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo) |
-| [MiMo 旁白朗读](https://github.com/covel-ai/covel-plugins) | 自动或手动朗读剧情，演示自定义 speech wire、后台任务与音轨面板。 | covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/mimo-tts/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts) |
-| [笔记清理示例](https://github.com/covel-ai/covel-plugins) | 纯 entry 格式化服务：清理行首行尾空白与多余空行，保留段落。 | covel-ai | 待确认 | 待确认 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-clean/README.md) | [来源](https://github.com/covel-ai/covel-plugins) |
-| [笔记大纲示例](https://github.com/covel-ai/covel-plugins) | 纯 entry 格式化服务：将非空行整理成纯文本项目符号列表。 | covel-ai | 待确认 | 待确认 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-outline/README.md) | [来源](https://github.com/covel-ai/covel-plugins) |
-| [记录工作台示例](https://github.com/covel-ai/covel-plugins) | 记录面板发现独立格式化服务，处理成功后保存结果。 | covel-ai | 待确认 | 待确认 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/notes-workbench/README.md) | [来源](https://github.com/covel-ai/covel-plugins) |
-| [OpenAI 兼容剧情生图](https://github.com/covel-ai/covel-plugins) | 通过 OpenAI 兼容图像管线生成剧情插图并展示画廊。 | covel-ai | 0.0.39 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/openai-image-gen/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen) |
+| [DashScope 剧情生图](https://github.com/covel-ai/covel-plugins) | LLM 提示词、万相图像生成与持久化画廊的两段式流水线。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/dashscope-image-gen/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen) |
+| [Jev 选项推荐 Demo](https://github.com/covel-ai/covel-plugins) | 复杂开发示例：类型化输入、evaluation 模型、公共服务与舞台概率 UI。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/jev-choice-demo/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo) |
+| [MiMo 旁白朗读](https://github.com/covel-ai/covel-plugins) | 自动或手动朗读剧情，演示自定义 speech wire、后台任务与音轨面板。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/mimo-tts/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts) |
+| [笔记清理示例](https://github.com/covel-ai/covel-plugins) | 纯 entry 格式化服务：清理行首行尾空白与多余空行，保留段落。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-clean/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-clean) |
+| [笔记大纲示例](https://github.com/covel-ai/covel-plugins) | 纯 entry 格式化服务：将非空行整理成纯文本项目符号列表。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-outline/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-outline) |
+| [记录工作台示例](https://github.com/covel-ai/covel-plugins) | 记录面板发现独立格式化服务，处理成功后保存结果。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/notes-workbench/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/notes-workbench) |
+| [OpenAI 兼容剧情生图](https://github.com/covel-ai/covel-plugins) | 通过 OpenAI 兼容图像管线生成剧情插图并展示画廊。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/openai-image-gen/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen) |
+| [Story Note / 叙事便签示例](https://github.com/covel-ai/covel-plugins) | 演示通过 PostContextAssembly 为 story 提示词追加一句叙事建议。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/story-note/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/story-note) |
 
 ### 社区插件
 
@@ -54,7 +54,7 @@ Covel 官方维护的插件目录、官方可选扩展与开发示例。社区�
 - 普通仓库链接固定为解析时的默认分支提交；`/tree/<tag-or-commit>/<path>` 可以选择版本和子目录。
 - 分支名含 `/` 时，在链接的 ref 段写成 `%2F`，或使用提交 SHA。
 - 首期支持公开 GitHub 源码仓库中可直接运行的插件；不自动执行依赖安装、构建或生命周期脚本。Release 附件可先下载为 ZIP，再通过本地导入安装。
-- ZIP 顶层需要 `package.json` 和 `PLUGIN.md`，或 `runtimes/<name>/PLUGIN.md`。不要额外包一层目录。
+- ZIP 顶层需要 `package.json` 和根 `PLUGIN.md`，不要额外包一层目录。多 runtime 包的 runtime 位于 `runtimes/<id>/RUNTIME.md`。
 - 旧版 Covel 可将插件目录放到 `~/.covel/plugins/<id>`，然后重启。自定义插件目录以部署配置为准。
 - GitHub 解析与下载遵循 Covel 设置中的网络代理，支持系统代理、HTTP(S) 和 SOCKS5。
 - 桌面安装写入本机后端；连接远程服务器时写入远程后端，需管理员权限。

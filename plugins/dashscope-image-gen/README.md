@@ -8,7 +8,7 @@ The plugin does not issue image-generation HTTP requests itself. The framework's
 
 ## Installation and approval
 
-This officially maintained community plugin targets the current Covel `0.0.39` development contract and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
+This officially maintained community plugin targets the Covel `0.0.50` development contract (`covel: ">=0.0.50"` in `PLUGIN.md`; hosts outside that range do not load it) and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen
@@ -18,37 +18,55 @@ Resolution and downloads use Covel's configured network proxy. Review the source
 
 When migrating from the builtin version, plugin IDs, runtime IDs, and setting keys remain unchanged. Existing sessions require approval again after installation. Migration does not proactively delete saves, configuration, or media, and it does not automatically convert builtin trust into community code approval.
 
+## Package layout
+
+```text
+dashscope-image-gen/
+├── PLUGIN.md                       # id, version, covel range, tools, media.image-flow@1, settings, UI
+├── locales/zh.yaml                 # Chinese labels and UI text (locales/lock.json records their English source)
+├── server/index.js                 # entry: registers the two submission tools and the image-flow extension
+├── tools/submit-image-prompt.js
+├── lib/covel-helpers.js            # bundled SDK helpers (image generation, proposals, tool results)
+└── runtimes/
+    ├── prompt-generator/           # agent: RUNTIME.md (English), RUNTIME.zh.md, output.schema.json, ui/
+    └── image-generator/            # function: RUNTIME.md, handler.js, ui/
+```
+
+Version 0.1.0 moves the package to the Covel 0.0.50 format: the runtimes are `runtimes/<id>/RUNTIME.md` with grouped fields, settings and UI specs are declared once in the root `contributes`, labels and UI text are English with Chinese translations in `locales/zh.yaml`, and the English prompt body has a Simplified Chinese variant in `RUNTIME.zh.md`. Plugin, runtime, tool and setting IDs are unchanged. After updating an installed copy, restart the backend and approve the plugin in your session as for a new installation.
+
 ## Usage
 
-- Click **Generate image** at any point in the story to create a single scene or a page of comic panels based on the current atmosphere.
+- Click **Generate image** in the right panel (or the host's own image button, which it finds through `media.image-flow@1`) at any point in the story to create a single scene or a page of comic panels based on the current atmosphere.
 - Choose composition and prompt format independently: `composition` is `single-scene` or `comic-strip`; `promptMode` is `text` (natural language) or `image-json` (structured JSON).
 - Comic mode supports strict grids, dynamic layouts, or a dominant splash panel, with 2–6 panels.
 - All modes include quality terms such as 4K, ultra detailed, and masterpiece to request high-quality rendering.
+- One illustration flow per session: the plugin provides the single-provider extension point `media.image-flow@1`, so a session cannot have this plugin and `openai-image-gen` (or another illustration flow) active together. Both can stay installed; pick one per session.
+- When the selected `modelPresetId` slot is missing or is not an image model, `image-generator` returns `skipped` before writing a gallery record or sending a request.
 - To switch between models such as `qwen-image-3.0-pro`, `wan2.6-t2i`, `wan2.6-image`, `wan2.7-image`, and `wan2.7-image-pro`, add an `llm.toml` slot and change `modelPresetId` (see [Removed settings](#removed-settings)). The current flagship, **`qwen-image-3.0-pro`**, uses a synchronous endpoint without polling, offers the shortest generation wait, supports `negative_prompt`, and accepts up to six images per request. `wan2.6-t2i` is text-to-image only and supports `negative_prompt`. `wan2.7-image` prioritizes speed, and `wan2.7-image-pro` supports 4K text-to-image; neither supports `negative_prompt`, which the wire strips automatically. wan2.6/wan2.7 accept up to four images per request (`n`).
 
 ## Runtimes
 
 | Runtime | Type | Trigger | Responsibility |
 | --- | --- | --- | --- |
-| `dashscope-image-gen/prompt-generator` | agent (background) | manual | Read recent prompt history in the background and call the submission tool for `promptMode`; the tool archives the prompt and emits `image.generate.requested` to wake the downstream runtime |
-| `dashscope-image-gen/image-generator` | function (background) | event: `image.generate.requested` | Call `ctx.images.generate()` for wire selection, requests, MediaStore persistence, and promptHash deduplication; write index records containing `ref` from returned `MediaRef[]` to the `images` namespace and emit an `asset.generate` proposal |
+| `dashscope-image-gen/prompt-generator` | agent (background) | manual | Read recent prompt history in the background and call the submission tool for `promptMode`; the tool archives the prompt and emits `image.generate.requested` to wake the downstream runtime. Entry runtime of `media.image-flow@1` |
+| `dashscope-image-gen/image-generator` | function (background) | event: `image.generate.requested` | Call `ctx.images.generate()` for wire selection, requests, MediaStore persistence, and promptHash deduplication; write index records containing `ref` from returned `MediaRef[]` to the `images` namespace and return one `assetGenerations[]` effect per image. Asset runtime of `media.image-flow@1` |
 
-## userSettings
+## Settings
 
-prompt-generator:
+All settings are declared once in the root `PLUGIN.md` (`contributes.settings`) and both runtimes read them from `ctx.userSettings`. Used by prompt-generator:
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
-| `composition` | select | `single-scene` | `single-scene` depicts one moment; `comic-strip` treats a full page as one image showing successive moments in panels |
+| `composition` | select | `comic-strip` | `single-scene` depicts one moment; `comic-strip` treats a full page as one image showing successive moments in panels |
 | `comicPanels` | select | `auto` | Only for `comic-strip`. `auto` lets the model choose 2–6 panels; other values fix the count at 2/3/4/6 |
 | `comicLayoutStyle` | select | `dynamic` | Only for `comic-strip`. `strict-grid` uses a regular grid and consistent borders; `dynamic` allows spanning panels and figures or action crossing gutters; `splash-led` uses one dominant splash panel with smaller panels as timeline anchors |
-| `promptMode` | select | `text` | `text` produces a natural-language passage of 140–240 characters (240–420 for comics); `image-json` structures camera, lighting, subjects, style, and panels as JSON |
+| `promptMode` | select | `text` | `text` produces a natural-language passage (about 80–150 words, 150–260 for comics, from the English prompt; 140–240 Chinese characters, 240–420 for comics, from `RUNTIME.zh.md`); `image-json` structures camera, lighting, subjects, style, and panels as JSON |
 
-> **Quality instructions**: all modes require terms such as `4K, 8K, ultra HD, ultra detailed, highly detailed, masterpiece, best quality, sharp focus, intricate details` at the end of the prompt or in its `quality` field. Comic mode adds `crisp ink lines, clean panel borders, professional manga / comic page composition`. These are PLUGIN.md prompt rules, not strings appended by the image-generator adapter.
+> **Quality instructions**: all modes require terms such as `4K, 8K, ultra HD, ultra detailed, highly detailed, masterpiece, best quality, sharp focus, intricate details` at the end of the prompt or in its `quality` field. Comic mode adds `crisp ink lines, clean panel borders, professional manga / comic page composition`. These are rules of the prompt-generator prompt (`RUNTIME.md` / `RUNTIME.zh.md`), not strings appended by the image-generator adapter.
 >
 > **Comic sizes**: set `imageSize` to `1440x720` for horizontal strips, `720x1440` for vertical layouts, or `1024x1024` for square panels to avoid cropping that disrupts the composition. Use `x` as the separator; the wire converts it to DashScope's `*` format.
 
-image-generator:
+Used by image-generator:
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -61,7 +79,7 @@ image-generator:
 
 ### Removed settings
 
-Before the unified image pipeline, `image-generator` exposed a `model` setting for per-call model overrides. It has been removed from PLUGIN.md.
+Before the unified image pipeline, `image-generator` exposed a `model` setting for per-call model overrides. It is no longer declared.
 
 `ctx.images.generate()` accepts `presetId`, not a per-call model override. To switch between `wan2.7-image` and `wan2.7-image-pro`, add a `[covel.<slot>]` and change `modelPresetId` instead of overriding the model temporarily within a slot.
 
@@ -117,11 +135,11 @@ pnpm --dir "$COVEL_REPO" test:runtime -- dashscope-image-gen --plugins-dir "$PWD
 
 All `mock-*` cases should pass, covering text/structured tool submission, argument repair, and visible failure when no tool is called. See runtime-cases.json for the exact list.
 
-Positive cases simulate `prompt-generator` calling a submission tool. The tool emits the fixed `image.generate.requested` topic, and the framework wakes the `image-generator` follower. The mock harness does not provide `ctx.images` because there is no real gateway or MediaStore. The follower therefore returns a visible failure (`status: "failed"`); this is expected, not a regression. Assertions verify that the prompt was archived, the event emitted, and the follower failure recorded correctly.
+Positive cases simulate `prompt-generator` calling a submission tool. The tool emits the fixed `image.generate.requested` topic, and the framework wakes the `image-generator` follower as a background job. The mock harness has no image model, so the follower's availability check returns `skipped` (`image model unavailable`) and writes no gallery record; this is expected, not a regression. Assertions verify that the prompt was archived, the event emitted, and the follower skipped. The failure case checks the failed background job in `_runtime_jobs`.
 
 ### Unit tests (handler arguments)
 
-`tests/handler.test.js` imports `handler.js` directly and uses a handwritten mock of `ctx.images.generate` to check wire arguments: `negativePrompt` passthrough, preservation of `x` in `size` without local conversion, and fields such as `n`, `quality`, and `metadata`.
+`tests/handler.test.js` imports `handler.js` directly and uses a handwritten mock of `ctx.images` (`isAvailable` and `generate`) to check the availability skip, wire arguments (`negativePrompt` passthrough, preservation of `x` in `size` without local conversion, `n`, `quality`, `metadata`), record keys and `assetGenerations`. `tests/submit-image-prompt.test.js` checks the submission tools' explicit tool results, and `tests/entry.test.js` checks that the entry registers exactly the declared tools and the `media.image-flow@1` extension.
 
 ```bash
 pnpm exec vitest run plugins/dashscope-image-gen/tests
@@ -166,7 +184,8 @@ The image model interprets both formats; structured text does not guarantee that
 ## Notes
 
 - DashScope wan2.x OSS result URLs expire after 24 hours. `ctx.images.generate()` downloads bytes into MediaStore and returns content-addressed `MediaRef` values (`{ id, mime, size }`), so gallery images do not break when those URLs expire.
-- The handler also emits an `asset.generate` proposal (`{ ref, modality: 'image', meta }`). The kernel records it in traces and SSE; frontend `<Media>` / `AssetRender` components resolve it automatically.
+- The handler also returns one `assetGenerations[]` effect per image (`{ ref, modality: 'image', meta }`), which the kernel commits as an `asset.generate` proposal; frontend `<Media>` / `AssetRender` components resolve it automatically. `meta.prompt` is the line the story model reads in later turns where the picture appeared.
+- A request for several images writes `images.<imageId>` for the first (replacing its pending record) and `images.<imageId>-2`, `images.<imageId>-3`, … for the others.
 - `wan2.7-image` models do not support `negative_prompt`. The `dashscope-wan` wire strips it and returns a nonfatal warning, attached to the `_logs` entry `image.generate.completed` and the corresponding `images` record's `warnings` field.
 - In `image-json` mode, `prompt` contains an already-stringified JSON object. DashScope passes it to the model as prompt text.
 - Repeating the same parameters (`presetId` + `prompt` + `negativePrompt` + `size` + `quality` + `n` + `background`) hits the framework's promptHash deduplication cache without submitting a new DashScope task. Cache hits include `cached: true` in the record.
@@ -191,7 +210,7 @@ Business data is written only to this plugin's declared namespaces. Images or au
 
 If a model returns a URL, downloading the image remains subject to the runtime's `permissions.http`. Models returning base64 or bytes do not require remote image downloads. Do not resolve download failures by raising the trust level or bypassing SSRF checks.
 
-For compatible services that return URLs or for other regions, verify image domains in the provider's official documentation. Declare the exact HTTPS origins and GET method in the installed package's `runtimes/image-generator/PLUGIN.md`, then restart and approve the code again. Every origin in a redirect chain must be declared. Do not use wildcards or full signed URLs. For example:
+For compatible services that return URLs or for other regions, verify image domains in the provider's official documentation. Declare the exact HTTPS origins and GET method in the installed package's `runtimes/image-generator/RUNTIME.md`, then restart and approve the code again. Every origin in a redirect chain must be declared. Do not use wildcards or full signed URLs. For example:
 
 ```yaml
 permissions:

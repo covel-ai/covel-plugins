@@ -18,7 +18,7 @@ for (const [name, register] of [
       },
     });
     assert.equal(service.name, "format-note");
-    assert.equal(service.contract, "examples/note-format@1");
+    assert.equal(service.contract, "examples.note-format@1");
     assert.ok(service.description);
     assert.throws(() => service.input.parse({ text: "   " }));
     assert.throws(() => service.input.parse({ text: "x".repeat(4001) }));

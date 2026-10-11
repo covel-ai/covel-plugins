@@ -27,7 +27,12 @@
       ],
       "expect": {
         "events": ["image.generate.requested"],
-        "pluginData": [{ "namespace": "prompts", "field": "prompt" }],
+        "pluginData": [
+          {
+            "namespace": "prompts",
+            "field": "prompt"
+          }
+        ],
         "runtimeResults": [
           {
             "runtimeId": "dashscope-image-gen/prompt-generator",
@@ -35,7 +40,7 @@
           },
           {
             "runtimeId": "dashscope-image-gen/image-generator",
-            "status": "failed"
+            "status": "skipped"
           }
         ]
       }
@@ -67,7 +72,12 @@
       ],
       "expect": {
         "events": ["image.generate.requested"],
-        "pluginData": [{ "namespace": "prompts", "field": "prompt" }],
+        "pluginData": [
+          {
+            "namespace": "prompts",
+            "field": "prompt"
+          }
+        ],
         "runtimeResults": [
           {
             "runtimeId": "dashscope-image-gen/prompt-generator",
@@ -75,7 +85,7 @@
           },
           {
             "runtimeId": "dashscope-image-gen/image-generator",
-            "status": "failed"
+            "status": "skipped"
           }
         ]
       }
@@ -118,7 +128,12 @@
         }
       ],
       "expect": {
-        "pluginData": [{ "namespace": "prompts", "field": "prompt" }],
+        "pluginData": [
+          {
+            "namespace": "prompts",
+            "field": "prompt"
+          }
+        ],
         "runtimeResults": [
           {
             "runtimeId": "dashscope-image-gen/prompt-generator",
@@ -126,7 +141,7 @@
           },
           {
             "runtimeId": "dashscope-image-gen/image-generator",
-            "status": "failed"
+            "status": "skipped"
           }
         ],
         "events": ["image.generate.requested"]
@@ -167,7 +182,7 @@
         ],
         "pluginData": [
           {
-            "namespace": "_jobs",
+            "namespace": "_runtime_jobs",
             "status": "failed"
           }
         ]

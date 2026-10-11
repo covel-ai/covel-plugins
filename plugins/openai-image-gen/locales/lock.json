@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "labels": {
+    "zh": {
+      "PLUGIN.md#contributes.settings[key=comicLayoutStyle].description": "e1b07feea7414b39",
+      "PLUGIN.md#contributes.settings[key=comicLayoutStyle].label": "c8251c65d0a798db",
+      "PLUGIN.md#contributes.settings[key=comicPanels].description": "2eae96b2438eac88",
+      "PLUGIN.md#contributes.settings[key=comicPanels].label": "15669f7dc5e21aed",
+      "PLUGIN.md#contributes.settings[key=composition].description": "2e7d0636787a13cc",
+      "PLUGIN.md#contributes.settings[key=composition].label": "47fca483c89cad35",
+      "PLUGIN.md#contributes.settings[key=imageSize].description": "059ee19050e1438b",
+      "PLUGIN.md#contributes.settings[key=imageSize].label": "1af851907331c0ed",
+      "PLUGIN.md#contributes.settings[key=modelPresetId].description": "7fefe3f1d22c8988",
+      "PLUGIN.md#contributes.settings[key=modelPresetId].label": "fcd122ea0b4d64f1",
+      "PLUGIN.md#contributes.settings[key=n].description": "f5f618be50e6c6cd",
+      "PLUGIN.md#contributes.settings[key=n].label": "539bc2bb5dba5c50",
+      "PLUGIN.md#contributes.settings[key=promptMode].description": "fba31b662b00e300",
+      "PLUGIN.md#contributes.settings[key=promptMode].label": "2bae1e9a92a3fed1",
+      "PLUGIN.md#contributes.settings[key=quality].description": "d51bb0c0a5223920",
+      "PLUGIN.md#contributes.settings[key=quality].label": "9a05aea57ffdc572",
+      "PLUGIN.md#contributes.settings[key=requestTimeoutMs].description": "34699a87a441b219",
+      "PLUGIN.md#contributes.settings[key=requestTimeoutMs].label": "88016cc03ceb81fd",
+      "PLUGIN.md#contributes.settings[key=style].description": "827b5a3dff5318c9",
+      "PLUGIN.md#contributes.settings[key=style].label": "589447b9d7fcec2a",
+      "PLUGIN.md#description": "88e01c1b068cb3a4",
+      "PLUGIN.md#displayName": "8f4716e674b9f719",
+      "runtimes/image-generator/RUNTIME.md#description": "b79ced1222ef722c",
+      "runtimes/prompt-generator/RUNTIME.md#description": "6bb9596541776597"
+    }
+  }
+}

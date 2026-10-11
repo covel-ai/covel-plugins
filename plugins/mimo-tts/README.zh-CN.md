@@ -6,7 +6,7 @@
 
 ## 安装与授权
 
-这是官方维护的社区插件，适配 Covel `0.0.39` 当前开发契约，不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
+这是官方维护的社区插件，适配 Covel `0.0.50` 及以后的版本（`PLUGIN.md` 中的 `covel: ">=0.0.50"`），不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts
@@ -18,17 +18,31 @@ https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts
 
 ## 包含什么
 
-- `mimo-tts/auto-narrate` (function · auto · `stage: post-turn` · `turnCompletion: detached` · `needs: capability narrative-engine`)：当前叙事引擎（narrator 或 chat-mode-narrator）成功后持久入队并在后台自动朗读，不阻塞下一回合；同时写入「朗读」按钮的消息层数据（关闭自动朗读也会写，按钮始终可用）。
-- `mimo-tts/manual-narrate` (function · manual · `execution: background`)：「朗读」按钮触发，段落文本经按钮 payload 传入（manual 激活不解析 turn inputs，`payload.text` 必需）。
-- `lib/wires.js`：MiMo TTS HTTP wire（`api-key` header + OpenAI 风格 `chat/completions` + `audio.format/voice`）；`lib/mimo-tts.js`：track 记录/展示字段辅助。
-- 右侧 Tab `ui/audio-tab.json`：playlist 风格 — 每个 turn 一行，header（turn 标号 + AUTO/MANUAL + voice + 字节数）+ 一句文本提示 + 内联 `<audio controls>`。**故意不重复 narrator 全文**（聊天流里已有），用户按 turn 选择播放。
+```text
+mimo-tts/
+├── PLUGIN.md                     # 包：id、version、requires、entry、contributes（wires、settings、ui）
+├── locales/zh.yaml               # 中文标签（设置、说明）和界面/代码文字（messages）
+├── locales/lock.json             # 每条标签译文对应的 English 原文（pnpm i18n lock）
+├── server/index.js               # entry：covel.registerWires(...) → speech wire mimo-tts/mimo
+├── lib/                          # wires.js（MiMo HTTP wire）、mimo-tts.js（音轨辅助）、i18n.js（translate / labelText）
+├── runtimes/auto-narrate/        # RUNTIME.md + handler.js
+├── runtimes/manual-narrate/      # RUNTIME.md + handler.js
+└── ui/                           # audio-tab.json（右侧面板）、play-button.json（消息区）
+```
+
+- `mimo-tts/auto-narrate`（function · `schedule.trigger: auto` · `schedule.stage: post-turn` · `schedule.completion.mode: detached` · `schedule.needs: narrative-engine@1`）：当前叙事引擎（narrator 或 chat-mode-narrator）成功后，回合先结束，再由持久的后台任务朗读本回合的 `narrativeOutput`（经 `io.inputs.narrative` 绑定）；同时写入「朗读」按钮的消息层数据（关闭自动朗读也会写，按钮始终可用）。
+- `mimo-tts/manual-narrate`（function · `schedule.trigger: manual` · `schedule.manual.execution: background`）：「朗读」按钮触发，段落文本经按钮 payload 传入（manual 激活不解析 turn inputs，`payload.text` 必需）。
+- 两个 runtime 的全部写入都通过 `HandlerResult.effects`（`pluginData`、`assetGenerations`）返回；合成失败时保存一条 `failed` 音轨。它们声明了 `effects` 和 `permissions.http`（对 `https://api.xiaomimimo.com`、`https://token-plan-cn.xiaomimimo.com` 的 `POST`）。
+- `lib/wires.js`：MiMo TTS HTTP wire（`api-key` header + OpenAI 风格 `chat/completions` + `audio.format/voice`），在 `contributes.wires` 中声明为 `mimo`；`lib/mimo-tts.js`：track 记录/展示字段辅助。
+- 右侧 Tab `ui/audio-tab.json`：playlist 风格 — 每条音轨一行，header（回合 + AUTO/MANUAL + voice + 字节数）+ 一句文本提示 + `AudioPlayer`。**故意不重复 narrator 全文**（聊天流里已有），用户按回合选择播放。
 - 消息内按钮 `ui/play-button.json`：跟「插入图像」按钮同一交互层。
+- 清单和 UI spec 只写 English，中文在 `locales/zh.yaml`。两个 runtime 都是函数，没有提示词正文，也就没有 `RUNTIME.zh.md`。
 
 ## 一次性配置
 
 ### 1. 配置 MiMo slot（`~/.covel/llm.toml`）
 
-section 名默认应为 `[covel.mimo-tts]`（与插件 id 一致；插件两个 runtime 默认 `modelPresetId: "mimo-tts"`）：
+section 名默认应为 `[covel.mimo-tts]`（与插件 id 一致；`modelPresetId` 设置默认 `mimo-tts`，两个 runtime 也声明了 `function.model: mimo-tts`，后台任务运行前据此检查该 slot 的凭据）：
 
 ```toml
 [covel.mimo-tts]
@@ -62,25 +76,27 @@ Web 端：在前端 Settings → API Keys 录入 `xiaomi`。
 
 按上面的链接安装并重启后端，在会话插件选择中启用并完成服务端代码授权。
 
-## 用户可调设置（`userSettings`）
+## 用户可调设置（`contributes.settings`）
 
-| Runtime      | 关键字段           | 说明                                                                                       |
-| ------------ | ------------------ | ------------------------------------------------------------------------------------------ |
-| auto-narrate | `enabled`          | 关掉就只剩手动朗读                                                                         |
-| 共用         | `modelPresetId`    | `slot` 类型（UI 渲染成已配置槽的选择器）；默认 `mimo-tts`，对应 `[covel.mimo-tts]`         |
-| 共用         | `voice`            | 默认 `mimo_default`；voicedesign / voiceclone 用预生成的 id                                |
-| 共用         | `format`           | `mp3` (默认，audio/mpeg) / `wav` (audio/wav)。`pcm` / `pcm16` 浏览器无法直接播放，已不暴露 |
-| 共用         | `maxChars`         | 单次合成最大字符（避免触发 server 限制）                                                   |
-| 共用         | `requestTimeoutMs` | 单次请求超时                                                                               |
+在根 `PLUGIN.md` 中只声明一次，两个 runtime 都从 `ctx.userSettings` 读取；世界可以用 `pluginSettings` 预设。
 
-> 「共用」= 两个 runtime 都声明、且**必须逐字相同**：存储键是插件级的 `plugin.mimo-tts.<key>`，声明不一致时只有一个生效。`pnpm --dir "$COVEL_REPO" validate:plugin "$PWD/plugins/mimo-tts"` 会挡住漂移。将 `COVEL_REPO` 设为 Covel 主仓路径，并在本仓根目录运行该命令。
+| 关键字段           | 说明                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| `enabled`          | 只有 auto-narrate 读取；关掉就只剩手动朗读                                                 |
+| `modelPresetId`    | `slot` 类型（UI 渲染成已配置槽的选择器）；默认 `mimo-tts`，对应 `[covel.mimo-tts]`         |
+| `voice`            | 默认 `mimo_default`；voicedesign / voiceclone 用预生成的 id                                |
+| `format`           | `mp3` (默认，audio/mpeg) / `wav` (audio/wav)。`pcm` / `pcm16` 浏览器无法直接播放，已不暴露 |
+| `maxChars`         | 单次合成最大字符（避免触发 server 限制）                                                   |
+| `requestTimeoutMs` | 单次请求超时                                                                               |
+
+用 `pnpm --dir "$COVEL_REPO" validate:plugin "$PWD/plugins/mimo-tts"` 检查插件包。将 `COVEL_REPO` 设为 Covel 主仓路径，并在本仓根目录运行该命令。
 
 ## 数据布局
 
 - **plugin_data**: namespace=`tracks`，key 形如 `tts-auto-<turnId>` 或 `tts-manual-<turnId>-<rand>`，value 含 `ref` (MediaRef) + `triggeredBy` + `text` + 元数据。
 - **plugin_data**: namespace=`message`，key=turnId，value=`{ turnId, text }`——「朗读」按钮的消息层锚点 + payload 来源，auto-narrate 每回合写入。
 - **media_assets**: 音频字节由框架管线 `ctx.speech.generate()` 持久化到 MediaStore（promptHash 去重）；ownership 自动绑定到当前 session。
-- **runtime output**: `assetGenerations: [{ref, modality:'audio', meta}]` → 框架收集为 `asset.generate` proposal，trace + SSE 链路自然广播。
+- **runtime effects**: `effects.pluginData` 与 `effects.assetGenerations: [{ref, modality:'audio', meta}]` → 内核转成 `plugin.data` 与 `asset.generate` proposal，随本次执行一起提交；handler 不直接写入任何数据。
 
 ## 测试
 
@@ -91,6 +107,8 @@ pnpm exec vitest run plugins/mimo-tts/tests   # Covers the wire and both handler
 ```
 
 测试只 mock `fetch`（wire 层）与 `ctx.speech.generate` / `ctx.gateway.resolveSlot`（handler 层），不需要真实网络/MiMo key。
+
+在 Covel 主仓运行 `pnpm test:runtime -- mimo-tts --plugins-dir <本仓>/plugins --pretty` 执行 `tests/runtime-cases.json`。
 
 ## 已知限制 & 路线图
 

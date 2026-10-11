@@ -1,4 +1,5 @@
-// Pure Covel 0.0.39 helpers (MIT, Covel Contributors). See LICENSE and lib/README.md.
+// Pure Covel 0.0.50 helpers (MIT, Covel Contributors). See LICENSE and lib/README.md.
+// Sources: packages/plugin-handlers-utils/src/{index,image-generation,tool-result}.ts
 
 export function optionalString(value) {
   return typeof value === "string" && value.trim().length > 0
@@ -29,6 +30,9 @@ export function makeProposal(ctx, now, type, payload) {
     timestamp: now,
   };
 }
+
+// ── image generation (image-generation.ts) ───────────────────────
+
 const IMAGES_NAMESPACE = "images";
 function asRecord(value) {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -37,7 +41,7 @@ function asRecord(value) {
 }
 function readPromptPayload(payload, extraPromptFields) {
   const rec = asRecord(payload);
-  const prompt = rec ? optionalString(rec.prompt) : void 0;
+  const prompt = rec ? optionalString(rec.prompt) : undefined;
   if (!rec || !prompt) return null;
   const extras = {};
   for (const [field, fallback] of Object.entries(extraPromptFields)) {
@@ -49,7 +53,7 @@ function readPromptPayload(payload, extraPromptFields) {
     extras,
   };
 }
-function extractImagePrompt(ctx, config) {
+export function extractImagePrompt(ctx, config) {
   const extraFields = config.extraPromptFields ?? {};
   const trigger = asRecord(ctx.triggerEvent);
   if (trigger && trigger.topic === config.triggerTopic) {
@@ -58,8 +62,8 @@ function extractImagePrompt(ctx, config) {
   }
   return readPromptPayload(ctx.manualPayload, extraFields);
 }
-function imageRecordKey(imageId, refs, idx) {
-  return refs.length === 1 ? imageId : `${imageId}-${idx + 1}`;
+function imageRecordKey(imageId, idx) {
+  return idx === 0 ? imageId : `${imageId}-${idx + 1}`;
 }
 function errorMessage(err) {
   return err instanceof Error ? err.message : String(err);
@@ -69,7 +73,7 @@ async function failureRecord(ctx, baseRecord, message) {
     ...baseRecord,
     status: "failed",
     error: message,
-    completedAt: /* @__PURE__ */ new Date().toISOString(),
+    completedAt: new Date().toISOString(),
   };
   await ctx.pluginData?.set(IMAGES_NAMESPACE, baseRecord.imageId, record);
   await ctx.logger?.error?.("image.generate.failed", {
@@ -92,14 +96,7 @@ async function failureRecord(ctx, baseRecord, message) {
     },
   };
 }
-async function runImageGeneration(ctx, config) {
-  if (!ctx.images) {
-    return {
-      outcome: "failed",
-      error:
-        'ctx.images is unavailable. This plugin requires the framework image pipeline: an image-tagged slot in llm.toml plus a configured MediaStore. Upgrade @covel/server / @covel/runtime and add a [covel.<slot>] block with tag = "image".',
-    };
-  }
+export async function runImageGeneration(ctx, config) {
   const extracted = extractImagePrompt(ctx, config);
   if (!extracted) {
     await ctx.logger?.warn?.("no-prompt-found", {
@@ -114,8 +111,18 @@ async function runImageGeneration(ctx, config) {
   const plan = config.planRequest(settings, extracted);
   const { prompt } = plan;
   const { promptMode, extras } = extracted;
-  const imageId = `img-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-  const startedAt = /* @__PURE__ */ new Date().toISOString();
+  // Check the named model before writing a pending gallery record.
+  if (!ctx.images?.isAvailable(plan.presetId)) {
+    return { outcome: "skipped", skipReason: "image model unavailable" };
+  }
+  const suffix = ctx.random
+    ? ctx.random
+        .int(0, 36 ** 6)
+        .toString(36)
+        .padStart(6, "0")
+    : Math.random().toString(36).slice(2, 8);
+  const imageId = `img-${Date.now().toString(36)}-${suffix}`;
+  const startedAt = new Date().toISOString();
   const baseRecord = {
     imageId,
     prompt,
@@ -129,6 +136,7 @@ async function runImageGeneration(ctx, config) {
     ...plan.recordFields,
     startedAt,
   };
+  // Pre-write a pending placeholder so the gallery can spin while we wait.
   await ctx.pluginData?.set(IMAGES_NAMESPACE, imageId, {
     ...baseRecord,
     status: "pending",
@@ -139,7 +147,7 @@ async function runImageGeneration(ctx, config) {
     imageSize: plan.size,
     n: plan.n,
     requestTimeoutMs: plan.requestTimeoutMs,
-    ...(plan.quality !== void 0 ? { quality: plan.quality } : {}),
+    ...(plan.quality !== undefined ? { quality: plan.quality } : {}),
   });
   try {
     const { refs, warnings, cached } = await ctx.images.generate({
@@ -147,8 +155,8 @@ async function runImageGeneration(ctx, config) {
       prompt,
       size: plan.size,
       n: plan.n,
-      quality: plan.quality || void 0,
-      negativePrompt: plan.negativePrompt || void 0,
+      quality: plan.quality || undefined,
+      negativePrompt: plan.negativePrompt || undefined,
       signal: abortSignalWithTimeout(ctx.signal, plan.requestTimeoutMs),
       metadata: { source: config.source, turnId: ctx.turnId },
     });
@@ -159,12 +167,12 @@ async function runImageGeneration(ctx, config) {
         `Provider returned no images.${warnings.length > 0 ? ` Warnings: ${warnings.join("; ")}` : ""}`,
       );
     }
-    const completedAt = /* @__PURE__ */ new Date().toISOString();
+    const completedAt = new Date().toISOString();
     const imageRecords = refs.map((ref, idx) => ({
-      key: imageRecordKey(imageId, refs, idx),
+      key: imageRecordKey(imageId, idx),
       value: {
         ...baseRecord,
-        imageId: imageRecordKey(imageId, refs, idx),
+        imageId: imageRecordKey(imageId, idx),
         batchId: imageId,
         imageIndex: idx,
         imageCount: refs.length,
@@ -176,6 +184,7 @@ async function runImageGeneration(ctx, config) {
         durationMs: Date.parse(completedAt) - Date.parse(startedAt),
       },
     }));
+    // meta.prompt is the line the story model reads where the picture appears.
     const assets = refs.map((ref, imageIndex) => ({
       ref,
       modality: "image",
@@ -221,110 +230,42 @@ async function runImageGeneration(ctx, config) {
     return failureRecord(ctx, baseRecord, errorMessage(err));
   }
 }
-export { extractImagePrompt, runImageGeneration };
-const TOOL_PENDING_PROPOSALS = /* @__PURE__ */ Symbol.for(
-  "covel.tools.pendingProposals",
-);
-const TOOL_EMITTED_EVENTS = /* @__PURE__ */ Symbol.for(
-  "covel.tools.emittedEvents",
-);
-const TOOL_EXECUTION_ENVELOPE = /* @__PURE__ */ Symbol.for(
-  "covel.tools.executionEnvelope",
-);
-function withPendingProposals(content, pendingProposals) {
-  if (pendingProposals.length === 0) {
-    return content;
-  }
-  const copied = [...pendingProposals];
-  if (content !== null && typeof content === "object") {
-    try {
-      Object.defineProperty(content, TOOL_PENDING_PROPOSALS, {
-        value: copied,
-        enumerable: false,
-        configurable: true,
-        writable: true,
-      });
-      return content;
-    } catch {}
-  }
-  const envelope = {
-    content,
-    pendingProposals: copied,
-  };
-  Object.defineProperty(envelope, TOOL_EXECUTION_ENVELOPE, {
-    value: true,
-    enumerable: false,
-    configurable: false,
-    writable: false,
-  });
-  return envelope;
-}
-function isExecutionEnvelope(value) {
+
+// ── tool results (tool-result.ts) ────────────────────────────────
+// A tool result is an explicit, enumerable object the host recognizes by
+// `kind: "covel.tool-result"`; it survives spread, structuredClone and JSON.
+
+function isToolResult(value) {
   return (
-    !!value &&
+    value !== null &&
     typeof value === "object" &&
-    value[TOOL_EXECUTION_ENVELOPE] === true
+    "kind" in value &&
+    value.kind === "covel.tool-result"
   );
 }
-function getToolContent(value) {
-  return isExecutionEnvelope(value) ? value.content : value;
-}
-function getPendingProposals(value) {
-  if (isExecutionEnvelope(value)) {
-    return value.pendingProposals ?? [];
-  }
-  if (value !== null && typeof value === "object") {
-    const proposals = value[TOOL_PENDING_PROPOSALS];
-    if (Array.isArray(proposals)) {
-      return proposals;
-    }
-  }
-  return [];
-}
-function withEmittedEvents(content, events) {
-  if (events.length === 0) {
-    return content;
-  }
-  const copied = [...events];
-  if (content !== null && typeof content === "object") {
-    try {
-      Object.defineProperty(content, TOOL_EMITTED_EVENTS, {
-        value: copied,
-        enumerable: false,
-        configurable: true,
-        writable: true,
-      });
-      return content;
-    } catch {}
-  }
-  const envelope = {
-    content,
-    emittedEvents: copied,
+export function withPendingProposals(content, pendingProposals) {
+  const emittedEvents = getEmittedEvents(content);
+  return {
+    kind: "covel.tool-result",
+    content: getToolContent(content),
+    pendingProposals: [...pendingProposals],
+    ...(emittedEvents ? { emittedEvents: [...emittedEvents] } : {}),
   };
-  Object.defineProperty(envelope, TOOL_EXECUTION_ENVELOPE, {
-    value: true,
-    enumerable: false,
-    configurable: false,
-    writable: false,
-  });
-  return envelope;
 }
-function getEmittedEvents(value) {
-  if (isExecutionEnvelope(value)) {
-    return value.emittedEvents;
-  }
-  if (value !== null && typeof value === "object") {
-    const events = value[TOOL_EMITTED_EVENTS];
-    if (Array.isArray(events)) {
-      return events;
-    }
-  }
-  return void 0;
+export function withEmittedEvents(content, emittedEvents) {
+  return {
+    kind: "covel.tool-result",
+    content: getToolContent(content),
+    pendingProposals: [...getPendingProposals(content)],
+    emittedEvents: [...emittedEvents],
+  };
 }
-export {
-  getEmittedEvents,
-  getPendingProposals,
-  getToolContent,
-  withEmittedEvents,
-  withPendingProposals,
-};
+export function getToolContent(value) {
+  return isToolResult(value) ? value.content : value;
+}
+export function getPendingProposals(value) {
+  return isToolResult(value) ? value.pendingProposals : [];
+}
+export function getEmittedEvents(value) {
+  return isToolResult(value) ? value.emittedEvents : undefined;
+}

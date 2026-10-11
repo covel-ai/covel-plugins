@@ -1,0 +1,66 @@
+# Chinese text of the openai-image-gen plugin.
+# A section named after a manifest file translates its labels, under the same keys.
+# messages translates the UI: English text, then its translation.
+PLUGIN.md:
+  displayName: 图像生成
+  description: 根据当前剧情生成插图，适合想给故事配画的玩法。
+  contributes:
+    settings:
+      - key: composition
+        label: 画面构图
+        description: 选择生成一张单独场景，或生成一页包含多个连续瞬间的漫画。
+        options:
+          - label: 单一场景
+          - label: 多格漫画
+      - key: comicPanels
+        label: 漫画格数
+        description: 多格漫画时使用。自动会按剧情节奏选择合适的格数。
+        options:
+          - label: 自动 2-6 格
+          - label: 2 格
+          - label: 3 格
+          - label: 4 格
+          - label: 6 格
+      - key: comicLayoutStyle
+        label: 漫画排版风格
+        description: 多格漫画时使用。可以选择规整排版、动态跨格，或以一张大画面为主。
+        options:
+          - label: 规整网格
+          - label: 动态跨格
+          - label: 大跨页主导
+      - key: promptMode
+        label: 画面描述方式
+        description: 普通描述更简单，精细描述能控制更多画面细节。
+        options:
+          - label: 普通描述
+          - label: 精细描述
+      - key: modelPresetId
+        label: 服务配置
+        description: 选择设置里用于生成图片的服务配置。默认使用 openai-image。
+      - key: imageSize
+        label: 尺寸
+        description: 图片大小。默认是方图，也可以填写横图或竖图尺寸。
+      - key: "n"
+        label: 一次生成几张
+        description: 每次点击生成几张图。部分服务可能只支持一张。
+      - key: requestTimeoutMs
+        label: 单次等待时间
+        description: 单次生成最多等待多久，避免图片任务一直停住。
+      - key: quality
+        label: 画质（可选）
+        description: 默认为 low。GPT Image 可填 low、medium、high 或 auto。
+      - key: style
+        label: 风格（可选）
+        description: 可选。填写后会影响图片整体风格。
+runtimes/image-generator/RUNTIME.md:
+  description: 根据整理好的画面需求生成图片，并保存到画廊。
+runtimes/prompt-generator/RUNTIME.md:
+  description: 根据当前剧情整理画面需求，为生成插图做准备。
+messages:
+  Images: 图像
+  Gallery: 画廊
+  Jobs: 任务
+  Generate: 生成
+  Story illustration: 剧情插图
+  Click the button below to generate an image from the current story. Results appear in the gallery.: 点击下方按钮，会根据当前剧情生成一张图片。生成结果会出现在画廊。
+  Generate image: 生成图片

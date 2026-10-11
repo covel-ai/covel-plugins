@@ -1,8 +1,20 @@
 {
+  "specVersion": 1,
   "id": "recommendations",
-  "label": { "zh": "Jev 推荐 Demo", "en": "Jev Recommendations Demo" },
+  "label": "Jev Recommendations Demo",
   "icon": "sparkles",
-  "surfaces": ["panel", "stage"],
-  "dataSource": { "namespace": "recommendations" },
-  "webview": { "entry": "./recommendations.html", "height": 300 }
+  "surfaces": [
+    "panel",
+    "stage"
+  ],
+  "dataSource": {
+    "namespace": "recommendations"
+  },
+  "emptyState": {
+    "message": "Recommendations appear after the next suggested actions are evaluated."
+  },
+  "webview": {
+    "entry": "./recommendations.html",
+    "height": 300
+  }
 }

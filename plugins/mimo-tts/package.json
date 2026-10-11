@@ -1,6 +1,6 @@
 {
   "name": "@covel/plugin-mimo-tts",
-  "version": "0.0.39",
+  "version": "0.0.50",
   "private": true,
   "type": "module",
   "description": "Automatic and manual narration through a plugin-registered MiMo speech wire.",

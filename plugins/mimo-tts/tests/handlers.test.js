@@ -8,11 +8,13 @@
  * Coverage:
  *   - auto-narrate: skipped when no narrator output; disabled still commits
  *     the Speak-button message-surface record (success, no synthesis)
- *   - auto-narrate: success → pluginData[tracks] + pluginData[message] +
- *     assetGenerations[] (the key the kernel turns into asset.generate)
+ *   - auto-narrate: success → effects.pluginData[tracks] +
+ *     effects.pluginData[message] + effects.assetGenerations[] (the key the
+ *     kernel turns into asset.generate); nothing is written directly
  *   - auto-narrate: cached hit → autoPlay false, cached recorded
- *   - auto-narrate: failed when ctx.speech is unavailable / generate throws
- *     (message surface still written directly so the button appears)
+ *   - auto-narrate: failed when ctx.speech is unavailable; a throwing
+ *     generate stores a failed track and still records the message surface
+ *   - display labels follow ctx.messages (locales/zh.yaml)
  *   - manual-narrate: skipped when payload.text is missing (manual
  *     activations resolve no inputs — the button payload is the only source)
  *   - manual-narrate: payload.text + voice/format overrides forwarded
@@ -157,10 +159,10 @@ describe("auto-narrate handler", () => {
     );
     expect(result.effects.pluginData[0].value.sizeLabel).toBe("4 B");
 
-    // Pending state is logged but NOT written to plugin-data — Tab only
-    // ever shows done/failed so the <Media> placeholder never appears.
-    expect(ctx.pluginData.set).toHaveBeenCalledTimes(1);
-    expect(ctx.pluginData.set.mock.calls[0][2].status).toBe("done");
+    // Every write leaves through effects; a pending state is never stored,
+    // so the tab only shows done/failed tracks.
+    expect(ctx.pluginData.set).not.toHaveBeenCalled();
+    expect(result.effects.pluginData[0].value.status).toBe("done");
 
     expect(ctx.speech.generate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -170,6 +172,20 @@ describe("auto-narrate handler", () => {
         format: "mp3",
       }),
     );
+  });
+
+  it("labels the track in the languages of ctx.messages", async () => {
+    // The host passes the plugin's locales/zh.yaml as ctx.messages:
+    // `translate` picks the session language, `labelText` keeps every one.
+    const ctx = makeBaseCtx({ narrative: "夜风掠过山岗。" });
+    ctx.messages = {
+      translations: { "Turn {turn}": "回合 {turn}", AUTO: "自动" },
+      labels: { AUTO: { zh: "自动" }, "Turn {turn}": { zh: "回合 {turn}" } },
+    };
+    const result = await autoHandler(ctx);
+    const track = result.effects.pluginData[0].value;
+    expect(track.turnLabel).toBe("回合 7");
+    expect(track.triggerLabel).toEqual({ en: "AUTO", zh: "自动" });
   });
 
   it("does not auto-play a cached (deduped) track", async () => {
@@ -194,15 +210,23 @@ describe("auto-narrate handler", () => {
     );
 
     const result = await autoHandler(ctx);
+    // A failed synthesis is a stored `failed` track, so the run succeeds and
+    // its effects (track + Speak-button surface) commit together.
+    expect(result.outcome).toBe("success");
     expect(result.value.status).toBe("failed");
     expect(result.value.error).toMatch(/unknown speech wire/);
-    expect(ctx.pluginData.set.mock.calls[0][2].status).toBe("failed");
-    // The Speak button still appears for the turn: the message-surface
-    // record is written directly (a failed result commits no proposals).
-    expect(ctx.pluginData.set).toHaveBeenCalledWith("message", "turn-7", {
-      turnId: "turn-7",
-      text: "test",
+    expect(result.effects.assetGenerations).toBeUndefined();
+    expect(result.effects.pluginData[0].namespace).toBe("tracks");
+    expect(result.effects.pluginData[0].value.status).toBe("failed");
+    expect(result.effects.pluginData[0].value.error).toMatch(
+      /unknown speech wire/,
+    );
+    expect(result.effects.pluginData).toContainEqual({
+      namespace: "message",
+      key: "turn-7",
+      value: { turnId: "turn-7", text: "test" },
     });
+    expect(ctx.pluginData.set).not.toHaveBeenCalled();
   });
 
   it("aborts synthesis when the player stops the turn", async () => {
@@ -263,6 +287,33 @@ describe("manual-narrate handler", () => {
       expect.objectContaining({ voice: "voice-clone-42", format: "wav" }),
     );
     expect(result.value.ref.mime).toBe("audio/wav");
+  });
+
+  it("stores a failed track when manual synthesis throws", async () => {
+    const ctx = makeBaseCtx({
+      manualPayload: { text: "hello", turnId: "t-1" },
+    });
+    ctx.speech.generate.mockRejectedValue(new Error("HTTP 429"));
+    const result = await manualHandler(ctx);
+    expect(result.outcome).toBe("success");
+    expect(result.value.status).toBe("failed");
+    expect(result.effects.assetGenerations).toBeUndefined();
+    expect(result.effects.pluginData).toHaveLength(1);
+    expect(result.effects.pluginData[0].value).toMatchObject({
+      status: "failed",
+      turnId: "t-1",
+      triggeredBy: "manual",
+      error: "HTTP 429",
+    });
+  });
+
+  it("fails without proposals when ctx.speech is unavailable", async () => {
+    const ctx = makeBaseCtx({ manualPayload: { text: "hello" } });
+    ctx.speech = undefined;
+    const result = await manualHandler(ctx);
+    expect(result.outcome).toBe("failed");
+    expect(result.error).toMatch(/ctx\.speech is unavailable/);
+    expect(result.effects).toBeUndefined();
   });
 
   it("aborts manual synthesis when the player stops the turn", async () => {

@@ -1,6 +1,6 @@
 {
   "name": "@covel/plugin-openai-image-gen",
-  "version": "0.0.39",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Story illustrations through the unified OpenAI-compatible image pipeline.",

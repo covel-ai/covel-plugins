@@ -10,7 +10,7 @@
   "category": "media",
   "locales": ["zh-CN", "en-US"],
   "license": "MIT",
-  "covelVersion": "0.0.39",
+  "covelVersion": "0.0.50",
   "status": "active",
   "demo": "https://github.com/covel-ai/covel-plugins/blob/main/plugins/mimo-tts/README.md",
   "notes": "Official optional plugin moved from the Covel main repository. Restart and grant session code approval after installation. Requires a configured model role.",

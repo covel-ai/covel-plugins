@@ -18,7 +18,7 @@ In the Chinese file, use `[English](README.md) · **简体中文**`. Adjust file
 
 Translate the full instructions, including setup, settings, permissions, costs, limitations, and tests. Keep identifiers, configuration keys and values, commands, and API shapes unchanged; write code comments in English. Update both versions together when behavior or configuration changes. These are manually maintained document pairs; only the root README navigation and directory tables are generated.
 
-`PLUGIN.md` and runtime `PLUGIN.md` files are executable manifests and may contain agent prompts. Do not create translated manifests or alter prompts merely to translate a README. Keep manifest display names and descriptions bilingual through their existing localization fields; documentation translation does not change runtime behavior or plugin language support.
+`PLUGIN.md` and `RUNTIME.md` files are executable manifests and may contain agent prompts. Do not create translated manifests or alter prompts merely to translate a README. Manifests, UI specs and code are written in English; label and UI-text translations live in the package's `locales/<locale>.yaml`, and the only prompt variant Covel reads is Simplified Chinese (`PLUGIN.zh.md` / `RUNTIME.zh.md`). See Covel's [i18n reference](https://github.com/ackness/covel/blob/v0.0.50/docs/reference/i18n.md). Documentation translation does not change runtime behavior or plugin language support.
 
 ## Add a homepage language
 
