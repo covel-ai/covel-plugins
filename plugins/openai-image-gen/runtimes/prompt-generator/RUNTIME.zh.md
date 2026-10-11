@@ -1,106 +1,15 @@
 ---
-name: dashscope-image-gen/prompt-generator
-description:
-  zh: 根据当前剧情整理画面需求，为生成插图做准备。
-  en: Distills the current story into a scene brief to prepare for illustration.
-pluginType: plugin
-model: default
-outputKind: plugin
-capabilities: [image-prompt, manual-invoke]
-# Prompt generation and the provider render are both outside the gameplay
-# critical path. Declaring this here makes every RPC caller non-blocking; the
-# emitted image.generate.requested event keeps chaining to image-generator.
-execution: background
-timeoutMs: 300000
-maxRetries: 0
-callTimeoutMs: 50000
-firstTokenTimeoutMs: 30000
-requireToolUse: true
-completeAfterTools:
-  - submit-dashscope-text-prompt
-  - submit-dashscope-structured-prompt
-output:
-  schema: ./output.schema.json
-trigger:
-  type: manual
-tools:
-  plugin:
-    - submit-dashscope-text-prompt
-    - submit-dashscope-structured-prompt
-input:
-  inject:
-    - kind: plugin-data
-      namespace: prompts
-      as: "<previous-image-prompts>"
-      format: ids-only
-      maxEntries: 8
-userSettings:
-  - key: composition
-    type: select
-    default: comic-strip
-    label:
-      zh: 画面构图
-      en: Composition
-    description:
-      zh: 选择生成一张单独场景，或生成一页包含多个连续瞬间的漫画。
-      en: Choose a single scene, or a comic page with several connected moments.
-    options:
-      - { value: single-scene, label: { zh: 单一场景, en: Single scene } }
-      - { value: comic-strip, label: { zh: 多格漫画, en: Comic strip } }
-  - key: comicPanels
-    type: select
-    default: auto
-    label:
-      zh: 漫画格数
-      en: Comic panels
-    description:
-      zh: 多格漫画时使用。自动会按剧情节奏选择合适的格数。
-      en: Used for comic pages. Auto chooses the panel count from the story rhythm.
-    options:
-      - { value: auto, label: { zh: 自动 2-6 格, en: Auto 2-6 } }
-      - { value: "2", label: { zh: 2 格, en: "2 panels" } }
-      - { value: "3", label: { zh: 3 格, en: "3 panels" } }
-      - { value: "4", label: { zh: 4 格, en: "4 panels" } }
-      - { value: "6", label: { zh: 6 格, en: "6 panels" } }
-  - key: comicLayoutStyle
-    type: select
-    default: dynamic
-    label:
-      zh: 漫画排版风格
-      en: Comic layout
-    description:
-      zh: 多格漫画时使用。可以选择规整排版、动态跨格，或以一张大画面为主。
-      en: Used for comic pages. Choose a tidy grid, dynamic panels, or one large lead image.
-    options:
-      - { value: strict-grid, label: { zh: 规整网格, en: Strict grid } }
-      - { value: dynamic, label: { zh: 动态跨格, en: Dynamic breakout } }
-      - { value: splash-led, label: { zh: 大跨页主导, en: Splash-led } }
-  - key: promptMode
-    type: select
-    default: text
-    label:
-      zh: 画面描述方式
-      en: Image description style
-    description:
-      zh: 普通描述更简单，精细描述能控制更多画面细节。
-      en: Simple description is easier; detailed description controls more visual details.
-    options:
-      - { value: text, label: { zh: 普通描述, en: Simple description } }
-      - { value: image-json, label: { zh: 精细描述, en: Detailed description } }
-ui:
-  right:
-    - ./ui/generate-button.json
 ---
 
 你是一位专注于 AI 图像生成提示词（image prompt）的撰稿者，为一个互动叙事游戏生成「当下画面」或「这一段时间线下的多格漫画」的绘画指令。调用者会在剧情中的任意时刻点击「生成图片」按钮触发你运行。
 
 ## 你的任务
 
-根据当前剧情氛围，产出一条高质量、可直接送入 **通义万相 wan2.x** 文生图模型的提示词。模型对中文 / 英文均可理解，但对构图、光照、主体姿态、材质、镜头语言等关键词尤其敏感。
+根据当前剧情氛围，产出一条高质量、可直接送入 **OpenAI 兼容图像生成模型（gpt-image-2 / FLUX 等）** 的提示词。这些模型对英文关键词理解更扎实，对构图、光照、主体姿态、材质、镜头语言尤其敏感；中文也支持，但风格关键词建议保留英文专有名词。
 
 ## 全局画质要求（**所有模式都必须遵守**）
 
-无论 composition / promptMode 如何组合，**最终送入模型的 prompt 必须显式包含一组「极致画质」关键词**。建议把它们整体塞进画面描述结尾或 image-json 的 `style.aesthetic` / `details` 字段，让模型按最高品质渲染：
+无论 composition / promptMode 如何组合，**最终送入模型的 prompt 必须显式包含一组「极致画质」关键词**。建议把它们整体塞进画面描述结尾或 image-json 的 `style.aesthetic` / `quality` 字段，让模型按最高品质渲染：
 
 ```
 4K, 8K, ultra HD, ultra detailed, highly detailed, masterpiece,
@@ -221,7 +130,7 @@ professional photography, award-winning, fine texture
    `crisp ink lines, clean panel borders, professional manga / comic page composition,`
    `4K, 8K, ultra HD, ultra detailed, highly detailed, masterpiece, best quality, sharp focus, intricate details, cinematic lighting, fine texture`
 
-**禁止**：speech bubble / dialogue balloon / lettering / on-image text / page number / signature / readable kanji or letters。声音用「motion lines, speed lines, ink splash」表达，不画对白气泡，不写可读文字（DashScope 渲染文字效果差，强制用纯视觉叙事）。
+**禁止**：speech bubble / dialogue balloon / lettering / on-image text / page number / signature / readable kanji or letters。声音用「motion lines, speed lines, ink splash」表达，不画对白气泡，不写可读文字。
 
 ---
 
@@ -319,11 +228,11 @@ professional photography, award-winning, fine texture
 
 完成提示词后必须只调用一次与当前 `promptMode` 匹配的工具：
 
-- `text`：调用 `submit-dashscope-text-prompt`，`prompt` 传完整文本。
-- `image-json`：调用 `submit-dashscope-structured-prompt`，`prompt` 直接传 JSON 对象，不要 stringify。
+- `text`：调用 `submit-openai-image-text-prompt`，`prompt` 传完整文本。
+- `image-json`：调用 `submit-openai-image-structured-prompt`，`prompt` 直接传 JSON 对象，不要 stringify。
 - 两种工具的 `composition` 都必须照抄 `{{ userSettings.composition }}`。
 
-工具会统一完成提示词序列化、留档和 `image.generate.requested` 事件发射。不要自行构造 `events`，不要重复提交，也不要在工具调用前后输出 JSON、解释或确认文本。
+工具会统一完成提示词序列化、留档和 `openai-image.generate.requested` 事件发射。不要自行构造 `events`，不要重复提交，也不要在工具调用前后输出 JSON、解释或确认文本。
 
 ### 硬规则
 

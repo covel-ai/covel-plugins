@@ -1,5 +1,6 @@
+import { readFile } from "node:fs/promises";
 import { describe, expect, it, vi } from "vitest";
-import { recommend, inputSchema } from "../server.js";
+import register, { CONTRACT, recommend, inputSchema } from "../server.js";
 import handler from "../handler.js";
 
 const options = [
@@ -119,7 +120,7 @@ describe("evaluation choice demo", () => {
     });
     expect(call).toHaveBeenCalledWith(
       expect.objectContaining({
-        contract: "demo/choice-recommendation@1",
+        contract: "jev-choice-demo.recommendation@1",
         input: expect.objectContaining({ presetId: "intent" }),
       }),
     );
@@ -135,5 +136,25 @@ describe("evaluation choice demo", () => {
     ]);
     expect(result.effects).not.toHaveProperty("events");
     expect(await handler({ inputs: {} })).toMatchObject({ outcome: "skipped" });
+  });
+  it("registers exactly the service its manifest contributes", async () => {
+    const services: { contract: string; name: string }[] = [];
+    register({
+      registerService: (service: (typeof services)[number]) =>
+        services.push(service),
+    } as never);
+    expect(services.map(({ contract, name }) => ({ contract, name }))).toEqual([
+      { contract: CONTRACT, name: "recommend" },
+    ]);
+    const manifest = await readFile(
+      new URL("../PLUGIN.md", import.meta.url),
+      "utf8",
+    );
+    expect(manifest).toContain(`services:\n    - ${CONTRACT}\n`);
+    const spec = await readFile(
+      new URL("../ui/recommendations.json", import.meta.url),
+      "utf8",
+    );
+    expect(spec).not.toMatch(/\p{Script=Han}/u);
   });
 });

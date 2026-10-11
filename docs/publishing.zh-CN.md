@@ -2,7 +2,7 @@
 
 [English](publishing.md) · **简体中文**
 
-插件包需要 `package.json`（name、version、type: module）和根 `PLUGIN.md`，或多 runtime 的 `runtimes/<name>/PLUGIN.md`。包名的 `plugin-` 前缀可省略；规范身份必须与清单 name 的根段相同。
+插件包需要 `package.json`（name、version、type: module）和根 `PLUGIN.md`，其 `id` 与包目录名相同。单 runtime 写在根文件的 `runtime:` 下，多 runtime 放在 `runtimes/<id>/RUNTIME.md`。Covel 0.0.50 拒绝子目录 `PLUGIN.md` 和旧的平铺清单字段。`PLUGIN.md` 的 `version` 必须与 `package.json` 相同，`covel: ">=0.0.50"` 声明适配的宿主范围，范围之外的宿主不安装也不加载该包。包名的 `plugin-` 前缀可省略。
 
 发布目录的 JavaScript 必须直接可运行且自包含。开发工具放在 devDependencies；用于 GitHub 自动安装的 package.json 不保留 dependencies、optionalDependencies 或 peerDependencies。需要这些依赖的插件请在作者侧打包依赖并生成独立发布目录，再链接到该目录。不要依赖 Covel monorepo 的 workspace 解析。安装器不会执行脚本。
 
@@ -12,11 +12,11 @@
 
 安装预览固定 Git commit 和文件摘要，有效期 15 分钟。安装时重新获取该提交并核对摘要；目录变更或预览过期须重新确认。普通安装不覆盖同 ID 插件。支持更新的 Covel 版本可检查已安装插件、预览文件变化并确认下载；更新暂存到下次后端启动时替换，失败恢复旧包。独立存储的会话设置、plugin-data 和媒体保留，但作者仍需说明新版本的数据兼容性。本地增删或修改过包文件会阻止更新，应先备份并处理改动。
 
-建议在清单中声明标准 capabilities、outputKind 和 relations。不要通过具体插件 ID 的条件分支扩展框架。支持版本由作者声明；当前安装器校验清单契约，不承诺仅凭版本文本能证明兼容。
+在清单中声明版本化契约（`provides`、`requires`、`optional`、`conflicts`）、`io.visibility`，以及与 entry 注册一致的 `contributes`。不要通过具体插件 ID 的条件分支扩展框架。支持版本由作者声明；当前安装器校验清单契约，不承诺仅凭版本文本能证明兼容。标注适配版本前，用该版本的 Covel 仓库运行 `COVEL_DIR=<covel 仓库> pnpm check:covel`，它对本仓每个包执行 Covel 的静态 `validate:plugin`。
 
 ## 官方插件维护
 
-官方插件统一提供双语清单、中英文 README 安装与模型配置、数据和网络说明、MIT LICENSE、可独立执行的 JavaScript、回归测试与索引条目。`README.md` 为默认英文入口，`README.zh-CN.md` 为中文版，顶部提供语言切换链接。两个版本同步维护，详见[多语言维护](localization.zh-CN.md)。复杂开发示例放在 `examples/`，按需功能放在 `plugins/`；框架原语保留在 Covel 主仓。更改依赖或打包产物时验证每个目录单独复制到临时目录后可导入，不依赖本仓或主仓的 node_modules。
+官方插件统一提供 English 清单与 `locales/zh-CN.yaml` 中的简体中文标签、中英文 README 安装与模型配置、数据和网络说明、MIT LICENSE、可独立执行的 JavaScript、回归测试与索引条目。`README.md` 为默认英文入口，`README.zh-CN.md` 为中文版，顶部提供语言切换链接。两个版本同步维护，详见[多语言维护](localization.zh-CN.md)。复杂开发示例放在 `examples/`，按需功能放在 `plugins/`；框架原语保留在 Covel 主仓。更改依赖或打包产物时验证每个目录单独复制到临时目录后可导入，不依赖本仓或主仓的 node_modules。
 
 保留插件身份、设置键和原 Covel Contributors 许可证。各插件独立维护 `package.json` 的版本，索引中的 `covelVersion` 表示宿主兼容版本，不是插件发布版本。安装前后的信任来源不同，旧会话必须重新授权。已安装旧开发副本时，先备份自行修改的源码，再通过设置卸载并重装；不要手工覆盖安装记录。
 

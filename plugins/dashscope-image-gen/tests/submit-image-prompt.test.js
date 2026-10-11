@@ -1,19 +1,34 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { tool, z } from "../../../test-support/toolkit.js";
 import {
   getEmittedEvents,
   getPendingProposals,
   getToolContent,
-  shortId,
-  tool,
-  z,
-} from "../../../test-support/toolkit.js";
+} from "../lib/covel-helpers.js";
 import makeSubmitImagePromptTools from "../tools/submit-image-prompt.js";
+
+// The host's shortId (plugin SDK short-id.ts): the label's words plus eight hex
+// digits, drawn from the context's random source when one is passed.
+function shortId(prefix, label, _sessionId, random) {
+  const slug = (label.toLowerCase().match(/[a-z0-9]+/g) ?? [])
+    .join("-")
+    .slice(0, 32)
+    .replace(/-$/, "");
+  const part = random
+    ? random
+        .int(0, 2 ** 32)
+        .toString(16)
+        .padStart(8, "0")
+    : crypto.randomUUID().replaceAll("-", "").slice(0, 8);
+  return [prefix, slug, part].filter(Boolean).join("-");
+}
 
 const context = {
   sessionId: "session-image-prompt",
   turnId: "turn-image-prompt",
   pluginId: "dashscope-image-gen",
   runtimeId: "dashscope-image-gen/prompt-generator",
+  random: { int: vi.fn().mockReturnValue(0xabc) },
 };
 
 function toolsByName() {
@@ -54,7 +69,7 @@ describe("dashscope image prompt submission tools", () => {
         payload: {
           namespace: "prompts",
           key: expect.stringMatching(
-            /^prompt-cinematic-moonlit-harbor-[a-f0-9]{32}$/,
+            /^prompt-cinematic-moonlit-harbor-[a-f0-9]{8}$/,
           ),
           value: {
             prompt: "cinematic moonlit harbor",
@@ -64,6 +79,21 @@ describe("dashscope image prompt submission tools", () => {
         },
       },
     ]);
+  });
+
+  it("returns an explicit host tool result with a seeded prompt key", async () => {
+    const submit = toolsByName().get("submit-dashscope-text-prompt");
+    const result = await submit.execute(
+      { prompt: "harbor", composition: "single-scene" },
+      context,
+    );
+
+    expect(result.kind).toBe("covel.tool-result");
+    // Every field is enumerable, so the result survives structuredClone.
+    expect(getEmittedEvents(structuredClone(result))).toHaveLength(1);
+    expect(getPendingProposals(result)[0].payload.key).toBe(
+      "prompt-harbor-00000abc",
+    );
   });
 
   it("serializes a structured prompt exactly once", async () => {

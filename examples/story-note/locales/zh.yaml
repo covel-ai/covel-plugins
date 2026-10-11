@@ -1,0 +1,5 @@
+# Chinese text of the story-note plugin.
+# A section named after a manifest file translates its labels, under the same keys.
+PLUGIN.md:
+  displayName: 叙事便签示例
+  description: 为叙事提示词追加一句建议，演示社区 hook 插件。

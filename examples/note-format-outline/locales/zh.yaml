@@ -1,0 +1,5 @@
+# Chinese text of the note-format-outline plugin.
+# A section named after a manifest file translates its labels, under the same keys.
+PLUGIN.md:
+  displayName: 笔记大纲
+  description: 将非空行整理成纯文本项目符号列表，避免重复项目符号。

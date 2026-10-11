@@ -8,7 +8,7 @@ An image-generation plugin for the OpenAI Images API. Generation uses the framew
 
 ## Installation and approval
 
-This officially maintained community plugin targets the current Covel `0.0.39` development contract and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
+This officially maintained community plugin targets the Covel `0.0.50` development contract (`covel: ">=0.0.50"` in `PLUGIN.md`; hosts outside that range do not load it) and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen
@@ -17,6 +17,22 @@ https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen
 Resolution and downloads use Covel's configured network proxy. Review the source and server-side code risks, confirm installation, restart the backend, then enable and approve the plugin in your session. Official maintenance does not waive community code approval. Model calls may incur costs. The packaged JavaScript runs directly without dependency installation or a build step.
 
 When migrating from the builtin version, plugin IDs, runtime IDs, and setting keys remain unchanged. Existing sessions require approval again after installation. Migration does not proactively delete saves, configuration, or media, and it does not automatically convert builtin trust into community code approval.
+
+## Package layout
+
+```text
+openai-image-gen/
+├── PLUGIN.md                       # id, version, covel range, tools, media.image-flow@1, settings, UI
+├── locales/zh.yaml                 # Chinese labels and UI text (locales/lock.json records their English source)
+├── server/index.js                 # entry: registers the two submission tools and the image-flow extension
+├── tools/submit-image-prompt.js
+├── lib/covel-helpers.js            # bundled SDK helpers (image generation, proposals, tool results)
+└── runtimes/
+    ├── prompt-generator/           # agent: RUNTIME.md (English), RUNTIME.zh.md, output.schema.json, ui/
+    └── image-generator/            # function: RUNTIME.md, handler.js, ui/
+```
+
+Version 0.1.0 moves the package to the Covel 0.0.50 format: the runtimes are `runtimes/<id>/RUNTIME.md` with grouped fields, settings and UI specs are declared once in the root `contributes`, labels and UI text are English with Chinese translations in `locales/zh.yaml`, and the English prompt body has a Simplified Chinese variant in `RUNTIME.zh.md`. Plugin, runtime, tool and setting IDs are unchanged. After updating an installed copy, restart the backend and approve the plugin in your session as for a new installation.
 
 ## Comparison with dashscope-image-gen
 
@@ -27,7 +43,9 @@ When migrating from the builtin version, plugin IDs, runtime IDs, and setting ke
 | Event topic | `openai-image.generate.requested` | `image.generate.requested` |
 | Credentials | `[covel.<slot>]` in `~/.covel/llm.toml`, default slot `openai-image` | `[covel.<slot>]` in `~/.covel/llm.toml`, default slot `image` |
 
-Both plugins can be enabled together. Their different event topics avoid duplicate triggers, and their galleries are independent because `pluginData` is isolated by `pluginId`. Both wires are handled by the framework's image-wire registry; neither plugin has HTTP or SDK dependencies.
+Both plugins can be installed together, but a session uses one of them: each provides the single-provider extension point `media.image-flow@1` (through which the host finds the illustration flow for its own image button), so the session resolver accepts only one illustration flow per session. Their event topics and galleries are separate in any case (`pluginData` is isolated by `pluginId`). Both wires are handled by the framework's image-wire registry; neither plugin has HTTP or SDK dependencies.
+
+When the selected `modelPresetId` slot is missing or is not an image model, `image-generator` returns `skipped` before writing a gallery record or sending a request.
 
 ## Configure llm.toml and keys.env
 
@@ -56,7 +74,7 @@ OPENAI_API_KEY=sk-xxx
 
 For a third-party service, supply **both its key and its baseUrl**; update both lines together.
 
-### Enable both image plugins
+### Configure slots for both image plugins
 
 ```toml
 [covel.image]                              # DashScope wan2.7
@@ -78,18 +96,18 @@ tag      = "image"
 output   = ["image"]
 ```
 
-By default, dashscope-image-gen uses `modelPresetId = "image"` → wan2.7, while openai-image-gen uses `modelPresetId = "openai-image"` → gpt-image-2. Each has its own **Generate** button and gallery in the right panel.
+By default, dashscope-image-gen uses `modelPresetId = "image"` → wan2.7, while openai-image-gen uses `modelPresetId = "openai-image"` → gpt-image-2. Choose the plugin per session; the active one shows its **Generate** button and gallery in the right panel.
 
 ## Runtimes
 
 | Runtime | Type | Trigger | Responsibility |
 | --- | --- | --- | --- |
-| `openai-image-gen/prompt-generator` | agent (background) | manual | Read recent prompt history in the background, combine `composition` and `promptMode` to write an image prompt, then call the matching submission tool to archive it, emit a fixed event, and wake the downstream runtime |
-| `openai-image-gen/image-generator` | function (background) | event: `openai-image.generate.requested` | Call `ctx.images.generate()` for wire selection, requests, MediaStore persistence, and promptHash deduplication; write index records containing `ref` from the returned `MediaRef[]` to the `images` namespace and emit an `asset.generate` proposal |
+| `openai-image-gen/prompt-generator` | agent (background) | manual | Read recent prompt history in the background, combine `composition` and `promptMode` to write an image prompt, then call the matching submission tool to archive it, emit a fixed event, and wake the downstream runtime. Entry runtime of `media.image-flow@1` |
+| `openai-image-gen/image-generator` | function (background) | event: `openai-image.generate.requested` | Call `ctx.images.generate()` for wire selection, requests, MediaStore persistence, and promptHash deduplication; write index records containing `ref` from the returned `MediaRef[]` to the `images` namespace and return one `assetGenerations[]` effect per image. Asset runtime of `media.image-flow@1` |
 
-## userSettings
+## Settings
 
-prompt-generator uses the same structure as dashscope-image-gen:
+All settings are declared once in the root `PLUGIN.md` (`contributes.settings`) and both runtimes read them from `ctx.userSettings`. Used by prompt-generator, with the same structure as dashscope-image-gen:
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -98,7 +116,7 @@ prompt-generator uses the same structure as dashscope-image-gen:
 | `comicLayoutStyle` | select | `dynamic` | `strict-grid` / `dynamic` / `splash-led` |
 | `promptMode` | select | `text` | `text` for natural language; `image-json` for structured JSON |
 
-image-generator:
+Used by image-generator:
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -108,11 +126,11 @@ image-generator:
 | `quality` | text | `low` | GPT Image accepts `low` / `medium` / `high` / `auto` |
 | `style` | text | _(empty)_ | Optional; appended to the prompt as `<prompt>, style: <style>`, rather than passed as a separate wire parameter |
 
-> **Quality instructions**: the prompt-generator's PLUGIN.md system prompt requires terms such as 4K, ultra detailed, and masterpiece at the end of each prompt or in its `quality` field. Comic mode also adds `crisp ink lines, clean panel borders, professional manga / comic page composition`.
+> **Quality instructions**: the prompt-generator prompt (`RUNTIME.md` / `RUNTIME.zh.md`) requires terms such as 4K, ultra detailed, and masterpiece at the end of each prompt or in its `quality` field. Comic mode also adds `crisp ink lines, clean panel borders, professional manga / comic page composition`.
 
 ### Removed settings
 
-Before the unified image pipeline, `image-generator` exposed `model` (per-call model override), `maxRetries` (retry count), and `extraProviderOptions` (additional JSON parameters). They have been removed from PLUGIN.md:
+Before the unified image pipeline, `image-generator` exposed `model` (per-call model override), `maxRetries` (retry count), and `extraProviderOptions` (additional JSON parameters). They are no longer declared:
 
 - **`model`**: `ctx.images.generate()` accepts `presetId`, not a per-call model override. Add a `[covel.<slot>]` and switch `modelPresetId` to change models.
 - **`maxRetries`**: the handler never implemented retries for this setting, so its removal does not remove working behavior.
@@ -137,8 +155,9 @@ moderation = "low"
 
 ```bash
 # Mock mode: verify tool submission and fixed events without real API calls.
-# ctx.images is unavailable to image-generator in mock mode;
-# status: failed is expected, not a regression.
+# The mock harness has no image model, so image-generator returns
+# skipped (image model unavailable); this is expected, not a regression.
+# Unit tests: pnpm exec vitest run plugins/openai-image-gen/tests
 pnpm --dir "$COVEL_REPO" test:runtime -- openai-image-gen --plugins-dir "$PWD/plugins" --pretty
 
 # Live mode: requires OPENAI_API_KEY in keys.env and an openai-image slot in llm.toml.
@@ -159,7 +178,7 @@ Fireworks uses model workflow endpoints with a different response shape, while f
 
 - `gpt-image-2` is the default OpenAI model. With third-party services, use a model ID actually offered by that service. `gpt-image-1` is deprecated and `dall-e-3` has been removed from the API, so they are no longer listed as alternatives. See [OpenAI GPT Image 2](https://developers.openai.com/api/docs/models/gpt-image-2).
 - The framework's `ctx.images.generate()` handles SSRF guards, baseUrl validation, and retries; the plugin does not implement these checks itself.
-- The gallery reads the `images` namespace. `ctx.images.generate()` persists bytes in MediaStore and returns `MediaRef[]`; the handler writes `ref` into `images.<imageId>`. Multi-image requests publish separate records such as `images.<imageId>-1` and `images.<imageId>-2`. SSE `plugin-data.changed` refreshes the gallery automatically, and the frontend resolves references through `<Media src={ref}>`.
+- The gallery reads the `images` namespace. `ctx.images.generate()` persists bytes in MediaStore and returns `MediaRef[]`; the handler writes `ref` into `images.<imageId>`. A multi-image request writes the first image to `images.<imageId>` (replacing its pending record) and the others to `images.<imageId>-2`, `images.<imageId>-3`, …. Each image is also returned as an `assetGenerations[]` effect whose `meta.prompt` the story model reads in later turns where the picture appeared. SSE `plugin-data.changed` refreshes the gallery automatically, and the frontend resolves references through `<Media src={ref}>`.
 - **Credentials**: the plugin does not persist apiKey or baseUrl in settings.json. `ctx.images.generate()` resolves the framework slot using `modelPresetId`, just as dashscope-image-gen does.
 - The plugin adds no third-party HTTP SDK. Framework dependencies are managed in Covel's root workspace.
 
@@ -173,7 +192,7 @@ Business data is written only to this plugin's declared namespaces. Images or au
 
 If a model returns a URL, downloading the image remains subject to the runtime's `permissions.http`. Models returning base64 or bytes do not require remote image downloads. Do not resolve download failures by raising the trust level or bypassing SSRF checks.
 
-For compatible services that return URLs or for other regions, verify image domains in the provider's official documentation. Declare the exact HTTPS origins and GET method in the installed package's `runtimes/image-generator/PLUGIN.md`, then restart and approve the code again. Every origin in a redirect chain must be declared. Do not use wildcards or full signed URLs. For example:
+For compatible services that return URLs or for other regions, verify image domains in the provider's official documentation. Declare the exact HTTPS origins and GET method in the installed package's `runtimes/image-generator/RUNTIME.md`, then restart and approve the code again. Every origin in a redirect chain must be declared. Do not use wildcards or full signed URLs. For example:
 
 ```yaml
 permissions:

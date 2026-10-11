@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "labels": {
+    "zh": {
+      "PLUGIN.md#contributes.settings[key=enabled].description": "3f18bde18ae57c98",
+      "PLUGIN.md#contributes.settings[key=enabled].label": "dc15958d4a31c146",
+      "PLUGIN.md#contributes.settings[key=format].description": "63b3e0dca6369476",
+      "PLUGIN.md#contributes.settings[key=format].label": "e2ecf8cf8fb197ad",
+      "PLUGIN.md#contributes.settings[key=maxChars].description": "bd9fc8118acf1dc2",
+      "PLUGIN.md#contributes.settings[key=maxChars].label": "ca5ca34f9863afd0",
+      "PLUGIN.md#contributes.settings[key=modelPresetId].description": "bec438c9b6a4b516",
+      "PLUGIN.md#contributes.settings[key=modelPresetId].label": "fcd122ea0b4d64f1",
+      "PLUGIN.md#contributes.settings[key=requestTimeoutMs].description": "60364a1864d0e742",
+      "PLUGIN.md#contributes.settings[key=requestTimeoutMs].label": "d49eb568ff08932f",
+      "PLUGIN.md#contributes.settings[key=voice].description": "d67cad720c1bcc58",
+      "PLUGIN.md#contributes.settings[key=voice].label": "87bf2bc08589f0bd",
+      "PLUGIN.md#description": "91d8a3205df86ee0",
+      "PLUGIN.md#displayName": "6d878ec13a83993d",
+      "runtimes/auto-narrate/RUNTIME.md#description": "724035ae4867cdef",
+      "runtimes/manual-narrate/RUNTIME.md#description": "b0c993c07ae5ef40"
+    }
+  }
+}

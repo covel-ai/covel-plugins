@@ -6,7 +6,7 @@ Read narrator output aloud with Xiaomi **MiMo TTS**. The plugin automatically ge
 
 ## Installation and approval
 
-This officially maintained community plugin targets the current Covel `0.0.39` development contract and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
+This officially maintained community plugin targets Covel `0.0.50` and later (`covel: ">=0.0.50"` in `PLUGIN.md`) and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts
@@ -18,17 +18,31 @@ When migrating from the builtin version, plugin IDs, runtime IDs, and setting ke
 
 ## Package contents
 
-- `mimo-tts/auto-narrate` (function · auto · `stage: post-turn` · `turnCompletion: detached` · `needs: capability narrative-engine`): after the current narrative engine (narrator or chat-mode-narrator) succeeds, persistently queues background narration without blocking the next turn. It also writes message data for the **Read aloud** button, even when automatic narration is disabled, so the button remains available.
-- `mimo-tts/manual-narrate` (function · manual · `execution: background`): triggered by the **Read aloud** button. Paragraph text arrives through the button payload; manual activation does not resolve turn inputs, so `payload.text` is required.
-- `lib/wires.js`: the MiMo TTS HTTP wire (`api-key` header, OpenAI-style `chat/completions`, and `audio.format/voice`). `lib/mimo-tts.js`: helpers for track records and display fields.
-- `ui/audio-tab.json`: a playlist tab with one row per turn, a header (turn number, AUTO/MANUAL, voice, and byte count), a short text preview, and inline `<audio controls>`. It avoids repeating the full narrator text already in the chat stream; users select playback by turn.
+```text
+mimo-tts/
+├── PLUGIN.md                     # package: id, version, requires, entry, contributes (wires, settings, ui)
+├── locales/zh.yaml               # Chinese labels (settings, descriptions) and UI/code text (messages)
+├── locales/lock.json             # the English each label translation is for (pnpm i18n lock)
+├── server/index.js               # entry: covel.registerWires(...) -> speech wire mimo-tts/mimo
+├── lib/                          # wires.js (MiMo HTTP wire), mimo-tts.js (track helpers), i18n.js (translate / labelText)
+├── runtimes/auto-narrate/        # RUNTIME.md + handler.js
+├── runtimes/manual-narrate/      # RUNTIME.md + handler.js
+└── ui/                           # audio-tab.json (right panel), play-button.json (message area)
+```
+
+- `mimo-tts/auto-narrate` (function · `schedule.trigger: auto` · `schedule.stage: post-turn` · `schedule.completion.mode: detached` · `schedule.needs: narrative-engine@1`): after the active narrative engine (narrator or chat-mode-narrator) succeeds, the turn finishes and a durable background job narrates the turn's `narrativeOutput` (bound through `io.inputs.narrative`). It also writes the message data for the **Read aloud** button, even when automatic narration is disabled, so the button remains available.
+- `mimo-tts/manual-narrate` (function · `schedule.trigger: manual` · `schedule.manual.execution: background`): triggered by the **Read aloud** button. Paragraph text arrives through the button payload; manual activation does not resolve turn inputs, so `payload.text` is required.
+- Both runtimes return every write as `HandlerResult.effects` (`pluginData`, `assetGenerations`); a failed synthesis is stored as a `failed` track. They declare their `effects` and `permissions.http` (`POST` to `https://api.xiaomimimo.com` and `https://token-plan-cn.xiaomimimo.com`).
+- `lib/wires.js`: the MiMo TTS HTTP wire (`api-key` header, OpenAI-style `chat/completions`, and `audio.format/voice`), declared in `contributes.wires` as `mimo`. `lib/mimo-tts.js`: helpers for track records and display fields.
+- `ui/audio-tab.json`: a playlist tab with one row per track, a header (turn, AUTO/MANUAL, voice, and byte count), a short text preview, and an `AudioPlayer`. It avoids repeating the full narrator text already in the chat stream; users select playback by turn.
 - `ui/play-button.json`: the message button, on the same interaction layer as **Insert image**.
+- Manifests and UI specs are English; Chinese is in `locales/zh.yaml`. The runtimes are functions, so there is no prompt body and no `RUNTIME.zh.md`.
 
 ## Initial configuration
 
 ### 1. Configure the MiMo slot in `~/.covel/llm.toml`
 
-Use `[covel.mimo-tts]` as the default section name, matching the plugin ID. Both runtimes default to `modelPresetId: "mimo-tts"`:
+Use `[covel.mimo-tts]` as the default section name, matching the plugin ID. The `modelPresetId` setting defaults to `mimo-tts`, and both runtimes declare `function.model: mimo-tts` so a background job checks that slot's credentials before it runs:
 
 ```toml
 [covel.mimo-tts]
@@ -62,25 +76,27 @@ On the web, enter the key for `xiaomi` in **Settings → API Keys**.
 
 Install through the link above and restart the backend. Enable the plugin in your session and approve its server-side code.
 
-## User settings (`userSettings`)
+## Settings (`contributes.settings`)
 
-| Runtime | Key | Description |
-| --- | --- | --- |
-| auto-narrate | `enabled` | Disable to keep manual narration only |
-| Shared | `modelPresetId` | A `slot` setting shown as a selector of configured slots; defaults to `mimo-tts`, matching `[covel.mimo-tts]` |
-| Shared | `voice` | Defaults to `mimo_default`; use a pregenerated ID for voicedesign / voiceclone |
-| Shared | `format` | `mp3` (default, audio/mpeg) or `wav` (audio/wav). `pcm` / `pcm16` are not exposed because browsers cannot play them directly |
-| Shared | `maxChars` | Maximum characters per synthesis request, to avoid server limits |
-| Shared | `requestTimeoutMs` | Timeout for a single request |
+Declared once in the root `PLUGIN.md`; both runtimes read them from `ctx.userSettings`. A world can preset them with `pluginSettings`.
 
-> Shared settings are declared in both runtimes and **must be identical**. Their storage keys are plugin-wide (`plugin.mimo-tts.<key>`); inconsistent declarations cause only one to take effect. `pnpm --dir "$COVEL_REPO" validate:plugin "$PWD/plugins/mimo-tts"` detects drift. Set `COVEL_REPO` to a main Covel checkout and run the command from this repository's root.
+| Key                | Description                                                                                                                  |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`          | Read by auto-narrate only. Disable to keep manual narration only                                                             |
+| `modelPresetId`    | A `slot` setting shown as a selector of configured slots; defaults to `mimo-tts`, matching `[covel.mimo-tts]`                |
+| `voice`            | Defaults to `mimo_default`; use a pregenerated ID for voicedesign / voiceclone                                               |
+| `format`           | `mp3` (default, audio/mpeg) or `wav` (audio/wav). `pcm` / `pcm16` are not exposed because browsers cannot play them directly |
+| `maxChars`         | Maximum characters per synthesis request, to avoid server limits                                                             |
+| `requestTimeoutMs` | Timeout for a single request                                                                                                 |
+
+Check the package with `pnpm --dir "$COVEL_REPO" validate:plugin "$PWD/plugins/mimo-tts"`. Set `COVEL_REPO` to a main Covel checkout and run the command from this repository's root.
 
 ## Data layout
 
 - **plugin_data**: namespace `tracks`, with keys such as `tts-auto-<turnId>` or `tts-manual-<turnId>-<rand>`. Values contain `ref` (MediaRef), `triggeredBy`, `text`, and metadata.
 - **plugin_data**: namespace `message`, keyed by turn ID, with values `{ turnId, text }`. This anchors the **Read aloud** button to a message and supplies its payload; auto-narrate writes it each turn.
 - **media_assets**: `ctx.speech.generate()` persists audio bytes in MediaStore with promptHash deduplication. Ownership is automatically bound to the current session.
-- **runtime output**: `assetGenerations: [{ref, modality:'audio', meta}]` is collected by the framework as an `asset.generate` proposal and broadcast through trace and SSE.
+- **runtime effects**: `effects.pluginData` and `effects.assetGenerations: [{ref, modality:'audio', meta}]`. The kernel turns them into `plugin.data` and `asset.generate` proposals and commits them with the run; the handlers write nothing directly.
 
 ## Tests
 
@@ -92,15 +108,17 @@ pnpm exec vitest run plugins/mimo-tts/tests   # Covers the wire and both handler
 
 Tests mock only `fetch` at the wire layer and `ctx.speech.generate` / `ctx.gateway.resolveSlot` at the handler layer. No live network or MiMo key is required.
 
+From a main Covel checkout, `pnpm test:runtime -- mimo-tts --plugins-dir <this repo>/plugins --pretty` runs `tests/runtime-cases.json`.
+
 ## Known limitations and roadmap
 
-| Item | Status |
-| --- | --- |
-| Autoplay | The themed `AudioPlayer` catalog component has no `autoPlay` prop, and most browsers restrict automatic playback. Track records already include `plugin_data.tracks[*].autoPlay = true`, ready for framework support. |
-| Pending status | The tab intentionally displays only done/failed entries, without a generating placeholder. Pending work is exposed through logs and SSE traces. |
-| Streaming | Not implemented. MiMo's `stream: true` changes the format to `pcm`, which browser `<audio>` cannot consume directly. It would require a frontend PCM-to-Web-Audio worker or backend MP3 conversion before chunking. The wire currently uses non-streaming requests, pending a framework streaming-media primitive. |
-| Playback speed | Native browser controls can offer 0.5×/2× speed through the audio element's context menu. Dedicated buttons could be added later through a custom component in the UI spec. |
-| Long text | Currently truncated with `maxChars`; future work could synthesize overlapping text segments and play them in sequence. |
+| Item           | Status                                                                                                                                                                                                                                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Autoplay       | The themed `AudioPlayer` catalog component has no `autoPlay` prop, and most browsers restrict automatic playback. Track records already include `plugin_data.tracks[*].autoPlay = true`, ready for framework support.                                                                                              |
+| Pending status | The tab intentionally displays only done/failed entries, without a generating placeholder. Pending work is exposed through logs and SSE traces.                                                                                                                                                                    |
+| Streaming      | Not implemented. MiMo's `stream: true` changes the format to `pcm`, which browser `<audio>` cannot consume directly. It would require a frontend PCM-to-Web-Audio worker or backend MP3 conversion before chunking. The wire currently uses non-streaming requests, pending a framework streaming-media primitive. |
+| Playback speed | Native browser controls can offer 0.5×/2× speed through the audio element's context menu. Dedicated buttons could be added later through a custom component in the UI spec.                                                                                                                                        |
+| Long text      | Currently truncated with `maxChars`; future work could synthesize overlapping text segments and play them in sequence.                                                                                                                                                                                             |
 
 ## References
 

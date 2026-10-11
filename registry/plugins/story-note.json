@@ -1,5 +1,5 @@
 {
-  "id": "example-story-note",
+  "id": "story-note",
   "name": "Story Note Example",
   "description": "Demonstrates adding a narrative suggestion to story prompts through PostContextAssembly.",
   "maintainer": "official",
@@ -10,7 +10,7 @@
   "category": "authoring",
   "locales": ["zh-CN", "en-US"],
   "license": "MIT",
-  "covelVersion": "0.0.39",
+  "covelVersion": "0.0.50",
   "status": "active",
   "demo": "https://github.com/covel-ai/covel-plugins/blob/main/examples/story-note/README.md",
   "notes": "Official authoring example, disabled by default. Requires session code approval after installation. Uses the current public hook contract.",

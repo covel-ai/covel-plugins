@@ -4,7 +4,7 @@ import { CONTRACT } from "./server.js";
 const DEFAULT_GOAL =
   "Choose the action that best follows the player's latest stated intent, fits the confirmed scene, and moves the current decision forward without inventing facts.";
 
-/** @param {import('@covel/shared/plugin-runtime').FunctionHandlerContext} ctx */
+/** @type {import('@covel/plugin-handlers-utils').PluginFunctionHandler} */
 export default async function handler(ctx) {
   const choices = ctx.inputs?.choices;
   const narrative = ctx.inputs?.narrative;

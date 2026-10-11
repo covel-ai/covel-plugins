@@ -10,15 +10,15 @@
   "category": "authoring",
   "locales": ["zh-CN", "en-US"],
   "license": "MIT",
-  "covelVersion": null,
-  "status": "pending",
+  "covelVersion": "0.0.50",
+  "status": "active",
   "demo": "https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-outline/README.md",
-  "notes": "Official composable-notes example. Targets the public service contract in Covel development PR #86; released-host compatibility remains unconfirmed. Install independently and approve server code per session.",
+  "notes": "Official composable-notes example. Provides the examples.note-format@1 service; version 2.0.0 requires Notes Workbench 2.0.0 or later. Install independently and approve server code per session.",
   "translations": {
     "zh-CN": {
       "name": "笔记大纲示例",
       "description": "纯 entry 格式化服务：将非空行整理成纯文本项目符号列表。",
-      "notes": "官方组合记录示例；针对 Covel PR #86 的开发服务契约，尚未确认已发布宿主兼容性。须单独安装并在会话中授权服务端代码。"
+      "notes": "官方组合记录示例，提供 examples.note-format@1 服务；2.0.0 须与记录工作台 2.0.0 及以上配合。须单独安装并在会话中授权服务端代码。"
     }
   }
 }

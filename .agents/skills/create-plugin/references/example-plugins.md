@@ -1,15 +1,22 @@
-# Official examples
+# Current examples
 
-Use the runnable packages in this repository as the source of truth. Do not copy old wire implementations or numeric-priority manifests from historical snippets.
+Use maintained packages rather than copied historic manifests.
 
-| Package                                                               | Demonstrates                                                                                                                        |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| [Story Note](../../../../examples/story-note/README.md)               | Small hook-only entry, story prompt extension, no dependencies                                                                      |
-| [Jev Choice Demo](../../../../examples/jev-choice-demo/README.md)     | Typed upstream inputs, evaluation gateway, validated public service, capability-owned data, sandboxed stage/panel HTML, bundled Zod |
-| [DashScope Images](../../../../plugins/dashscope-image-gen/README.md) | Manual prompt tools, event follower, background image pipeline, CDN download permissions, gallery                                   |
-| [OpenAI Images](../../../../plugins/openai-image-gen/README.md)       | Compatible image providers, settings, image generation helpers, persisted MediaRefs                                                 |
-| [MiMo TTS](../../../../plugins/mimo-tts/README.md)                    | Entry-registered speech wire, auto/manual runtimes, detached turn completion, cancellation, audio UI                                |
+Main checkout:
 
-Each package has its own README, LICENSE, manifests and tests. Imports in an installable package stay inside that directory; helpers shared during authoring must be bundled or copied into each published package.
+- `templates/plugin-with-tools`: inline grouped agent runtime and a declared entry tool.
+- `templates/plugin-multi-runtime`: root contributions plus child `RUNTIME.md` files, own data, and a post-turn analyst with a narrative input binding.
+- `plugins/memory`: detached `turn-digest@1`, `prompt.segment@1`, and public block-definition services.
+- `plugins/history-compaction`: `history.compact@2` implementation with bounded summary segments.
+- `plugins/world-init`: World Model schema initialization and own public services.
 
-Core contract examples stay in [Covel's plugins directory](https://github.com/ackness/covel/tree/main/plugins), including scene-stage, scene-prompts, guide and dice-check. These paths are not local to this repository.
+Community checkout (`covel-plugins`, https://github.com/covel-ai/covel-plugins):
+
+- `examples/story-note`: declared context hook with no store access; plugin ID is `story-note`.
+- `examples/notes-workbench`: RPC action + slash command, scoped data writes, optional service discovery.
+- `examples/note-format-clean` and `note-format-outline`: `examples.note-format@1` service providers.
+- `examples/jev-choice-demo`: required `scene-prompts@1`/`narrative-engine@1` inputs and an evaluation service.
+- `plugins/openai-image-gen` and `dashscope-image-gen`: `media.image-flow@1`, explicit tools, event followers, generic gallery/job props.
+- `plugins/mimo-tts`: declared speech wire, detached post-turn narration, manual playback.
+
+Preserve ownership declarations when adapting an entry. Change package and runtime IDs consistently, including UI actions and extension output. A public contract may be shared by competing providers; private data namespaces are not a cross-plugin interface.

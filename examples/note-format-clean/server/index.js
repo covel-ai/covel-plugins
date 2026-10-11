@@ -4,7 +4,7 @@ export default function (covel) {
   const { z } = covel.toolkit;
   covel.registerService({
     name: "format-note",
-    contract: "examples/note-format@1",
+    contract: "examples.note-format@1",
     description:
       "Trim line whitespace and excess blank lines; preserve paragraphs.",
     input: z.object({ text: z.string().max(4000).trim().min(1) }),

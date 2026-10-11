@@ -18,7 +18,7 @@
 
 完整翻译使用说明，包括安装配置、设置、权限、费用、限制和测试。标识符、配置键与值、命令和 API 结构保持不变；代码注释使用英文。行为或配置变更时同步更新两个版本。这些文档由人工成对维护；只有根 README 的语言导航和插件表格由脚本生成。
 
-`PLUGIN.md` 和 runtime 的 `PLUGIN.md` 是可执行清单，正文可能包含 agent 提示词。不要仅为翻译 README 而创建翻译清单或改写提示词。清单中的显示名称与简介沿用已有的本地化字段提供双语；文档翻译不改变运行行为或插件支持的语言。
+`PLUGIN.md` 和 `RUNTIME.md` 是可执行清单，正文可能包含 agent 提示词。不要仅为翻译 README 而创建翻译清单或改写提示词。清单、UI spec 和代码用 English 书写；标签与界面文字的译文放在包内 `locales/<locale>.yaml`，Covel 只读取简体中文这一种提示词变体（`PLUGIN.zh.md` / `RUNTIME.zh.md`）。见 Covel 的 [i18n 参考](https://github.com/ackness/covel/blob/v0.0.50/docs/reference/i18n.md)。文档翻译不改变运行行为或插件支持的语言。
 
 ## 添加首页语言
 

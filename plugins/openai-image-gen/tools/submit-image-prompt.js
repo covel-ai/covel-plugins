@@ -1,5 +1,5 @@
-import { makeProposal } from "../lib/covel-helpers.js";
 import {
+  makeProposal,
   withEmittedEvents,
   withPendingProposals,
 } from "../lib/covel-helpers.js";
@@ -25,10 +25,12 @@ export default function ({ tool, z, shortId }) {
       promptMode,
       composition: selectedComposition,
     };
+    // context.random makes the key repeat in a test server started with a seed.
     const promptKey = shortId(
       "prompt",
       normalizedPrompt.slice(0, 96),
       context.sessionId,
+      context.random,
     );
     const now = new Date().toISOString();
 

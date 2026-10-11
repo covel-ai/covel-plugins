@@ -1,35 +1,36 @@
-import { runImageGeneration } from "../../lib/covel-helpers.js";
 /**
  * @covel/plugin-dashscope-image-gen — image-generator handler
  *
  * Triggered by the `image.generate.requested` event from the sibling
  * `prompt-generator` agent. Generation goes through the framework's unified
- * `ctx.images.generate()` pipeline: the kernel picks the wire from the
- * resolved slot (`modelPresetId` → `[covel.<slot>]` in `~/.covel/llm.toml`,
- * `providerRequestMetadata.imageWire = "dashscope-wan"`), which handles the
- * DashScope wan2.x async task (submit + poll), the `x`→`*` size-separator
- * conversion, per-model negative_prompt / `n` handling, the
- * `X-DashScope-Async` header, SSRF/redirect guarding, and OSS URL ingestion
- * into the framework MediaStore.
+ * `ctx.images.generate()` pipeline: the kernel resolves the slot named by
+ * `modelPresetId` (`[covel.<slot>]` in llm.toml, with
+ * `providerRequestMetadata.imageWire = "dashscope-wan"`), and that wire handles
+ * the DashScope wan2.x async task (submit + poll), the `x`→`*` size-separator
+ * conversion, per-model negative_prompt / `n` handling, SSRF/redirect guarding,
+ * and OSS URL ingestion into the framework MediaStore.
  *
- * The provider-agnostic trunk (prompt extraction, pending record, gallery
- * fan-out, failure cards) lives in the bundled lib/covel-helpers.js
- * `runImageGeneration`; this file only declares what is dashscope-specific:
- * the event topic, the default preset, and the userSettings mapping
- * (negativePrompt passthrough + quality display field).
+ * The provider-agnostic trunk (prompt extraction, model availability check,
+ * pending record, gallery fan-out, failure cards) is the SDK's
+ * `runImageGeneration`, bundled in lib/covel-helpers.js; this file only
+ * declares what is DashScope-specific: the event topic, the default preset,
+ * and the settings mapping (negativePrompt passthrough + quality display
+ * field).
  *
- * Execution mode: `background` (declared in PLUGIN.md). The framework
- * writes a `_jobs/<jobId>` pending record before invoking this handler
- * and defers the call so the HTTP response flushes immediately. Right-
- * panel gallery subscribes to `plugin-data.changed` SSE on the `images`
- * namespace and re-renders when the commit lands.
+ * Execution: `schedule.manual.execution: background` (RUNTIME.md). The host
+ * runs it as a durable runtime job, which the `_jobs` panel data source shows.
+ * The gallery re-renders on `plugin-data.changed` for the `images` namespace.
  */
 
-import { optionalNumber, optionalString } from "../../lib/covel-helpers.js";
+import {
+  optionalNumber,
+  optionalString,
+  runImageGeneration,
+} from "../../lib/covel-helpers.js";
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 300000;
 
-/** @type {import('@covel/plugin-loader').FunctionHandler} */
+/** @type {import("@covel/plugin-handlers-utils").PluginFunctionHandler} */
 export default async function imageGeneratorHandler(ctx) {
   return runImageGeneration(ctx, {
     source: "dashscope-image-gen",

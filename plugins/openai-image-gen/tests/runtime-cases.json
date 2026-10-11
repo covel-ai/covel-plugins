@@ -27,7 +27,12 @@
       ],
       "expect": {
         "events": ["openai-image.generate.requested"],
-        "pluginData": [{ "namespace": "prompts", "field": "prompt" }],
+        "pluginData": [
+          {
+            "namespace": "prompts",
+            "field": "prompt"
+          }
+        ],
         "runtimeResults": [
           {
             "runtimeId": "openai-image-gen/prompt-generator",
@@ -35,7 +40,7 @@
           },
           {
             "runtimeId": "openai-image-gen/image-generator",
-            "status": "failed"
+            "status": "skipped"
           }
         ]
       }
@@ -69,7 +74,12 @@
       ],
       "expect": {
         "events": ["openai-image.generate.requested"],
-        "pluginData": [{ "namespace": "prompts", "field": "prompt" }],
+        "pluginData": [
+          {
+            "namespace": "prompts",
+            "field": "prompt"
+          }
+        ],
         "runtimeResults": [
           {
             "runtimeId": "openai-image-gen/prompt-generator",
@@ -77,7 +87,7 @@
           },
           {
             "runtimeId": "openai-image-gen/image-generator",
-            "status": "failed"
+            "status": "skipped"
           }
         ]
       }
@@ -109,7 +119,12 @@
       ],
       "expect": {
         "events": ["openai-image.generate.requested"],
-        "pluginData": [{ "namespace": "prompts", "field": "prompt" }],
+        "pluginData": [
+          {
+            "namespace": "prompts",
+            "field": "prompt"
+          }
+        ],
         "runtimeResults": [
           {
             "runtimeId": "openai-image-gen/prompt-generator",
@@ -117,7 +132,7 @@
           },
           {
             "runtimeId": "openai-image-gen/image-generator",
-            "status": "failed"
+            "status": "skipped"
           }
         ]
       }
@@ -155,7 +170,12 @@
             "errorIncludes": "requireToolUse"
           }
         ],
-        "pluginData": [{ "namespace": "_jobs", "status": "failed" }]
+        "pluginData": [
+          {
+            "namespace": "_runtime_jobs",
+            "status": "failed"
+          }
+        ]
       }
     },
     {
@@ -175,7 +195,11 @@
       },
       "expect": {
         "pluginData": [
-          { "namespace": "images", "status": "done", "field": "ref" }
+          {
+            "namespace": "images",
+            "status": "done",
+            "field": "ref"
+          }
         ],
         "logs": ["image.generate.started", "image.generate.completed"]
       },

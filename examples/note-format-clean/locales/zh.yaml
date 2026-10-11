@@ -1,0 +1,5 @@
+# Chinese text of the note-format-clean plugin.
+# A section named after a manifest file translates its labels, under the same keys.
+PLUGIN.md:
+  displayName: 笔记清理
+  description: 清理行首行尾空白和多余空行，同时保留段落结构。

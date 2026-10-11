@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import register from "../server/index.js";
@@ -8,7 +9,7 @@ import save from "../runtimes/save/handler.js";
 const formatter = {
   pluginId: "note-formatter",
   name: "format-note",
-  contract: "examples/note-format@1",
+  contract: "examples.note-format@1",
 };
 
 function saveContext(manualPayload, services = {}) {
@@ -42,13 +43,41 @@ test("/notes only requests the notes panel", async () => {
     message: "Notes panel opened.",
     clientAction: { type: "open-plugin-panel", panelId: "notes-workbench" },
   });
+  // The host passes the session language's translations as `ctx.messages`.
+  const translated = await action.handler(
+    {},
+    {
+      locale: "zh-CN",
+      messages: {
+        translations: { "Notes panel opened.": "已打开记录面板。" },
+        labels: {},
+      },
+    },
+  );
+  assert.equal(translated.message, "已打开记录面板。");
+});
+
+test("code text has a Chinese translation in locales/zh.yaml", async () => {
+  const catalog = await readFile(
+    new URL("../locales/zh.yaml", import.meta.url),
+    "utf8",
+  );
+  for (const source of ["../server/index.js", "../runtimes/save/handler.js"]) {
+    const code = await readFile(new URL(source, import.meta.url), "utf8");
+    const texts = [
+      ...code.matchAll(/translate\(\s*ctx,\s*"((?:[^"\\]|\\.)*)"/g),
+    ].map((match) => match[1]);
+    assert.ok(texts.length > 0, source);
+    for (const text of texts)
+      assert.ok(catalog.includes(`\n  ${text}: `), `${source}: ${text}`);
+  }
 });
 
 test("providers lists only format-note and sorts by plugin ID", async () => {
   const result = await providers({
     services: {
       async discover(contract) {
-        assert.equal(contract, "examples/note-format@1");
+        assert.equal(contract, "examples.note-format@1");
         return [
           { ...formatter, pluginId: "zeta", description: "Z" },
           { ...formatter, name: "other", pluginId: "ignored" },
@@ -93,7 +122,7 @@ test("selected provider is called with the contract, text, and time budget", asy
         assert.deepEqual(request, {
           pluginId: "note-formatter",
           name: "format-note",
-          contract: "examples/note-format@1",
+          contract: "examples.note-format@1",
           input: { text: "Hello" },
         });
         assert.deepEqual(options, { timeoutMs: 1500, signal: ctx.signal });
@@ -122,6 +151,16 @@ test("invalid input, unavailable providers, and failed formatting do not save", 
   await assert.rejects(save(unavailable.ctx), /unavailable/);
   assert.equal(unavailable.writes.length, 0);
 
+  const translated = saveContext({ text: " " });
+  translated.ctx.messages = {
+    translations: {
+      "Note text must contain nonblank text and be at most 4000 characters.":
+        "记录内容须为 1 至 4000 个字符，且不能全为空白。",
+    },
+    labels: {},
+  };
+  await assert.rejects(save(translated.ctx), /记录内容/);
+
   for (const call of [
     async () => {
       throw new Error("failed");
@@ -135,5 +174,26 @@ test("invalid input, unavailable providers, and failed formatting do not save", 
     );
     await assert.rejects(save(ctx));
     assert.equal(writes.length, 0);
+  }
+});
+
+test("the panel invokes only bridge actions the host offers and declared manual runtimes", async () => {
+  const html = await readFile(
+    new URL("../ui/workbench.html", import.meta.url),
+    "utf8",
+  );
+  const actions = new Set(
+    [...html.matchAll(/window\.covel\.invoke\(\s*"([^"]+)"/g)].map(
+      (match) => match[1],
+    ),
+  );
+  assert.deepEqual([...actions].sort(), ["invokeRuntime", "setUiState"]);
+  for (const name of ["providers", "save"]) {
+    assert.match(html, new RegExp(`invoke\\("${name}"`));
+    const manifest = await readFile(
+      new URL(`../runtimes/${name}/RUNTIME.md`, import.meta.url),
+      "utf8",
+    );
+    assert.match(manifest, /trigger:\n {4}type: manual/);
   }
 });

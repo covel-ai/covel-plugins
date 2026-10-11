@@ -1,6 +1,6 @@
 import { z } from "./vendor/zod.js";
 
-export const CONTRACT = "demo/choice-recommendation@1";
+export const CONTRACT = "jev-choice-demo.recommendation@1";
 export const inputSchema = z
   .object({
     presetId: z.string().min(1),
@@ -99,7 +99,7 @@ export async function recommend(input, ctx) {
   }
 }
 
-/** @param {import('@covel/runtime').PluginAPI} covel */
+/** @param {import('@covel/plugin-handlers-utils').PluginAPI} covel */
 export default function register(covel) {
   covel.registerService({
     name: "recommend",

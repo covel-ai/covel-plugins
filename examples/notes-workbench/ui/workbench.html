@@ -5,30 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Notes Workbench</title>
     <style>
+      /* The host hands over the active style scheme as --covel-* properties.
+         The fallbacks only matter before the first state arrives. */
       :root {
         color-scheme: light dark;
-        font:
-          14px/1.5 system-ui,
-          sans-serif;
       }
       * {
         box-sizing: border-box;
       }
       body {
         margin: 0;
-        padding: 14px;
-        color: CanvasText;
-        background: Canvas;
+        padding: 12px 4px;
+        background: transparent;
+        color: var(--covel-foreground, CanvasText);
+        font-family: var(--covel-font-sans, system-ui), system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
       }
       h1 {
         margin: 0;
+        font-family:
+          var(--covel-font-display, var(--covel-font-sans, system-ui)),
+          system-ui, sans-serif;
         font-size: 18px;
         letter-spacing: -0.02em;
       }
       .hint,
       .meta {
         margin: 4px 0 12px;
-        opacity: 0.7;
+        color: var(--covel-muted-foreground, GrayText);
         font-size: 12px;
       }
       label {
@@ -40,14 +45,14 @@
       select,
       button {
         font: inherit;
-        border: 1px solid GrayText;
-        border-radius: 8px;
+        border: 1px solid var(--covel-border, GrayText);
+        border-radius: var(--covel-radius-control, 8px);
       }
       textarea,
       select {
         width: 100%;
-        color: CanvasText;
-        background: Canvas;
+        color: inherit;
+        background: var(--covel-surface, Canvas);
         padding: 8px;
       }
       textarea {
@@ -58,15 +63,20 @@
       button {
         padding: 7px 12px;
         cursor: pointer;
-        background: ButtonFace;
-        color: ButtonText;
+        background: transparent;
+        color: inherit;
       }
-      button:disabled {
-        opacity: 0.5;
+      button:hover:not(:disabled) {
+        border-color: var(--covel-accent, Highlight);
+      }
+      button:disabled,
+      textarea:disabled,
+      select:disabled {
+        opacity: 0.55;
         cursor: default;
       }
       :focus-visible {
-        outline: 2px solid Highlight;
+        outline: 2px solid var(--covel-accent, Highlight);
         outline-offset: 2px;
       }
       .actions {
@@ -76,18 +86,19 @@
         margin-top: 10px;
       }
       #save {
-        color: HighlightText;
-        background: Highlight;
-        border-color: Highlight;
+        color: var(--covel-accent-foreground, HighlightText);
+        background: var(--covel-accent, Highlight);
+        border-color: var(--covel-accent, Highlight);
       }
       #status {
         min-height: 2.5em;
         margin: 8px 0;
         font-size: 12px;
+        color: var(--covel-muted-foreground, GrayText);
         overflow-wrap: anywhere;
       }
       #status[data-error="true"] {
-        color: light-dark(#a32929, #ffb4ab);
+        color: var(--covel-danger, light-dark(#a32929, #ffb4ab));
       }
       h2 {
         margin: 12px 0 6px;
@@ -101,7 +112,7 @@
         list-style: none;
       }
       #notes li {
-        border-top: 1px solid GrayText;
+        border-top: 1px solid var(--covel-border, GrayText);
         padding: 10px 0;
       }
       .note-text {
@@ -139,6 +150,9 @@
     </p>
     <ul id="notes" aria-label="Saved notes"></ul>
     <script>
+      // The host passes this document no translations, so it carries its own
+      // text: English, plus Simplified Chinese. Traditional Chinese and every
+      // other locale read English.
       const messages = {
         en: {
           title: "Notes Workbench",
@@ -205,6 +219,7 @@
       const refresh = document.getElementById("refresh");
       const status = document.getElementById("status");
       let locale = "en",
+        uiLocale = "en",
         ready = false,
         locked = false,
         busy = false,
@@ -215,6 +230,14 @@
         statusKey = "ready",
         statusError = false;
       const t = (key) => messages[locale][key];
+      function languageOf(value) {
+        try {
+          const tag = new Intl.Locale(String(value)).maximize();
+          return tag.language === "zh" && tag.script === "Hans" ? "zh" : "en";
+        } catch {
+          return "en";
+        }
+      }
       function showStatus(key, error = false) {
         statusKey = key;
         statusError = error;
@@ -260,6 +283,13 @@
           showStatus("cacheFailed", true);
         }
       }
+      function formatTime(date) {
+        try {
+          return date.toLocaleString(uiLocale);
+        } catch {
+          return date.toLocaleString("en");
+        }
+      }
       function renderNotes() {
         const list = document.getElementById("notes");
         list.replaceChildren();
@@ -280,7 +310,7 @@
           const date = new Date(note.createdAt);
           const timestamp = Number.isNaN(date.valueOf())
             ? ""
-            : date.toLocaleString(locale === "zh" ? "zh-CN" : "en");
+            : formatTime(date);
           meta.textContent = `${note.providerPluginId ? `${t("source")}: ${note.providerPluginId}` : t("original")} · ${timestamp}`;
           row.append(body, meta);
           list.append(row);
@@ -387,11 +417,12 @@
           if (draft && typeof draft.providerPluginId === "string")
             chosenProvider = draft.providerPluginId;
         }
-        locale = state.locale?.toLowerCase().startsWith("zh") ? "zh" : "en";
+        uiLocale = typeof state.locale === "string" ? state.locale : "en";
+        locale = languageOf(uiLocale);
         locked = state.locked === true;
         records =
           state.data && typeof state.data === "object" ? state.data : {};
-        document.documentElement.lang = locale;
+        document.documentElement.lang = locale === "zh" ? "zh-Hans" : "en";
         for (const element of document.querySelectorAll("[data-i18n]"))
           element.textContent = t(element.dataset.i18n);
         text.placeholder = t("placeholder");

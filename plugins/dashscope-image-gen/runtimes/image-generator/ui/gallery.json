@@ -1,14 +1,18 @@
 {
   "id": "dashscope-image-gen-gallery",
   "group": "image-studio",
-  "groupLabel": { "zh": "图像", "en": "Images" },
+  "groupLabel": "Images",
   "groupOrder": 450,
-  "label": { "zh": "画廊", "en": "Gallery" },
+  "label": "Gallery",
   "icon": "image",
-  "dataSource": { "namespace": "images" },
+  "dataSource": {
+    "namespace": "images"
+  },
   "alwaysRender": true,
   "view": {
     "component": "ImageGallery",
-    "props": { "pluginId": "dashscope-image-gen" }
+    "props": {
+      "pluginId": "dashscope-image-gen"
+    }
   }
 }

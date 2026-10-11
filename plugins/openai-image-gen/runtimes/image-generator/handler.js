@@ -1,28 +1,30 @@
-import { runImageGeneration } from "../../lib/covel-helpers.js";
 /**
  * @covel/plugin-openai-image-gen — image-generator handler
  *
  * Triggered by `openai-image.generate.requested` from the sibling
  * `prompt-generator` agent. Generation goes through the framework's unified
- * `ctx.images.generate()` pipeline: the kernel picks the wire from the
- * resolved slot (`modelPresetId` → `[covel.<slot>]` in `~/.covel/llm.toml`),
- * handles the HTTP call + SSRF guard + response parsing + promptHash dedup,
- * and persists bytes into MediaStore. Switching providers is a pure
- * llm.toml edit — no plugin code changes.
+ * `ctx.images.generate()` pipeline: the kernel resolves the slot named by
+ * `modelPresetId` (`[covel.<slot>]` in llm.toml), handles the HTTP call, SSRF
+ * guard, response parsing and promptHash dedup, and persists the bytes into
+ * MediaStore. Switching providers is an llm.toml edit, not a code change.
  *
- * The provider-agnostic trunk (prompt extraction, pending record, gallery
- * fan-out, failure cards) lives in the bundled lib/covel-helpers.js
- * `runImageGeneration`; this file only declares what is openai-specific:
- * the event topic, the default preset, the `composition` prompt field, the
- * OpenAI size normalization, and the style-into-prompt folding.
+ * The provider-agnostic trunk (prompt extraction, model availability check,
+ * pending record, gallery fan-out, failure cards) is the SDK's
+ * `runImageGeneration`, bundled in lib/covel-helpers.js; this file only
+ * declares what is OpenAI-specific: the event topic, the default preset, the
+ * `composition` prompt field, the size normalization, and the
+ * style-into-prompt folding.
  *
- * Execution mode: `background` — the framework writes a `_jobs/<jobId>`
- * pending record before invoking this handler. The right-panel gallery
- * subscribes to `plugin-data.changed` SSE on the `images` namespace and
- * re-renders when commit lands.
+ * Execution: `schedule.manual.execution: background` (RUNTIME.md). The host
+ * runs it as a durable runtime job, which the `_jobs` panel data source shows.
+ * The gallery re-renders on `plugin-data.changed` for the `images` namespace.
  */
 
-import { optionalNumber, optionalString } from "../../lib/covel-helpers.js";
+import {
+  optionalNumber,
+  optionalString,
+  runImageGeneration,
+} from "../../lib/covel-helpers.js";
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 300000;
 
@@ -36,7 +38,7 @@ function normalizeImageSize(value) {
     .toLowerCase();
 }
 
-/** @type {import('@covel/plugin-loader').FunctionHandler} */
+/** @type {import("@covel/plugin-handlers-utils").PluginFunctionHandler} */
 export default async function imageGeneratorHandler(ctx) {
   return runImageGeneration(ctx, {
     source: "openai-image-gen",

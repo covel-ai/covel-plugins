@@ -1,0 +1,25 @@
+# Chinese text of the notes-workbench plugin.
+# A section named after a manifest file translates its labels, under the same keys.
+# messages translates the UI spec and the text in code: English text, then its translation.
+# The HTML panel (ui/workbench.html) carries its own text: the host passes it no translations.
+PLUGIN.md:
+  displayName: 记录工作台
+  description: 保存会话记录，并可先交给已启用的记录格式化服务处理。
+  contributes:
+    commands:
+      - name: notes
+        description: 打开记录面板。
+runtimes/providers/RUNTIME.md:
+  description: 列出当前会话可用的记录格式化服务。
+runtimes/save/RUNTIME.md:
+  description: 原样保存记录，或先经所选格式化服务处理再保存。
+messages:
+  Notes Workbench: 记录工作台
+  shortLabel|Notes: 记录
+  Notes panel opened.: 已打开记录面板。
+  Enter note text.: 请输入记录内容。
+  Note text must contain nonblank text and be at most 4000 characters.: 记录内容须为 1 至 4000 个字符，且不能全为空白。
+  Invalid formatter plugin ID.: 格式化插件 ID 无效。
+  The selected note formatter is unavailable.: 所选记录格式化插件当前不可用。
+  Note formatting failed. Retry or save the original text.: 记录格式化失败，请重试或选择保存原文。
+  The formatted note is blank, invalid, or exceeds 8000 characters.: 格式化结果无效或超过 8000 个字符。

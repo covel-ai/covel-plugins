@@ -1,0 +1,38 @@
+# Chinese text of the mimo-tts plugin.
+# A section named after a manifest file translates its labels, under the same keys.
+# messages translates the UI specs and the text in code: English text, then its translation.
+PLUGIN.md:
+  displayName: 语音朗读
+  description: 把故事内容朗读成语音，可自动朗读，也可以手动朗读某一段。
+  contributes:
+    settings:
+      - key: enabled
+        label: 自动朗读
+        description: 每轮故事结束后自动生成旁白。关闭后可以用「朗读」按钮手动生成。
+      - key: modelPresetId
+        label: 服务配置
+        description: 选择设置里用于朗读的服务配置。默认使用 mimo-tts。
+      - key: voice
+        label: 音色
+        description: 选择朗读声音。需要自定义声音时，在服务后台创建后填写对应名称。
+      - key: format
+        label: 音频格式
+        description: 推荐使用常见音频格式，方便直接播放。
+      - key: maxChars
+        label: 单次最大字符数
+        description: 单次朗读的最长文字。太长的内容会自动截短，避免等待过久。
+      - key: requestTimeoutMs
+        label: 请求超时(ms)
+        description: 单次朗读最多等待多久，避免语音任务一直停住。
+runtimes/auto-narrate/RUNTIME.md:
+  description: 每轮故事结束后自动生成旁白语音。
+runtimes/manual-narrate/RUNTIME.md:
+  description: 点击「朗读」按钮后，为当前段落生成语音。
+messages:
+  Narration: 旁白
+  No narration yet. Continue the story, or use the Speak button in the story area.: 还没有旁白音频。继续推进故事，或在剧情区点「朗读」按钮。
+  Speak: 朗读
+  Speak this paragraph: 朗读这一段
+  AUTO: 自动
+  MANUAL: 手动
+  Turn {turn}: 回合 {turn}

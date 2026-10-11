@@ -4,12 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <style>
+      /* The host sets the --covel-* theme tokens; the fallbacks are a dark scheme. */
       :root {
-        color-scheme: dark;
         font:
-          13px/1.5 system-ui,
+          13px/1.5 var(--covel-font-sans, system-ui),
+          system-ui,
           sans-serif;
-        color: #d5e6e7;
+        color: var(--covel-foreground, #d5e6e7);
       }
       body {
         margin: 0;
@@ -25,24 +26,24 @@
       h3 {
         margin: 0;
         font-size: 13px;
-        color: #6ac9d0;
+        color: var(--covel-accent, #6ac9d0);
       }
       small,
       #status {
-        color: #91a5ad;
+        color: var(--covel-muted-foreground, #91a5ad);
       }
       #list {
         display: grid;
         gap: 6px;
       }
       .option {
-        border: 1px solid #354951;
-        border-radius: 5px;
+        border: 1px solid var(--covel-border, #354951);
+        border-radius: var(--covel-radius-control, 5px);
         padding: 8px 10px;
       }
       .option.selected {
-        border-color: #52bbc5;
-        background: #21474c50;
+        border-color: var(--covel-accent, #52bbc5);
+        background: color-mix(in srgb, var(--covel-accent, #52bbc5) 14%, transparent);
       }
       .line {
         display: flex;
@@ -53,7 +54,7 @@
         flex: 1;
       }
       .score {
-        color: #6dd1d9;
+        color: var(--covel-accent, #6dd1d9);
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
       }
@@ -62,12 +63,12 @@
         height: 4px;
         display: block;
         margin-top: 6px;
-        accent-color: #62ced5;
+        accent-color: var(--covel-accent, #62ced5);
       }
       #note {
         margin: 8px 0 0;
         font-size: 11px;
-        color: #82969d;
+        color: var(--covel-muted-foreground, #82969d);
       }
     </style>
   </head>
@@ -81,9 +82,18 @@
     <p id="note"></p>
     <script>
       const el = (id) => document.getElementById(id);
+      // Simplified Chinese only; Traditional Chinese and every other locale read English.
+      const isSimplifiedChinese = (locale) => {
+        try {
+          const tag = new Intl.Locale(String(locale)).maximize();
+          return tag.language === "zh" && tag.script === "Hans";
+        } catch {
+          return false;
+        }
+      };
       window.covel.subscribe(
-        ({ data = {}, context = {}, locale = "zh", locked = false }) => {
-          const zh = locale.startsWith("zh");
+        ({ data = {}, context = {}, locale = "en", locked = false }) => {
+          const zh = isSimplifiedChinese(locale);
           el("title").textContent = zh
             ? "Jev · 选项推荐 Demo"
             : "Jev · Choice recommendation demo";
