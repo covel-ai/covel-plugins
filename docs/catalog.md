@@ -4,6 +4,16 @@
 
 Plugins and Worlds consume one implementation from [covel-catalog](https://github.com/covel-ai/covel-catalog). This repository keeps plugin content, collection configuration and a thin site entry. The API, adapters, shared UI, protocols and deployment files belong to the independent catalog repository. Both consumers pin an exact commit with a full SHA256 manifest; CI rejects modified, missing or extra vendor files. Shared changes are reviewed in covel-catalog before upgrading both consumers. Each Pages workflow is checked against the same vendored template.
 
+## Production Cloudflare deployment (2026-10-29)
+
+Production uses `https://api.covel.cc` from [covel-catalog-cloudflare](https://github.com/covel-ai/covel-catalog-cloudflare), with Workers, D1 and private R2. Its trusted Actions runner owns collection, checkpoints and ingestion for both directories. The Node deployment and combined collection workflow described below remain available for other deployments; they are not the active production pipeline.
+
+The active consumer workflow is **Publish site with Cloudflare catalog** (`.github/workflows/site.yml`): push to main or dispatch, validate the pinned kit, check the current API policy/catalog, build with `VITE_CATALOG_API`, then deploy the static shell. Configure repository **variable** `DIRECTORY_API_URL=https://api.covel.cc`. This consumer needs no catalog write token or Cloudflare credential. Local fixture `catalog.json` is excluded from the production artifact; the browser reads paginated live API summaries.
+
+Keep the legacy **Collect plugins and publish Pages** (`pages.yml`) workflow disabled in GitHub Actions and its `CATALOG_API_URL` variable unset. It uses the Node-only proxy and must not run against Cloudflare. Do not enable both pipelines. The shared legacy template remains byte-checked for consumers choosing the Node backend.
+
+Pages uses the GitHub Actions source and custom domain `plugins.covel.cc`. Set its DNS-only CNAME to `covel-ai.github.io`, then enable HTTPS enforcement after certificate issuance. To restore a previous site, revert the relevant site change and push main (or dispatch at that reviewed main revision); do not roll back the independent API policy or append-only version history. Collection/rule operations and D1/R2 recovery belong to the Cloudflare deployment repository.
+
 ## Discovery and migration
 
 Add either `covel-plugin` or `covel-plugins` to a public repository's About → Topics. Each collection searches both, deduplicates numeric repository IDs, rechecks membership, and reads manifests from a fixed commit. No listing PR or registry JSON is needed. A repository without a usable manifest remains pending; a malformed sibling does not hide valid packages. Official identity comes only from `catalog/config.json`. Removing both topics removes automatically discovered entries; configured migration seeds remain exceptions while public. Archived packages are hidden by default and cannot be downloaded through the platform.

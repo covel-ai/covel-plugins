@@ -1,0 +1,68 @@
+name: Publish site with Cloudflare catalog
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: production-pages
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm check && pnpm test:catalog
+      - name: Verify current Cloudflare catalog and policy
+        env:
+          DIRECTORY_API_URL: ${{ vars.DIRECTORY_API_URL }}
+          CATALOG_KIND: plugins
+        run: |
+          node --input-type=module <<'NODE'
+          const base = new URL(process.env.DIRECTORY_API_URL);
+          if (base.protocol !== 'https:' || base.username || base.password || base.pathname !== '/' || base.search || base.hash) throw new Error('Configure an HTTPS API origin');
+          for (const path of ['/v1/policy', `/v1/catalog?kind=${process.env.CATALOG_KIND}&limit=24`]) {
+            const response = await fetch(new URL(path, base), { signal: AbortSignal.timeout(30000) });
+            if (!response.ok) throw new Error(`API preflight failed: ${response.status}`);
+            const data = await response.json();
+            if (data.schemaVersion !== 1) throw new Error('Unexpected schema');
+            if (path === '/v1/policy') {
+              if (!(Date.parse(data.expiresAt) > Date.now())) throw new Error('Policy expired');
+            } else if (data.kind !== process.env.CATALOG_KIND || data.mode !== 'github' || !data.snapshotId || !Array.isArray(data.items) || data.items.length > 24) throw new Error('Incomplete catalog');
+          }
+          NODE
+      - name: Build API-backed site
+        run: pnpm build:pages
+        env:
+          VITE_CATALOG_API: ${{ vars.DIRECTORY_API_URL }}
+          BASE_PATH: ./
+      - name: Omit local fixtures from the public artifact
+        run: rm -f dist/catalog.json
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
