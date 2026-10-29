@@ -10,7 +10,13 @@
     "test:registry": "node --test scripts/*.test.mjs examples/story-note/tests/*.test.js examples/notes-workbench/tests/*.test.js examples/note-format-clean/tests/*.test.js examples/note-format-outline/tests/*.test.js",
     "test:plugins": "vitest run",
     "check:vendor": "node scripts/build-vendor.mjs --check",
-    "check:covel": "node scripts/check-covel.mjs"
+    "check:covel": "node scripts/check-covel.mjs",
+    "test:catalog": "node --test packages/catalog-kit/test/*.test.mjs scripts/catalog/*.test.mjs",
+    "collect": "node scripts/catalog/collect.mjs",
+    "collect:local": "node scripts/catalog/collect.mjs --local",
+    "build:site": "pnpm --filter @covel/directory-site build",
+    "test:site": "playwright test",
+    "serve:catalog": "node service/main.mjs"
   },
   "engines": {
     "node": ">=26"
@@ -18,10 +24,12 @@
   "packageManager": "pnpm@11.22.0",
   "devDependencies": {
     "@playwright/test": "1.64.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "esbuild": "0.28.2",
     "semver": "^7.8.5",
     "vitest": "4.1.11",
     "yaml": "2.9.1",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   }
 }

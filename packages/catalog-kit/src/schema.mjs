@@ -27,6 +27,7 @@ export const entrySchema = z.object({
   tags: z.array(z.string().max(100)).max(50), locales: z.array(z.string().max(30)).max(30),
   translations: z.record(z.string().max(30), z.object({ name: z.string().max(200).optional(), description: text.optional(), notes: text.optional() }).strict()),
   official: z.boolean(), discovery: z.enum(["topic", "seed", "local"]), fork: z.boolean(),
+  legacyMetadata: z.object({ covelVersion: z.string().max(200).nullable(), notes: text }).strict().optional(),
   status: z.enum(["indexed", "pending", "archived"]), problems: z.array(z.string().max(300)).max(100),
   stars: count.nullable(), downloadRequests: count.nullable(),
   releasePublishedAt: date, firstSeenAt: date, contentChangedAt: date, fetchedAt: date,

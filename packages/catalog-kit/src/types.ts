@@ -52,6 +52,7 @@ export interface CatalogEntry {
   revisionId?: string | null;
   blocked?: boolean;
   policyReason?: string | null;
+  legacyMetadata?: { covelVersion: string | null; notes: string };
 }
 
 export interface Catalog {
@@ -105,6 +106,9 @@ export interface VersionRecord {
   firstSeenAt: string;
   conflict: boolean;
   artifacts: ArtifactRecord[];
+  blocked?: boolean;
+  observations?: { entryKey: string; sourceRef: SourceRef; commitSha: string; observedAt: string | null; conflict: boolean }[];
+  metadata?: Pick<CatalogEntry, "covelVersion" | "license" | "readmeUrl" | "status">;
 }
 
 export interface ArtifactRecord {

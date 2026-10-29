@@ -1,7 +1,7 @@
 ---
 id: jev-choice-demo
 kind: plugin
-version: 0.1.0
+version: 0.1.1
 covel: ">=0.0.50"
 displayName: Jev Choice Recommendations Demo
 description: >-

@@ -80,7 +80,8 @@ export function createGitHubClient({
   let requests = 0;
   let remaining = null;
   let resetAt = null;
-  async function run(endpoint, { optional = false, immutable = false } = {}) {
+  async function run(endpoint, { optional = false, immutable = false, responseLimitBytes = maxResponseBytes } = {}) {
+    if (!Number.isSafeInteger(responseLimitBytes) || responseLimitBytes < 1 || responseLimitBytes > 300 * 1024 * 1024) throw new GitHubError("Invalid GitHub response byte limit");
     let url = apiUrl(endpoint);
     let redirects = 0;
     let attempt = 0;
@@ -147,7 +148,7 @@ export function createGitHubClient({
         continue;
       }
       if (!response.ok) { await response.body?.cancel(); throw new GitHubError(`GitHub HTTP ${response.status}: ${url.pathname}`, response.status); }
-      const body = await jsonBody(response, maxResponseBytes);
+      const body = await jsonBody(response, responseLimitBytes);
       if (body?.private !== true) await cache.set(key, { etag: response.headers.get("etag"), body });
       return body;
     }
@@ -208,7 +209,7 @@ export async function discoverRepositories(get, topics, { now = new Date() } = {
 
 export async function readBlob(get, base, file, maxBytes = MAX_FILE_BYTES) {
   if (!/^\/repos\/[A-Za-z0-9-]+\/[A-Za-z0-9_.-]+$/.test(base)) throw new MetadataError("Invalid repository API base");
-  if (file?.type !== "blob" || !/^100(644|755)$/.test(file.mode) || file.size > maxBytes || !/^[a-f0-9]{40,64}$/.test(file.sha)) throw new MetadataError("Metadata must be a regular bounded Git blob");
+  if (file?.type !== "blob" || !/^100(644|755)$/.test(file.mode) || file.size > maxBytes || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(file.sha)) throw new MetadataError("Metadata must be a regular bounded Git blob");
   const blob = await get(`${base}/git/blobs/${file.sha}`, { immutable: true });
   if (blob.encoding !== "base64" || typeof blob.content !== "string" || blob.size > maxBytes || blob.content.length > Math.ceil(maxBytes * 1.5)) throw new MetadataError("Invalid or oversized metadata blob");
   const bytes = Buffer.from(blob.content, "base64");
@@ -222,7 +223,7 @@ export async function repositoryTree(get, repository) {
   let commit;
   try { commit = await get(`${base}/commits/${encodeURIComponent(repository.default_branch)}`); }
   catch (error) { if (error instanceof GitHubError && error.status === 409) return null; throw error; }
-  if (!/^[a-f0-9]{40,64}$/.test(commit.sha) || !/^[a-f0-9]{40,64}$/.test(commit.commit?.tree?.sha)) throw new GitHubError("Invalid repository commit");
+  if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(commit.sha) || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(commit.commit?.tree?.sha)) throw new GitHubError("Invalid repository commit");
   const tree = await get(`${base}/git/trees/${commit.commit.tree.sha}?recursive=1`, { immutable: true });
   if (tree.truncated !== false || !Array.isArray(tree.tree)) throw new GitHubError("Incomplete repository tree; refusing partial publication");
   return { commitSha: commit.sha, tree: tree.tree };

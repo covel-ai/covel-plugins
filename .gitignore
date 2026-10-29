@@ -11,3 +11,8 @@ site/public/catalog.json
 artifacts/
 test-results/
 playwright-report/
+.cache/
+*.tsbuildinfo
+service/data/
+service/backups/
+service/.env

@@ -9,9 +9,10 @@ collector transport, policy engine, or download service.
 
 ## Ownership and rollout
 
-- Worlds owns the shared GitHub transport/discovery, its tests, this specification,
-  the worlds adapter, and consumer synchronization checks.
-- Plugins owns shared types/UI, registry service, plugins adapter, packaging and
+- Worlds owns shared GitHub transport/discovery, durable collection rounds, tag
+  discovery, ZIP core, their tests, this specification, the worlds adapter, and
+  consumer synchronization checks.
+- Plugins owns shared types/UI, registry service, plugins adapter and
   service deployment files. Changes affecting the other adapter are communicated
   before integration; the other maintainer reviews the resulting diff.
 - Each repository retains its package manager. Runtime: Node 26. Pages deployment
@@ -85,6 +86,26 @@ Keep these separate in durable storage:
 3. Artifact: revision ID, packager version, ZIP SHA256, byte size and storage key.
    Repacking may add another artifact but cannot overwrite the old artifact or be
    presented as a new source-package version.
+
+Release evidence has an explicit tag-name binding. For a repository containing
+exactly one package at its root, `<version>` or `v<version>` matches that package's
+manifest version. A nested package requires `<id>/v<version>` or
+`<package-path>/v<version>`. A generic monorepo tag cannot promote unrelated packages
+to stable releases, even if their development manifests contain valid SemVer.
+Unmatched refs remain source observations/diagnostics, not release candidates.
+Prerelease tags are recorded but never selected for the stable channel.
+
+`collectReleases` accepts `now: Date` and persists repository tag-page progress,
+each annotated-tag dereference and commit extraction. The adapter parses once per
+repository/commit and never chooses metadata based on the supplied diagnostic tag.
+`artifacts/releases.json` is a sidecar array, published with the current catalog;
+both queues are acknowledged only after successful output. Network and truncated
+tree failures abort publication; invalid package metadata yields diagnostics.
+GitHub tag pagination has no transactional history boundary or total count.
+Duplicate pages are rejected/restarted; tags inserted or removed during pagination
+can require the next round. A successful sidecar is a set of observed releases,
+not proof of exhaustive historical versions. Current Topics membership completeness
+is validated separately. The durable service retains earlier release observations.
 
 Hash normalization fixes path ordering and encoding; it must not rewrite source
 bytes or line endings. Record the algorithm; verify compatibility with the Covel
