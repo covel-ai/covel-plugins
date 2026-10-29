@@ -5,3 +5,9 @@ coverage/
 .env
 .env.*
 *.log
+.taste-skill/
+site/dist/
+site/public/catalog.json
+artifacts/
+test-results/
+playwright-report/
