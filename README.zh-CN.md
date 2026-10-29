@@ -20,7 +20,7 @@ Covel 官方维护的插件目录、官方可选扩展与开发示例。社区�
 
 ## 插件目录
 
-[网页目录](https://plugins.covel.cc/)提供搜索、官方／社区筛选、版本、仓库 Star 和统一 ZIP 下载，与[世界目录](https://worlds.covel.cc/)共用采集核心、界面与服务。正式发布需要配置共享服务；本地预览会明确标注尚不可用的实时功能。
+[网页目录](https://plugins.covel.cc/)提供搜索、官方／社区筛选、版本、仓库 Star 和统一 ZIP 下载，通过独立 [covel-catalog](https://github.com/covel-ai/covel-catalog) 与[世界目录](https://worlds.covel.cc/)共用采集核心、界面与服务。正式发布需要配置共享服务；本地预览会明确标注尚不可用的实时功能。
 
 每 6 小时、main 推送或手动触发采集。以当前 `PLUGIN.md`、`package.json` 为准，新包不需要新增 registry JSON 或申请收录 PR。`registry/plugins/` 仅保留迁移备注；官方身份由 `catalog/config.json` 指定，独立规则可以下架条目并停止平台下载。[架构与运维](docs/catalog.zh-CN.md)。
 
@@ -63,7 +63,7 @@ pnpm test:site          # 需要 Playwright Chromium
 pnpm test              # 原有官方插件回归测试
 ```
 
-采集／构建只有仓库只读权限。Pages 独立发布，必须先有完整快照被已配置的共享服务接受；失败保留旧站，持久检查点支持续跑。[部署与备份说明](docs/catalog.zh-CN.md)。
+采集／构建只有仓库只读权限。Pages 独立发布，必须先有完整快照被已配置的共享服务接受；失败保留旧站，持久检查点支持续跑。[消费端部署说明](docs/catalog.zh-CN.md)。
 
 Agent 开发技能位于 [`.agents/skills/create-plugin/SKILL.md`](.agents/skills/create-plugin/SKILL.md)，支持发现该目录的 Agent 可直接使用 `$create-plugin`。
 

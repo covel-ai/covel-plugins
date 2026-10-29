@@ -1,10 +1,10 @@
 import { readFile, readdir, mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createGitHubClient, discoverRepositories, diskCache, GitHubError, MetadataError, MAX_FILE_BYTES, readBlob, repositoryPath, repositoryTree } from "../../packages/catalog-kit/src/github.mjs";
-import { createCatalog, parseCatalog } from "../../packages/catalog-kit/src/schema.mjs";
-import { collectRound, fileCheckpoint } from "../../packages/catalog-kit/src/round.mjs";
-import { createRegistryGitHubClient } from "../../packages/catalog-kit/src/proxy-client.mjs";
+import { createGitHubClient, discoverRepositories, diskCache, GitHubError, MetadataError, MAX_FILE_BYTES, readBlob, repositoryPath, repositoryTree } from "@covel/catalog-kit/github";
+import { createCatalog, parseCatalog } from "@covel/catalog-kit/schema";
+import { collectRound, fileCheckpoint } from "@covel/catalog-kit/round";
+import { createRegistryGitHubClient } from "@covel/catalog-kit/proxy-client";
 import { extractPlugins, candidate } from "./metadata.mjs";
 
 export const root = fileURLToPath(new URL("../../", import.meta.url));
@@ -66,7 +66,7 @@ export async function collectRemote({ get = createGitHubClient(), config, overri
   const catalog = createCatalog({ ...original, entries: original.entries.filter((entry) => !unavailable.has(entry.repositoryId)), issues: original.issues.filter((issue) => !round.result.repositories.some(({ repo }) => unavailable.has(repo.id) && repo.full_name === issue.repository)) });
   let releaseRound;
   if (withReleases) {
-    const { collectReleases } = await import("../../packages/catalog-kit/src/releases.mjs");
+    const { collectReleases } = await import("@covel/catalog-kit/releases");
     releaseRound = await collectReleases({ get, repositories, entries: catalog.entries, checkpoint: releaseCheckpoint, config: { ...config, adapterVersion: 2 }, now,
       extractAtCommit: async (repo, commitSha) => {
         const base = repositoryPath(repo.full_name);

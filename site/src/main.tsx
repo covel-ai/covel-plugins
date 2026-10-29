@@ -1,7 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { CatalogApp } from "../../packages/catalog-kit/ui/catalog-app";
-import "../../packages/catalog-kit/ui/styles.css";
+import { CatalogApp } from "@covel/catalog-kit/ui";
+import "@covel/catalog-kit/ui/styles.css";
 
 createRoot(document.getElementById("root")!).render(<React.StrictMode><CatalogApp config={{
   kind: "plugins", title: "Plugins", repository: "https://github.com/covel-ai/covel-plugins",

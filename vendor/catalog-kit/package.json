@@ -1,6 +1,6 @@
 {
   "name": "@covel/catalog-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -19,7 +19,10 @@
     "./store": "./src/store.mjs",
     "./server": "./src/server.mjs",
     "./proxy-client": "./src/proxy-client.mjs",
-    "./publish": "./src/publish.mjs"
+    "./publish": "./src/publish.mjs",
+    "./adapters/plugins": "./adapters/plugins.mjs",
+    "./adapters/worlds": "./adapters/worlds.mjs",
+    "./tools/sync": "./tools/sync.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"

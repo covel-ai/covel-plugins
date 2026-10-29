@@ -1,7 +1,7 @@
 // Explicit, read-only online check. Never run this from a PR or unit-test job.
 import path from "node:path";
-import { createGitHubClient, diskCache, repositoryPath, repositoryTree, readBlob, discoverRepositories } from "../../packages/catalog-kit/src/github.mjs";
-import { createPackager } from "../../packages/catalog-kit/src/packager.mjs";
+import { createGitHubClient, diskCache, repositoryPath, repositoryTree, readBlob, discoverRepositories } from "@covel/catalog-kit/github";
+import { createPackager } from "@covel/catalog-kit/packager";
 import { extractPlugins, validatePluginPackage } from "./metadata.mjs";
 import { loadInputs, root, writeJson } from "./collect.mjs";
 

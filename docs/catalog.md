@@ -2,7 +2,7 @@
 
 **English** · [简体中文](catalog.zh-CN.md)
 
-Plugins and Worlds use one implementation in [`packages/catalog-kit`](../packages/catalog-kit/SPEC.md). Worlds vendors an exact commit with a full SHA256 manifest; its CI rejects modified or extra vendor files. Change the canonical source, review across both repositories, then update the pinned consumer. The shared Pages workflow template is checked against each instantiated workflow.
+Plugins and Worlds consume one implementation from [covel-catalog](https://github.com/covel-ai/covel-catalog). This repository keeps plugin content, collection configuration and a thin site entry. The API, adapters, shared UI, protocols and deployment files belong to the independent catalog repository. Both consumers pin an exact commit with a full SHA256 manifest; CI rejects modified, missing or extra vendor files. Shared changes are reviewed in covel-catalog before upgrading both consumers. Each Pages workflow is checked against the same vendored template.
 
 ## Discovery and migration
 
@@ -49,31 +49,22 @@ Cursors bind snapshot, metric snapshot, query version and ordering, expire after
 
 The plugin site uses `https://plugins.covel.cc/` and links to `https://worlds.covel.cc/`. `site/public/CNAME` and the root-relative asset base support the custom domain. Local previews can override `VITE_SITE_URL` and `VITE_SIBLING_URL`; these are navigation URLs, while `VITE_CATALOG_API` is the shared API origin. A frontend build does not configure DNS or deploy the service.
 
-## Deployment boundary
+## Consumer CI and deployment
 
-No host or cloud resource is provisioned by this repository. Choose a host with a persistent private volume, HTTPS reverse proxy, backups and enough memory for bounded archive work. The container defaults to a 2 GiB limit in Compose. TLS termination and public host selection remain deployment tasks.
+The production domains are configured in source; DNS, Pages settings and service deployment remain separate actions. The shared service currently uses one Node process, SQLite and a private file cache. Follow [covel-catalog operations](https://github.com/covel-ai/covel-catalog/blob/main/docs/operations.md) for Docker Compose, independent policy publication and backup/recovery. Those operations run from the catalog repository. Workers, Redis and S3 are future deployment options, not dependencies of this consumer.
 
-1. Copy `service/.env.example` to `service/.env`; supply a public HTTPS origin, exact allowed browser origins, a GitHub credential with public read access, and three distinct secrets of at least 32 characters from your secret manager. Plugins, Worlds and policy use different secrets. Never put credentials into Vite variables or public files.
-2. Build and start on the chosen host: `docker compose -f service/compose.yaml up --build -d`. The service binds to host loopback; configure the HTTPS proxy separately. For local inspection, `pnpm serve:catalog` binds to `127.0.0.1:8787`. A fresh instance deliberately returns 503 for catalog/downloads until current policy and complete snapshots exist.
-3. Review `catalog/policy.json`, update its issued/expiry times and monotonic sequence, and publish it with the independent manual policy workflow or `node scripts/catalog/publish-policy.mjs`. The checked-in initial policy is a review draft, not an evergreen production policy. Publish renewal before expiry; unavailable/expired policy disables platform queries/downloads.
-4. In each repository configure the **variable** `CATALOG_API_URL` and **secret** `CATALOG_INGEST_TOKEN` scoped to its kind. Only the canonical policy repository gets `CATALOG_POLICY_TOKEN`. Configure Pages to use GitHub Actions. Set deployment environment protection as needed for the actual organization.
-5. Review a complete CI artifact and ingestion receipt before initial publication. The workflow's collection/build job has `contents: read`; only the separate Pages job has `pages: write` and `id-token: write`. Without an API URL, CI produces an explicitly labeled local preview artifact and skips deployment.
+In this repository, configure the **variable** `CATALOG_API_URL` and **secret** `CATALOG_INGEST_TOKEN` scoped only to plugins. Never put credentials into Vite variables or public files. The policy credential belongs to covel-catalog. Configure Pages to use GitHub Actions and review a complete CI artifact and ingestion receipt before initial publication.
 
-The service has an in-memory limit of 180 requests/minute per socket address and four concurrent download handlers. The supplied reverse-proxy setup does not trust forwarded IP headers; clients behind one proxy share this limit. Measure traffic and set an appropriate deployment limit before public rollout. Queue budget exhaustion preserves collection progress. Two CI jobs do not need separate GitHub tokens when using the shared proxy.
+Collection/build has `contents: read`; only the separate Pages job receives `pages: write` and `id-token: write`. Without an API URL, CI produces an explicitly labeled local preview artifact and skips deployment. API failures preserve the current publication; collection checkpoints are saved even when a round exhausts its budget. A configured API with no ingest credential fails rather than falling back to an unrelated GitHub budget.
 
-Rules can target numeric repository ID, owner ID, package path, commit, content hash or archive hash with a reason and timestamp. Every new download/ticket redemption uses current rules; restoring a listing requires a new policy sequence. Previously transferred files and upstream GitHub direct links cannot be recalled. Static exports may preserve old observations and do not confer permission to download.
+Rules can target numeric repository ID, owner ID, package path, commit, content hash or archive hash with a reason and timestamp. Every new download/ticket redemption uses current rules; restoring a listing requires a new policy sequence. Previously transferred files and upstream GitHub direct links cannot be recalled. Static exports preserve observations and do not grant download permission.
 
-## Backup and recovery
+## Upgrading the shared implementation
 
-Use SQLite's online backup API, not a copy of only the live database file while WAL writes are active:
+The generated `vendor/catalog-kit` directory is read-only. `catalog-kit.lock.json` records the source repository, full commit, kit version and SHA256 of every file. Use `pnpm kit:sync --commit <full-SHA>` to fetch a reviewed upstream version, then refresh both file dependencies in `pnpm-lock.yaml` and run a clean frozen install. Never hand-edit vendored source or copy an uncommitted upstream directory. `pnpm kit:check` validates the complete source inventory; the installed package is a separate copy so dependency installation cannot modify vendor files. Both the root and site package resolution paths are checked against all 44 source hashes. The installed package's root `node_modules` dependency directory is managed by `pnpm-lock.yaml` and excluded from the source inventory; vendored source has no such exclusion.
 
-```sh
-node service/backup.mjs create service/data service/backups/2026-10-29
-node service/backup.mjs verify service/backups/2026-10-29
-```
-
-The destination must be new. The backup includes the database and every referenced artifact with checksums. Move encrypted copies off-host and monitor successful verification. To restore, stop the service, verify the backup, copy its `catalog.sqlite` and `artifacts/` into an empty private data volume owned by the container's `node` user, then restart. Check policy expiry/sequence before reopening downloads; rotate credentials if recovery follows a compromise. HTTP cache is disposable, while ledger, policy, counters and immutable artifacts are not.
+The consumer's collection, manifest-layout and browser tests run against the pinned kit. Keep the plugin and world consumers on the same reviewed release. Template changes require regenerating the workflow with `node scripts/catalog/workflow.mjs --write` and reviewing its permissions and deployment gates.
 
 ## Validation
 
-`pnpm test:catalog` covers discovery contracts, resumption, adapters, policy changes, signed cursors, release conflicts, deterministic packaging, private-proxy rejection, idempotency, HTTP ranges and backup restore. `pnpm test:site` exercises responsive layouts, bilingual search, theme, 10,000-entry paging, errors and browser history against production assets. `pnpm test` retains the official plugin regressions. Real GitHub smoke is explicit (`node scripts/catalog/smoke.mjs` or its manual workflow), separate from offline PR validation.
+`pnpm test:catalog` covers discovery contracts, resumption, adapters, policy changes, signed cursors, release conflicts, deterministic packaging, private-proxy rejection, idempotency, HTTP ranges and source-lock integrity. Backup/restore tests run in covel-catalog. `pnpm test:site` exercises responsive layouts, bilingual search, theme, 10,000-entry paging, errors and browser history against production assets. `pnpm test` retains the official plugin regressions. Real GitHub smoke is explicit (`node scripts/catalog/smoke.mjs` or its manual workflow), separate from offline PR validation.

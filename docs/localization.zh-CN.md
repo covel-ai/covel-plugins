@@ -24,7 +24,7 @@
 
 1. 复制现有 README 为 `README.<locale>.md`，翻译正文和快速导航锚点。以下生成标记各保留一对：`<!-- languages:start -->` / `<!-- languages:end -->`。插件表格不再生成。
 2. 在 `registry/locales.json` 中复制现有条目并翻译标签，设置 `locale`、使用该语言自身文字的 `label`、对应的 `readme` 文件名。英文必须排在第一位。语言标识支持语言、可选文字系统、可选地区，例如 `ja`、`pt-BR`、`zh-Hant-TW`。
-3. 包的显示翻译来自 `locales/<locale>.yaml` 中的 `PLUGIN.md` 字段，例如 `displayName` 与 `description`；请勿为新条目新增 registry JSON。共享网页 UI 标签位于 `packages/catalog-kit/ui/catalog-app.tsx`，两站同步使用。
+3. 包的显示翻译来自 `locales/<locale>.yaml` 中的 `PLUGIN.md` 字段，例如 `displayName` 与 `description`；请勿为新条目新增 registry JSON。共享网页 UI 标签位于 [covel-catalog UI](https://github.com/covel-ai/covel-catalog/blob/main/packages/catalog-kit/ui/catalog-app.tsx)，两站同步使用。
 
 4. 在仓库根目录运行：
 
@@ -40,4 +40,4 @@ node --test scripts/registry.test.mjs
 
 条目的 `locales` 字段表示插件本身支持的语言。添加首页或插件 README 译文不代表该插件支持对应语言。清单与提示词的本地化属于独立的运行时变更。
 
-网页条目翻译来自包内 `locales/<locale>.yaml` 的 `PLUGIN.md` 字段；请勿为新条目新增 registry JSON。共享界面标签位于 `packages/catalog-kit/ui/catalog-app.tsx`，两站同步使用。旧 registry 翻译仅保留为迁移历史。
+网页条目翻译来自包内 `locales/<locale>.yaml` 的 `PLUGIN.md` 字段；请勿为新条目新增 registry JSON。共享界面标签位于 [covel-catalog UI](https://github.com/covel-ai/covel-catalog/blob/main/packages/catalog-kit/ui/catalog-app.tsx)，两站同步使用。旧 registry 翻译仅保留为迁移历史。

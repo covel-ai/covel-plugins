@@ -36,9 +36,9 @@ jobs:
           path: |
             .cache/github
             .cache/round
-          key: ${{ runner.os }}-plugins-v1-${{ hashFiles('packages/catalog-kit/**', 'catalog/config.json', 'scripts/catalog/**', 'registry/plugins/**') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: ${{ runner.os }}-plugins-v1-${{ hashFiles('catalog-kit.lock.json', 'vendor/catalog-kit/**', 'catalog/config.json', 'scripts/catalog/**', 'registry/plugins/**') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            ${{ runner.os }}-plugins-v1-${{ hashFiles('packages/catalog-kit/**', 'catalog/config.json', 'scripts/catalog/**', 'registry/plugins/**') }}-
+            ${{ runner.os }}-plugins-v1-${{ hashFiles('catalog-kit.lock.json', 'vendor/catalog-kit/**', 'catalog/config.json', 'scripts/catalog/**', 'registry/plugins/**') }}-
       - name: Collect complete public catalog and releases
         if: vars.CATALOG_API_URL != ''
         run: pnpm collect
@@ -65,7 +65,7 @@ jobs:
       - name: Ingest complete snapshot into the shared service
         id: ingest
         if: vars.CATALOG_API_URL != ''
-        run: node packages/catalog-kit/src/publish.mjs --catalog site/public/catalog.json --releases artifacts/releases.json --receipt artifacts/publish-receipt.json
+        run: node node_modules/@covel/catalog-kit/src/publish.mjs --catalog site/public/catalog.json --releases artifacts/releases.json --receipt artifacts/publish-receipt.json
         env:
           CATALOG_API_URL: ${{ vars.CATALOG_API_URL }}
           CATALOG_INGEST_TOKEN: ${{ secrets.CATALOG_INGEST_TOKEN }}

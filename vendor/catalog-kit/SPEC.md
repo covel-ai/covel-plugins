@@ -1,8 +1,8 @@
 # Covel catalog protocol, version 1
 
 This is the shared implementation contract for `covel-plugins` and `covel-worlds`.
-The authoritative source is `covel-ai/covel-plugins/packages/catalog-kit`. Worlds
-consumes an exact commit with a versioned file manifest and SHA256 checks. A
+The authoritative source is `covel-ai/covel-catalog/packages/catalog-kit`. Both sites
+consume an exact commit with a versioned file manifest and SHA256 checks. A
 consumer must not independently edit its copy. Both consumers run the same
 contract tests. Product-specific parsing belongs in adapters, not a second UI,
 collector transport, policy engine, or download service.

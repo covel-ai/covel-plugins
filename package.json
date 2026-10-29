@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node scripts/registry.mjs --check && node scripts/catalog/workflow.mjs",
+    "check": "pnpm kit:check && node scripts/registry.mjs --check && node scripts/catalog/workflow.mjs",
     "generate": "node scripts/registry.mjs",
     "test": "pnpm run check:vendor && pnpm run test:registry && pnpm run test:plugins",
     "build:vendor": "node scripts/build-vendor.mjs",
@@ -11,13 +11,14 @@
     "test:plugins": "vitest run",
     "check:vendor": "node scripts/build-vendor.mjs --check",
     "check:covel": "node scripts/check-covel.mjs",
-    "test:catalog": "node --test packages/catalog-kit/test/*.test.mjs scripts/catalog/*.test.mjs",
+    "test:catalog": "pnpm kit:check && pnpm --dir node_modules/@covel/catalog-kit test && node --test scripts/catalog/*.test.mjs",
     "collect": "node scripts/catalog/collect.mjs",
     "collect:local": "node scripts/catalog/collect.mjs --local",
     "build:site": "pnpm --filter @covel/directory-site build",
     "test:site": "playwright test",
-    "serve:catalog": "node service/main.mjs",
-    "build:pages": "pnpm build:site && node scripts/catalog/copy-pages.mjs"
+    "build:pages": "pnpm build:site && node scripts/catalog/copy-pages.mjs",
+    "kit:check": "node scripts/catalog-kit.mjs check && node scripts/catalog/check-installed-kit.mjs",
+    "kit:sync": "node scripts/catalog-kit.mjs sync"
   },
   "engines": {
     "node": ">=26"
@@ -32,5 +33,8 @@
     "vitest": "4.1.11",
     "yaml": "2.9.1",
     "zod": "4.6.7"
+  },
+  "dependencies": {
+    "@covel/catalog-kit": "file:vendor/catalog-kit"
   }
 }

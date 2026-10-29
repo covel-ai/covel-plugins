@@ -5,8 +5,8 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { collectLocal, collectRemote, loadInputs, root } from "./collect.mjs";
 import { extractPlugins, parseYaml, validatePluginPackage } from "./metadata.mjs";
-import { GitHubError, MetadataError } from "../../packages/catalog-kit/src/github.mjs";
-import { memoryCheckpoint } from "../../packages/catalog-kit/src/round.mjs";
+import { GitHubError, MetadataError } from "@covel/catalog-kit/github";
+import { memoryCheckpoint } from "@covel/catalog-kit/round";
 
 const inputs = await loadInputs(), config = { ...inputs.config, seedRepositories: [] };
 const now = new Date("2026-10-29T00:00:00Z");

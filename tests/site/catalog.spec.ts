@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { CatalogStore } from "../../packages/catalog-kit/src/store.mjs";
-import { entry, catalog, policy, time } from "../../packages/catalog-kit/test/fixtures.mjs";
+import { CatalogStore } from "@covel/catalog-kit/store";
+import { entry, catalog, policy, time } from "../../node_modules/@covel/catalog-kit/test/fixtures.mjs";
 
 async function mockDirectory(page: Page, size = 80) {
   const store = new CatalogStore(":memory:", { now: () => Date.parse(time) }); store.publishPolicy(policy());

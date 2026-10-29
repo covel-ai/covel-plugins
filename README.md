@@ -20,7 +20,7 @@ Maintenance, feature category, and runtime trust are separate concepts. All exte
 
 ## Plugin directory
 
-The [web directory](https://plugins.covel.cc/) supports search, official/community filters, versions, repository Stars and a shared ZIP download service. Its frontend and collection core are shared with [Covel Worlds](https://worlds.covel.cc/). Production publication requires a configured shared service; the local preview clearly identifies unavailable live features.
+The [web directory](https://plugins.covel.cc/) supports search, official/community filters, versions, repository Stars and a shared ZIP download service. Its frontend and collection core are shared with [Covel Worlds](https://worlds.covel.cc/) through the independent [covel-catalog](https://github.com/covel-ai/covel-catalog) repository. Production publication requires a configured shared service; the local preview clearly identifies unavailable live features.
 
 Topics are discovered every six hours and on main pushes/manual runs. Current `PLUGIN.md` and `package.json` are authoritative; new packages need no registry JSON or listing PR. `registry/plugins/` preserves migration notes only. Official identity comes from `catalog/config.json`, and independent policy rules can withdraw entries and downloads. [Architecture and operations](docs/catalog.md).
 
@@ -61,7 +61,7 @@ pnpm test:site          # Requires Playwright Chromium
 pnpm test              # Existing official-plugin regression suite
 ```
 
-Collection/build CI has read-only repository permissions. The Pages job is separate and runs only after a complete snapshot is accepted by the configured service. Failures retain the previous publication; checkpoints allow later runs to resume. See [deployment and backup instructions](docs/catalog.md).
+Collection/build CI has read-only repository permissions. The Pages job is separate and runs only after a complete snapshot is accepted by the configured service. Failures retain the previous publication; checkpoints allow later runs to resume. See [consumer deployment instructions](docs/catalog.md).
 
 The authoring skill lives at [`.agents/skills/create-plugin/SKILL.md`](.agents/skills/create-plugin/SKILL.md). Agents that discover this directory can use `$create-plugin`.
 

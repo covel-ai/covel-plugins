@@ -13,8 +13,8 @@ test-results/
 playwright-report/
 .cache/
 *.tsbuildinfo
+# Keep any pre-migration private service data out of the content repository.
 service/data/
 service/backups/
 service/.env
-!service/.env.example
 /dist/

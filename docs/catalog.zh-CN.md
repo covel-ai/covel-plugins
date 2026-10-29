@@ -2,7 +2,7 @@
 
 [English](catalog.md) · **简体中文**
 
-插件与世界共用 [`packages/catalog-kit`](../packages/catalog-kit/SPEC.md) 中的协议、采集核心、界面和服务。Worlds 按固定 commit 导入源码并校验完整 SHA256 清单，CI 拒绝修改或新增 vendor 文件。公共改动先在 canonical 源码实现并互审，再升级消费端锁定版本。两仓 Pages workflow 由同一模板实例化并逐字校验。
+插件与世界统一消费独立 [covel-catalog](https://github.com/covel-ai/covel-catalog) 的实现。本仓保留插件内容、采集配置和页面薄入口；API、适配器、公共 UI、协议与部署文件归公共仓维护。两端锁定完整 commit 和全文件 SHA256 清单，CI 拒绝修改、缺失或额外 vendor 文件。公共改动先在 covel-catalog 互审，再升级两端版本；Pages workflow 由同一锁定模板实例化并逐字校验。
 
 ## 发现与迁移
 
@@ -49,31 +49,22 @@
 
 插件站使用 `https://plugins.covel.cc/`，并链接到 `https://worlds.covel.cc/`。`site/public/CNAME` 与根路径静态资源支持自定义域名。本地预览可用 `VITE_SITE_URL`、`VITE_SIBLING_URL` 覆盖互跳地址；`VITE_CATALOG_API` 则是共享 API 地址。前端构建不会配置 DNS 或部署服务。
 
-## 部署边界
+## 消费端 CI 与部署
 
-仓库不会创建主机或云资源。需要选择具备持久私有卷、HTTPS 反向代理和备份能力的主机。Compose 默认给容器 2 GiB 内存；域名与 TLS 终止仍需部署配置。
+生产域名已配置在源码中；DNS、Pages 设置与服务部署是独立操作。共享服务当前采用一个 Node 进程、SQLite 与私有文件缓存。Docker Compose、独立规则发布和备份恢复见 [covel-catalog 运维文档](https://github.com/covel-ai/covel-catalog/blob/main/docs/operations.md)，从公共仓执行。Workers、Redis、S3 仅为后续选项，不是本仓的运行依赖。
 
-1. 将 `service/.env.example` 复制为 `service/.env`，配置 HTTPS 公共 origin、浏览器 origin 白名单、仅需公开仓库读取的 GitHub 凭据，以及由密钥管理器提供的三个不同、至少 32 字符的令牌。插件、世界、规则分别使用自己的凭据；不要放进 Vite 变量或公开文件。
-2. 在选定主机运行 `docker compose -f service/compose.yaml up --build -d`；服务只绑定主机回环端口，另行配置 HTTPS 代理。本地检查可运行 `pnpm serve:catalog`，监听 `127.0.0.1:8787`。新实例在没有有效规则和完整快照时会明确返回 503。
-3. 审阅 `catalog/policy.json`，更新签发／过期时间与递增 sequence，通过独立手动 workflow 或 `node scripts/catalog/publish-policy.mjs` 发布。仓库中的初始规则是审阅草案，不是永久有效生产配置；应在到期前续发，规则不可用或过期会停止平台查询和下载。
-4. 两仓分别设置变量 `CATALOG_API_URL`、kind 对应密钥 `CATALOG_INGEST_TOKEN`。只有规则源仓库配置 `CATALOG_POLICY_TOKEN`。Pages 选择 GitHub Actions，并按组织需要设置发布环境保护。
-5. 首次发布前检查完整 CI artifact 与入库回执。采集／构建只有 `contents: read`，独立 Pages job 才有 `pages: write` 与 `id-token: write`。未设置 API URL 时只生成标明本地预览的验收文件，不部署。
+本仓设置变量 `CATALOG_API_URL` 与仅适用于 plugins 的密钥 `CATALOG_INGEST_TOKEN`。密钥不能放进 Vite 变量或公开文件；规则凭据由 covel-catalog 管理。Pages 选择 GitHub Actions，首次发布前核查完整 CI artifact 和入库回执。
 
-首版按 socket 地址限制每分钟 180 请求、同时 4 个下载处理。服务不信任转发 IP header，因此同一反向代理后的用户共享该限额；公开上线前应按实际流量设置部署限额。队列预算耗尽会保留采集进度，使用共享代理时两个 CI 无需各自的 GitHub 令牌。
+采集／构建只有 `contents: read`，独立 Pages job 才有 `pages: write` 与 `id-token: write`。没有 API URL 时只生成标明本地预览的验收文件，不部署。API 失败保留旧站；配额耗尽时也保存采集进度。已配置 API 却缺少入库凭据会明确失败，不会回退到另一套 GitHub 配额。
 
-规则可针对数字仓库 ID、owner ID、包路径、commit、内容或 ZIP 哈希，附原因和时间。每次新下载／票据兑换使用最新规则；恢复条目也要新 sequence。已经传出的文件及上游 GitHub 直链无法追回；静态导出可保留旧观察，但不授予下载权限。
+规则可针对数字仓库 ID、owner ID、包路径、commit、内容或 ZIP 哈希，附原因和时间。每次新下载／票据兑换使用最新规则；恢复条目也要新 sequence。已经传出的文件及上游 GitHub 直链无法追回；静态导出可保留观察，但不授予下载权限。
 
-## 备份与恢复
+## 升级公共实现
 
-使用 SQLite 在线备份 API，不能在 WAL 写入时只复制主数据库文件：
+`vendor/catalog-kit` 是生成的只读目录。`catalog-kit.lock.json` 记录来源仓库、完整 commit、kit 版本和每个文件的 SHA256。使用 `pnpm kit:sync --commit <完整SHA>` 获取已互审的上游版本，再刷新 `pnpm-lock.yaml` 中两处 file 依赖，执行干净的 frozen install。不能手改 vendor 或复制上游未提交目录。`pnpm kit:check` 校验完整文件清单；依赖安装使用独立副本，不污染 vendor。根包与 site 实际解析的公共包都会核对全部 44 个源码哈希。安装包根 `node_modules` 依赖目录由 `pnpm-lock.yaml` 管理，不属于源码清单；vendor 源码本身没有这个豁免。
 
-```sh
-node service/backup.mjs create service/data service/backups/2026-10-29
-node service/backup.mjs verify service/backups/2026-10-29
-```
-
-目标目录必须是新的；备份含数据库和所有被引用的 artifact，并逐一校验。加密异地保存并监控验证结果。恢复时先停服务、验证备份，将 `catalog.sqlite` 与 `artifacts/` 复制到新的私有数据卷并赋予容器 node 用户权限，再启动。开放下载前检查规则 sequence／有效期，若是安全事件恢复应轮换密钥。HTTP cache 可丢弃，正式历史、规则、计数和不可变文件不可用 CI cache 替代。
+消费端的采集、包布局和浏览器测试都针对锁定版本运行。插件和世界应保持同一已互审版本。模板更新后运行 `node scripts/catalog/workflow.mjs --write` 重新生成 workflow，并审查权限与发布条件。
 
 ## 验证
 
-`pnpm test:catalog` 覆盖发现契约、续跑、适配器、策略变更、游标、版本冲突、确定性打包、私有代理拒绝、幂等、Range 和备份恢复。`pnpm test:site` 在生产构建上验证响应式、双语搜索、主题、1 万条分页、错误和浏览器返回。`pnpm test` 保留官方插件回归。真实 GitHub smoke 通过 `node scripts/catalog/smoke.mjs` 或手动 workflow 单独执行，不混入 PR 离线验证。
+`pnpm test:catalog` 覆盖发现契约、续跑、适配器、策略变更、游标、版本冲突、确定性打包、私有代理拒绝、幂等、Range 和源码锁完整性；备份恢复测试在 covel-catalog 执行。`pnpm test:site` 在生产构建上验证响应式、双语搜索、主题、1 万条分页、错误和浏览器返回。`pnpm test` 保留官方插件回归。真实 GitHub smoke 通过 `node scripts/catalog/smoke.mjs` 或手动 workflow 单独执行，不混入 PR 离线验证。

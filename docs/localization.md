@@ -24,7 +24,7 @@ Translate the full instructions, including setup, settings, permissions, costs, 
 
 1. Copy an existing README to `README.<locale>.md` and translate its prose and quick-link anchors. Keep exactly one pair of each generated marker: `<!-- languages:start -->` / `<!-- languages:end -->`.
 2. Add an entry to `registry/locales.json`, copying an existing entry and translating its labels. Set `locale`, the native language `label`, and the matching `readme` filename. English must stay first. Locale identifiers support a language, optional script, and optional region, for example `ja`, `pt-BR`, and `zh-Hant-TW`.
-3. Package display translations come from the package's `locales/<locale>.yaml` under `PLUGIN.md` (for example `displayName` and `description`). Do not add new registry JSON to translate a listing. The shared website's interface labels live in `packages/catalog-kit/ui/catalog-app.tsx` and are consumed by both sites.
+3. Package display translations come from the package's `locales/<locale>.yaml` under `PLUGIN.md` (for example `displayName` and `description`). Do not add new registry JSON to translate a listing. The shared website's interface labels live in [covel-catalog UI](https://github.com/covel-ai/covel-catalog/blob/main/packages/catalog-kit/ui/catalog-app.tsx) and are consumed by both sites.
 
 4. Run these commands from the repository root:
 
