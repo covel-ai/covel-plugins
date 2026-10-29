@@ -49,6 +49,8 @@ jobs:
         env:
           VITE_CATALOG_API: ${{ vars.DIRECTORY_API_URL }}
           BASE_PATH: ./
+          VITE_SITE_URL: ${{ vars.DIRECTORY_SITE_URL }}
+          VITE_SIBLING_URL: ${{ vars.DIRECTORY_SIBLING_URL }}
       - name: Omit local fixtures from the public artifact
         run: rm -f dist/catalog.json
       - uses: actions/upload-pages-artifact@v3

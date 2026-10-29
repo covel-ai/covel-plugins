@@ -12,6 +12,8 @@ The active consumer workflow is **Publish site with Cloudflare catalog** (`.gith
 
 Keep the legacy **Collect plugins and publish Pages** (`pages.yml`) workflow disabled in GitHub Actions and its `CATALOG_API_URL` variable unset. It uses the Node-only proxy and must not run against Cloudflare. Do not enable both pipelines. The shared legacy template remains byte-checked for consumers choosing the Node backend.
 
+Until custom-domain ownership and DNS are verified, `DIRECTORY_SITE_URL` and `DIRECTORY_SIBLING_URL` point to the two `https://covel-ai.github.io/covel-*/` project URLs. After binding both custom domains, delete those two optional repository variables and dispatch `site.yml` in both repositories to restore the source defaults.
+
 Pages uses the GitHub Actions source and custom domain `plugins.covel.cc`. Set its DNS-only CNAME to `covel-ai.github.io`, then enable HTTPS enforcement after certificate issuance. To restore a previous site, revert the relevant site change and push main (or dispatch at that reviewed main revision); do not roll back the independent API policy or append-only version history. Collection/rule operations and D1/R2 recovery belong to the Cloudflare deployment repository.
 
 ## Discovery and migration
