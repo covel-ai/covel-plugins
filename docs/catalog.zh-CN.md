@@ -61,7 +61,9 @@
 
 ## 升级公共实现
 
-`vendor/catalog-kit` 是生成的只读目录。`catalog-kit.lock.json` 记录来源仓库、完整 commit、kit 版本和每个文件的 SHA256。使用 `pnpm kit:sync --commit <完整SHA>` 获取已互审的上游版本，再刷新 `pnpm-lock.yaml` 中两处 file 依赖，执行干净的 frozen install。不能手改 vendor 或复制上游未提交目录。`pnpm kit:check` 校验完整文件清单；依赖安装使用独立副本，不污染 vendor。根包与 site 实际解析的公共包都会核对全部 44 个源码哈希。安装包根 `node_modules` 依赖目录由 `pnpm-lock.yaml` 管理，不属于源码清单；vendor 源码本身没有这个豁免。
+`vendor/catalog-kit` 是生成的只读目录。`catalog-kit.lock.json` 记录来源仓库、完整 commit、kit 版本和每个文件的 SHA256。使用 `pnpm kit:sync --commit <完整SHA>` 获取已互审的上游版本，再刷新 `pnpm-lock.yaml` 中两处 file 依赖，执行干净的 frozen install。不能手改 vendor 或复制上游未提交目录。`pnpm kit:check` 校验完整文件清单；依赖安装使用独立副本，不污染 vendor。根包与 site 实际解析的公共包都会核对锁中全部源码哈希。安装包根 `node_modules` 依赖目录由 `pnpm-lock.yaml` 管理，不属于源码清单；vendor 源码本身没有这个豁免。
+
+Plugins 与 Worlds 共用默认暗色主题。仅保存的 `covel-theme=light` 选择浅色；存储不可用时回退暗色，页面仍可使用。初始化不会保存偏好。两站 HTML 在外部资源之前内联 `node vendor/catalog-kit/tools/theme-bootstrap.mjs` 的完整同步输出，并以 `html.dark` 兜底。升级 kit 后替换对应 head 标记块，`pnpm check` 会与固定版本生成器逐字核对。两个域名分别保存浏览器偏好。
 
 消费端的采集、包布局和浏览器测试都针对锁定版本运行。插件和世界应保持同一已互审版本。模板更新后运行 `node scripts/catalog/workflow.mjs --write` 重新生成 workflow，并审查权限与发布条件。
 

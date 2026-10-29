@@ -67,9 +67,57 @@ test("debounced bilingual search, version SHA, theme and errors have explicit st
     expect(calls.filter((url) => /[?&]q=/.test(url)).length).toBeGreaterThan(0);
     await page.locator(".package-name > button").first().click(); await expect(page.getByRole("dialog")).toContainText("a".repeat(40));
     await expect(page.getByRole("dialog")).toContainText("离线 ZIP"); await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: "Dark theme" }).click(); await expect(page.locator("html")).toHaveClass(/dark/);
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await page.getByRole("button", { name: "Light theme" }).click(); await expect(page.locator("html")).not.toHaveClass(/dark/);
     store.now = () => Date.parse("2027-01-01T00:00:00Z");
     await page.getByRole("textbox").fill("missing search"); await expect(page.getByRole("alert")).toContainText("目录暂时无法加载");
+    expect(errors).toEqual([]);
+  } finally { store.close(); }
+});
+
+test("dark first paint survives hydration; an explicit light choice survives reload", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  const { store, errors } = await mockDirectory(page);
+  const bundles = /\/assets\/[^?]+\.(?:js|css)(?:\?.*)?$/;
+  try {
+    // With external styles and application code unavailable, the inline head must still paint dark.
+    await page.route(bundles, (route) => route.abort());
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
+    await expect(page.locator("html")).toHaveCSS("background-color", "rgb(18, 25, 21)");
+    expect(await page.evaluate(() => localStorage.getItem("covel-theme"))).toBeNull();
+    await page.unroute(bundles);
+    await page.reload(); await expect(page.locator(".package-row")).toHaveCount(24);
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    expect(await page.evaluate(() => ({ theme: localStorage.getItem("covel-theme"), locale: localStorage.getItem("covel-locale") }))).toEqual({ theme: null, locale: null });
+    await page.getByRole("button", { name: "Light theme" }).click();
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
+    expect(await page.evaluate(() => localStorage.getItem("covel-theme"))).toBe("light");
+    await page.route(bundles, (route) => route.abort());
+    await page.reload();
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
+    await expect(page.locator("html")).toHaveCSS("color-scheme", "light");
+    await expect(page.locator("html")).toHaveCSS("background-color", "rgb(237, 240, 234)");
+    await page.unroute(bundles);
+    await page.reload(); await expect(page.locator(".package-row")).toHaveCount(24);
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
+    expect(errors).toEqual([]);
+  } finally { store.close(); }
+});
+
+test("blocked preference storage leaves theme and language controls usable", async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(window, "localStorage", { configurable: true, get() { throw new DOMException("Storage blocked", "SecurityError"); } }));
+  const { store, errors } = await mockDirectory(page);
+  try {
+    await page.goto("/"); await expect(page.locator(".package-row")).toHaveCount(24);
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await page.getByRole("button", { name: "Light theme" }).click();
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
+    await page.getByRole("button", { name: "切换为中文" }).click();
+    await expect(page.getByRole("heading", { name: "插件." })).toBeVisible();
+    await page.reload(); await expect(page.locator(".package-row")).toHaveCount(24);
+    await expect(page.locator("html")).toHaveClass(/dark/);
     expect(errors).toEqual([]);
   } finally { store.close(); }
 });

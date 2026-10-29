@@ -1,6 +1,7 @@
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { publishStaged } from "./staged-publication.mjs";
 import { parseCatalog, entrySchema, policySchema } from "./schema.mjs";
 
 export function serviceUrl(input) {
@@ -18,13 +19,24 @@ export async function publishCatalog({ url, token, catalog: input, releases = []
   const catalog = parseCatalog(input);
   if (catalog.mode !== "github" || !catalog.generatedAt) throw new Error("A local preview cannot be published to the shared service");
   if (!Array.isArray(releases)) throw new Error("Release sidecar must be an array");
-  const payload = JSON.stringify({ catalog, releases: releases.map((entry) => entrySchema.parse(entry)), allowEmpty: false });
-  if (Buffer.byteLength(payload) > 64 * 1024 * 1024) throw new Error("Snapshot exceeds the service ingestion limit");
   const options = () => ({ redirect: "error", signal: AbortSignal.timeout(timeoutMs) });
   const policyResponse = await fetchImpl(`${base}/v1/policy`, options());
   if (!policyResponse.ok) throw new Error(`Directory policy preflight failed (HTTP ${policyResponse.status})`);
   const policy = policySchema.parse(await policyResponse.json());
   if (Date.parse(policy.expiresAt) <= now.getTime() || Date.parse(policy.issuedAt) > now.getTime() + 60_000) throw new Error("Directory policy is expired or not yet valid");
+  if (policyResponse.headers.get("x-catalog-ingest") === "staged-v1") {
+    const client = { json: async (route, { data }) => {
+      const response = await fetchImpl(`${base}${route}`, { ...options(), method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` }, body: JSON.stringify(data) });
+      if (!response.ok) throw new Error(`Staged snapshot ingestion failed (HTTP ${response.status}); retry retains the last complete snapshot`);
+      return response.json();
+    } };
+    const receipt = await publishStaged(client, `/admin/snapshots/${catalog.kind}`, catalog, releases);
+    if (!/^[a-f0-9]{64}$/.test(receipt?.snapshotId) || !receipt.stats) throw new Error("Invalid staged publication receipt");
+    return { snapshotId: receipt.snapshotId, stats: receipt.stats, policyVersion: policy.version };
+  }
+  const payload = JSON.stringify({ catalog, releases: releases.map((entry) => entrySchema.parse(entry)), allowEmpty: false });
+  if (Buffer.byteLength(payload) > 64 * 1024 * 1024) throw new Error("Snapshot exceeds the service ingestion limit");
   const response = await fetchImpl(`${base}/admin/snapshots/${catalog.kind}`, { ...options(), method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${token}` }, body: payload });
   // Service error bodies and fetch exceptions are intentionally not printed by

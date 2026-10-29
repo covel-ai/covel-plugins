@@ -1,6 +1,6 @@
 {
   "name": "@covel/catalog-kit",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "engines": {
@@ -22,7 +22,14 @@
     "./publish": "./src/publish.mjs",
     "./adapters/plugins": "./adapters/plugins.mjs",
     "./adapters/worlds": "./adapters/worlds.mjs",
-    "./tools/sync": "./tools/sync.mjs"
+    "./tools/sync": "./tools/sync.mjs",
+    "./core": "./src/core.mjs",
+    "./http-contract": "./src/http-contract.mjs",
+    "./download-client": "./src/download-client.mjs",
+    "./collector": "./src/collector.mjs",
+    "./staged-publication": "./src/staged-publication.mjs",
+    "./preferences": "./src/preferences.mjs",
+    "./tools/theme-bootstrap": "./tools/theme-bootstrap.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"

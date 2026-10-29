@@ -1,3 +1,4 @@
+import { requestDownload } from "../src/download-client.mjs";
 import type { Catalog, CatalogConfig, CatalogEntry, CatalogPage, VersionRecord } from "../src/types";
 
 export type Query = { q: string; source: string; category: string; locale: string; status: string; sort: string };
@@ -48,11 +49,9 @@ export function createCatalogClient(config: CatalogConfig) {
     async versions(key: string, signal: AbortSignal): Promise<VersionRecord[]> {
       return api ? json(`${api}/v1/entries/${encodeURIComponent(key)}/versions`, { signal }) : [];
     },
-    async download(key: string, revisionId: string, idempotencyKey: string) {
+    async download(key: string, revisionId: string, idempotencyKey: string, signal?: AbortSignal) {
       if (!api) throw new Error("Downloads are unavailable in a local preview");
-      return json<{ url: string; expiresAt: string; artifact: { artifactSha256: string; filename: string } }>(`${api}/v1/downloads`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, revisionId, idempotencyKey }),
-      });
+      return requestDownload({ api, key, revisionId, idempotencyKey, signal });
     },
   };
 }

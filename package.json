@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "pnpm kit:check && node scripts/registry.mjs --check && node scripts/catalog/workflow.mjs",
+    "check": "pnpm kit:check && node scripts/registry.mjs --check && node scripts/catalog/workflow.mjs && node scripts/catalog/theme.mjs",
     "generate": "node scripts/registry.mjs",
     "test": "pnpm run check:vendor && pnpm run test:registry && pnpm run test:plugins",
     "build:vendor": "node scripts/build-vendor.mjs",

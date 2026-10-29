@@ -2,16 +2,12 @@ import { DatabaseSync } from "node:sqlite";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { mkdirSync, chmodSync } from "node:fs";
 import path from "node:path";
-import semver from "semver";
-import { entrySchema, parseCatalog, policySchema, catalogStats } from "./schema.mjs";
+import { parseCatalog, catalogStats } from "./schema.mjs";
 import { sha256 } from "./hash.mjs";
 
-export class ServiceError extends Error {
-  constructor(status, code, message) { super(message); this.status = status; this.code = code; }
-}
-export const fail = (status, code, message) => { throw new ServiceError(status, code, message); };
+export { ServiceError, fail } from "./core.mjs";
+import { ServiceError, fail, identity, ruleFor, validatePolicy, revisionIdentity, revisionRecord, revisionConflict, observedEntry, validateRelease, queryOptions, searchMatch, selectUpdate } from "./core.mjs";
 const json = (row) => row ? JSON.parse(row.data) : null;
-const identity = (entry) => entry.sourceTreeHash ?? entry.contentHash;
 
 export class CatalogStore {
   constructor(filename, { now = () => Date.now(), allowLocal = false } = {}) {
@@ -53,9 +49,7 @@ export class CatalogStore {
     return json(this.db.prepare("SELECT e.data FROM snapshot_entries e JOIN current_snapshots c ON c.snapshot_id=e.snapshot_id WHERE e.key=?").get(key));
   }
   publishPolicy(input) {
-    const policy = policySchema.parse(input);
-    if (Date.parse(policy.expiresAt) <= this.now() || Date.parse(policy.issuedAt) > this.now() + 60_000) fail(400, "invalid_policy_time", "Policy must be current");
-    if (new Set(policy.rules.map((r) => r.id)).size !== policy.rules.length) fail(400, "duplicate_rule", "Policy rule IDs must be unique");
+    const policy = validatePolicy(input, this.now());
     const last = this.db.prepare("SELECT sequence,data FROM policies ORDER BY sequence DESC LIMIT 1").get();
     if (last && last.sequence >= policy.sequence) {
       if (last.sequence === policy.sequence && last.data === JSON.stringify(policy)) return policy;
@@ -70,31 +64,24 @@ export class CatalogStore {
     return policy;
   }
   ruleFor(entry, artifact, policy = this.policy()) {
-    return policy.rules.find((rule) =>
-      (!rule.kind || rule.kind === entry.kind) &&
-      (!rule.repositoryId || rule.repositoryId === entry.repositoryId) &&
-      (!rule.ownerId || rule.ownerId === entry.ownerId) &&
-      (rule.path === undefined || rule.path === entry.path) &&
-      (!rule.commitSha || rule.commitSha === entry.commitSha) &&
-      (!rule.contentHash || rule.contentHash === (artifact?.contentHash ?? entry.contentHash)) &&
-      (!rule.artifactSha256 || rule.artifactSha256 === artifact?.artifactSha256));
+    return ruleFor(entry, artifact, policy);
   }
   assertAllowed(entry, artifact) {
     const rule = this.ruleFor(entry, artifact);
     if (rule) fail(410, "withdrawn", rule.reason);
   }
   recordRevision(entry) {
-    if (entry.path === null || !entry.commitSha || !identity(entry) || !entry.sourceRef) return null;
-    const channel = entry.sourceRef.type === "tag" ? "release" : "development";
-    const id = sha256(JSON.stringify([entry.key, entry.version, identity(entry), channel]));
+    const identityValue = revisionIdentity(entry);
+    if (!identityValue) return null;
+    const { id, channel } = identityValue;
     let conflict = false;
     if (channel === "release") {
       const other = this.db.prepare("SELECT id FROM revisions WHERE entry_key=? AND version=? AND channel='release' AND source_hash<>? LIMIT 1").get(entry.key, entry.version, identity(entry));
       const bound = this.db.prepare("SELECT commit_sha FROM tag_bindings WHERE entry_key=? AND tag=?").get(entry.key, entry.sourceRef.name);
-      conflict = Boolean(other || (bound && bound.commit_sha !== entry.commitSha));
+      conflict = revisionConflict(entry, other, bound?.commit_sha);
       if (!bound) this.db.prepare("INSERT INTO tag_bindings VALUES (?,?,?)").run(entry.key, entry.sourceRef.name, entry.commitSha);
     }
-    const revision = { revisionId: id, entryKey: entry.key, version: entry.version, sourceRef: entry.sourceRef, commitSha: entry.commitSha, sourceTreeHash: identity(entry), contentHash: entry.contentHash, hashScheme: entry.hashScheme, channel, firstSeenAt: new Date(this.now()).toISOString(), conflict, entry };
+    const revision = revisionRecord(entry, conflict, this.now());
     // Immutable release payloads are never replaced. New source observations are separate.
     this.db.prepare("INSERT OR IGNORE INTO revisions VALUES (?,?,?,?,?,?,?,?)").run(id, entry.key, entry.version, channel, identity(entry), Number(conflict), this.now(), JSON.stringify(revision));
     const observation = { entryKey: entry.key, sourceRef: entry.sourceRef, commitSha: entry.commitSha, observedAt: entry.fetchedAt, conflict };
@@ -109,18 +96,15 @@ export class CatalogStore {
     if (previous?.inputHash === payloadId) return previous;
     if (previous && catalog.generatedAt && previous.generatedAt && catalog.generatedAt <= previous.generatedAt) fail(409, "stale_snapshot", "A newer complete snapshot is already published");
     if (previous?.entries.length && !catalog.entries.length && !allowEmpty) fail(409, "empty_snapshot", "Unexpected empty catalog; explicit acknowledgement is required");
-    const releaseEntries = releases.map((entry) => entrySchema.parse(entry));
-    const keySet = new Set(catalog.entries.map((e) => e.key));
-    if (releaseEntries.some((entry) => entry.kind !== catalog.kind || entry.sourceRef?.type !== "tag" || !keySet.has(entry.key) || entry.status !== "indexed" || !semver.valid(entry.version ?? "") || entry.path === null || !entry.commitSha || !identity(entry) || entry.ownerId !== catalog.entries.find((e) => e.key === entry.key)?.ownerId)) fail(400, "invalid_release", "Release candidates must be valid indexed versions of a current package at an exact tag");
+    const currentByKey = new Map(catalog.entries.map((e) => [e.key, e]));
+    const releaseEntries = releases.map((e) => validateRelease(e, currentByKey.get(e.key), catalog.kind));
     return this.transaction(() => {
       const prior = new Map((previous?.entries ?? []).map((e) => [e.key, e]));
       for (const release of releaseEntries) this.recordRevision(release);
       const timestamp = new Date(this.now()).toISOString();
       const entries = catalog.entries.map((original) => {
         const old = prior.get(original.key) ?? json(this.db.prepare("SELECT e.data FROM snapshot_entries e JOIN snapshots s ON s.id=e.snapshot_id WHERE e.key=? ORDER BY s.created DESC LIMIT 1").get(original.key));
-        const entry = { ...original, firstSeenAt: old?.firstSeenAt ?? timestamp,
-          contentChangedAt: !old ? null : identity(old) === identity(original) ? old.contentChangedAt : timestamp,
-          downloadRequests: this.db.prepare("SELECT requests FROM counters WHERE entry_key=?").get(original.key)?.requests ?? 0 };
+        const entry = observedEntry(original, old, this.db.prepare("SELECT requests FROM counters WHERE entry_key=?").get(original.key)?.requests ?? 0, timestamp);
         const revision = this.recordRevision(entry);
         return { ...entry, revisionId: revision?.revisionId ?? null, ...(revision?.conflict ? { status: "pending", problems: [...entry.problems, "version-conflict"] } : {}) };
       });
@@ -151,12 +135,7 @@ export class CatalogStore {
   }
   list(input) {
     const policy = this.policy();
-    const options = {
-      kind: input.kind ?? "plugins", q: (input.q ?? "").trim().slice(0, 200).toLocaleLowerCase(),
-      source: input.source ?? "all", category: input.category ?? "all", locale: input.locale ?? "all",
-      status: input.status ?? "all", sort: input.sort ?? (input.q?.trim() ? "relevance" : "updated"), limit: Number(input.limit ?? 24),
-    };
-    if (!["plugins", "worlds"].includes(options.kind) || !["all", "official", "community"].includes(options.source) || !["all", "indexed", "pending", "archived"].includes(options.status) || !["relevance", "updated", "name", "stars", "downloads"].includes(options.sort) || !Number.isInteger(options.limit) || options.limit < 1 || options.limit > 100) fail(400, "invalid_query", "Invalid directory filter or page size");
+    const options = queryOptions(input);
     const queryHash = sha256(JSON.stringify({ queryVersion: 1, ...options }));
     const cursor = input.cursor ? this.readCursor(input.cursor) : null;
     if (cursor && (cursor.queryHash !== queryHash || cursor.policy !== policy.sequence)) fail(409, "cursor_changed", "Search or directory policy changed; restart the search");
@@ -164,11 +143,7 @@ export class CatalogStore {
     if (!snapshot) fail(503, "catalog_unavailable", "No complete catalog has been published");
     const visible = snapshot.entries.filter((entry) => !this.ruleFor(entry, this.latestArtifact(entry.revisionId), policy));
     const words = options.q.split(/\s+/).filter(Boolean);
-    const match = (entry) => {
-      const names = [entry.name, entry.id, ...Object.values(entry.translations).map((t) => t.name ?? "")].join(" ").toLocaleLowerCase();
-      const all = [names, entry.description, entry.repository, entry.author, entry.category, ...entry.tags, ...Object.values(entry.translations).map((t) => t.description ?? "")].join(" ").toLocaleLowerCase();
-      return { matched: words.every((word) => all.includes(word)), score: (entry.id.toLocaleLowerCase() === options.q ? 100 : 0) + words.reduce((sum, word) => sum + (names.includes(word) ? 10 : all.includes(word) ? 1 : 0), 0) };
-    };
+    const match = (entry) => searchMatch(entry, options.q);
     let items = visible.filter((entry) =>
       (options.status === "all" ? entry.status !== "archived" : entry.status === options.status) &&
       (options.source === "all" || entry.official === (options.source === "official")) &&
@@ -275,15 +250,7 @@ export class CatalogStore {
     if (!installed || !artifact || json(artifact).contentHash !== lock.contentHash) return { state: "unknown", reason: "unverified-source" };
     this.assertAllowed({ ...installed.entry, ownerId: current.ownerId }, json(artifact));
     if (lock.updatePolicy === "pinned") return { state: "pinned" };
-    let candidates = this.db.prepare("SELECT data FROM revisions WHERE entry_key=? AND conflict=0 ORDER BY created DESC").all(lock.entryKey).map(json);
-    candidates = candidates.filter((r) => !this.ruleFor(r.entry) && r.entry.status === "indexed");
-    if (lock.updatePolicy === "branch") candidates = candidates.filter((r) => current.sourceRef?.type === "branch" && current.sourceRef.name === lock.sourceRef?.name && r.revisionId === current.revisionId);
-    else if (lock.updatePolicy === "stable") candidates = candidates.filter((r) => r.channel === "release" && semver.valid(r.version) && !semver.prerelease(r.version)).sort((a, b) => semver.rcompare(a.version, b.version) || b.firstSeenAt.localeCompare(a.firstSeenAt));
-    else fail(400, "invalid_update_policy", "Unknown update policy");
-    if (!hostVersion || !semver.valid(hostVersion) || !contractsVerified) return { state: "unknown", reason: "host-or-contract-context-missing" };
-    const candidate = candidates.find((r) => r.entry.covelVersion && semver.validRange(r.entry.covelVersion) && semver.satisfies(hostVersion, r.entry.covelVersion) && this.latestArtifact(r.revisionId) && !this.ruleFor({ ...r.entry, ownerId: current.ownerId }, this.latestArtifact(r.revisionId)));
-    if (!candidate) return { state: "unknown", reason: "no-verified-compatible-artifact" };
-    if (candidate.sourceTreeHash === installed.sourceTreeHash || (lock.updatePolicy === "stable" && (!semver.valid(installed.version) || !semver.gt(candidate.version, installed.version)))) return { state: "current" };
-    return { state: "available", candidate: { revisionId: candidate.revisionId, version: candidate.version, commitSha: candidate.commitSha, sourceRef: lock.updatePolicy === "branch" ? current.sourceRef : candidate.sourceRef }, requiresConfirmation: true, apply: "backend-restart", notice: "The Covel client must verify file and permission changes before installation." };
+    const revisions = this.db.prepare("SELECT data FROM revisions WHERE entry_key=? AND conflict=0 ORDER BY created DESC").all(lock.entryKey).map(json);
+    return selectUpdate({ lock, current, installed, revisions, artifacts: new Map(revisions.map((r) => [r.revisionId, this.latestArtifact(r.revisionId)])), policy: this.policy(), hostVersion, contractsVerified });
   }
 }

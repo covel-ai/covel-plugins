@@ -36,3 +36,18 @@ test("local snapshots, failed preflight and failed ingestion never authorize Pag
   await assert.rejects(publishCatalog({ ...args, fetchImpl: async (url) => url.endsWith("/v1/policy") ? response(policy()) : response({}, 409) }), /Pages must not deploy/);
   await assert.rejects(publishCatalog({ ...args, fetchImpl: async (url) => url.endsWith("/v1/policy") ? response(policy()) : response({}) }), /receipt/);
 });
+
+test('publisher negotiates bounded staged ingestion without changing Node direct ingestion', async () => {
+  const { catalog, policy } = await import('./fixtures.mjs');
+  const { publishCatalog } = await import('../src/publish.mjs');
+  const routes=[];const id='a'.repeat(64);
+  const receipt=await publishCatalog({url:'https://api.covel.cc',token:'x'.repeat(32),catalog:catalog(),now:new Date('2026-10-29T12:00:00Z'),fetchImpl:async(url,init)=>{
+    const path=new URL(url).pathname;routes.push(path);
+    if(path==='/v1/policy')return Response.json(policy(),{headers:{'X-Catalog-Ingest':'staged-v1'}});
+    if(path==='/admin/snapshots/plugins')return Response.json({snapshotId:id,next:0,published:false});
+    if(path.endsWith('/records/0')){assert.equal(JSON.parse(init.body).type,'entry');return Response.json({next:1});}
+    if(path.endsWith('/finish'))return Response.json({snapshotId:id,stats:catalog().stats});
+    throw new Error(path);
+  }});
+  assert.equal(receipt.snapshotId,id);assert.equal(routes.length,4);
+});

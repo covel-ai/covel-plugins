@@ -239,3 +239,28 @@ Use synthetic 100/1,000/10,000-entry datasets only in tests. Measure payload, DO
 latency and memory; first-page network/rendering must scale with the 24-item page,
 not total catalog size. Test mobile interactions and stable query/pagination. Verify
 complete local/CI artifacts and peer findings before real deployment.
+
+## Asynchronous deployment extension (kit 0.3)
+
+`POST /v1/downloads` may return HTTP 202 with `{state:"pending",jobId,retryAfter}`.
+This has no ticket and does not change counters. Repeat the same request with the
+same idempotency key; 200 retains the existing ticket contract. Clients cancel
+polling when leaving the detail view. The shared UI supports both Node's immediate
+response and asynchronous Workers preparation. Failed tasks return an explicit
+error; no repository ZIP or unverified URL is substituted.
+
+Storage adapters import `core` for policy matching, revision identities, release
+validation, timestamp projection, query options and update selection. Node remains
+synchronous. A D1 adapter must use transactional batches/conditional writes, not
+unprotected asynchronous translations of Node transactions. Heavy collection and
+packaging may execute the fixed shared package in a trusted job runner; package
+contents are only parsed as data. `collector` unifies production collection and
+revalidates resumed repository identities before acknowledging publication.
+
+A service can advertise `X-Catalog-Ingest: staged-v1` on the policy preflight.
+The shared publisher then sends a manifest, ordered bounded entry/release/issue
+records, and a completion request to the same kind-scoped ingestion prefix.
+The manifest includes an ordered rolling SHA-256 chain and complete counts.
+A deterministic publication identity and persisted next record allow retry; only a
+validated finish switches the live snapshot. Services without this header retain
+the original direct snapshot payload. No publishing credential is exposed to UI.

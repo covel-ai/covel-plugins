@@ -1,5 +1,5 @@
 import { GitHubError } from "./github.mjs";
-import { ServiceError } from "./store.mjs";
+import { ServiceError } from "./core.mjs";
 
 const invalid = () => { throw new ServiceError(400, "invalid_endpoint", "Unsupported public repository request"); };
 /** The proxy never trusts an opaque API response to tell whether its parent repo

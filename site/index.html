@@ -1,2 +1,35 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="theme-color" content="#e9ece8"/><meta name="description" content="Discover Covel plugins, explore their source and find the right additions for your world."/><title>Plugins · Covel</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- covel-theme:start -->
+<meta name="color-scheme" content="dark light" />
+<style data-covel-theme>
+html { color-scheme: light; background: var(--frame, #edf0ea); color: var(--foreground, #27332e); }
+html.dark { color-scheme: dark; background: var(--frame, #121915); color: var(--foreground, #e7ece6); }
+</style>
+<script data-covel-theme>
+(() => {
+function readPreference(key) {
+  try { return globalThis.localStorage?.getItem(key) ?? null; }
+  catch { return null; }
+}
+function readTheme() {
+  return readPreference("covel-theme") === "light" ? "light" : "dark";
+}
+function applyTheme(theme, root = globalThis.document?.documentElement) {
+  if (!root) return;
+  const dark = theme !== "light";
+  root.classList.toggle("dark", dark);
+  root.style.colorScheme = dark ? "dark" : "light";
+}
+applyTheme(readTheme());
+})();
+</script>
+<!-- covel-theme:end -->
+<meta name="description" content="Discover Covel plugins, explore their source and find the right additions for your world." />
+<title>Plugins · Covel</title>
+</head>
+<body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
+</html>
