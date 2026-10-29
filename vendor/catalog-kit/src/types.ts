@@ -91,6 +91,11 @@ export interface CatalogConfig {
   apiBase?: string;
   catalogUrl: string;
   guideUrl: string;
+  /** Covel project links, distinct from this directory's source and publishing guide. */
+  projectUrl: string;
+  demoUrl: string;
+  docsUrl: string;
+  projectRepository: string;
 }
 
 export interface VersionRecord {

@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "repository": "https://github.com/covel-ai/covel-catalog",
   "upstreamPath": "packages/catalog-kit",
-  "commit": "5fca414b7e1b505174a21cf329b0dbf6c27b260c",
-  "kitVersion": "0.3.1",
+  "commit": "d72b17eb675179f08815c1e8e9ffb5a9ee1c4e7a",
+  "kitVersion": "0.3.2",
   "files": {
     "SPEC.md": "a1182a351bf204b384e5cbda7941bbde018a9adad99524b3bc26406f952a32e3",
     "adapters/plugins.mjs": "b6c94a8aa4e4e418454cc8bd4546e7278bb635f3713b27b85d36abd7f0a68718",
     "adapters/worlds.mjs": "aa29b5c5218bf16a24a346c0bdaee8f00edbf5b04b262bbb9bf7a8a311d37b25",
-    "package.json": "2cb0734e06cfc8e4798b6d829d77a6f67ab71107d6d5112ceba9aca5976929e2",
+    "package.json": "d221b90a140048aade2aecb65e1eae75e17a917c0e3423d234e02084155d08c0",
     "src/collector.mjs": "164b7e17c3b4639e2d4f2919b81fb439ba06965d5b98a41de5c3bc670a1bd54e",
     "src/core.mjs": "0cdf8a266d3960fb60913ab9b6d3c449f0d0e3f5916e351537fc915473dd7d34",
     "src/download-client.d.mts": "002b1c2a393f02bbdd6f687dd3630ecc08bee471fa195e5c7764d026fa56a354",
@@ -28,7 +28,7 @@
     "src/server.mjs": "a75360e499f2c9c04d6b50c7aaa23b84d80d0743993147ecdb81b77de6c7eb0d",
     "src/staged-publication.mjs": "b55f3e5c3b8df3666bc20aacabc1ec7641d8cbf4716cb23aed96caeb627aa307",
     "src/store.mjs": "a2897df66d9f7c0a7982690cadfe7663808b56e5f520ca4f933c0bdbaf06ed01",
-    "src/types.ts": "2f2da616c5a897880a965729e94319ea2a050af1e278d3311e293f822f30dd3e",
+    "src/types.ts": "25cba9232285caf306743fa4b52a2444e58903bf9fdb392a921e467a01eb9e91",
     "templates/README.md": "db7f8c2a18eb2594a324c952fcd44fd3b77386475efcf7aa3074bca11a5c9b3a",
     "templates/pages.yml": "6380ed3a0d8422376239bafecaaca9f6e6cc3b3dec477dfe3133ef6856774a25",
     "test/collector.test.mjs": "ddf45f4cd56d321f3884da724dee8201325d594d3b883dfd6cc2e14c74991aac",
@@ -49,7 +49,7 @@
     "test/worlds-adapter.test.mjs": "4ab1f8ed68a8bddd4ebeef235d87a42e81bf6348dd5e6e1e8f0da5ea1f32c092",
     "tools/sync.mjs": "64b1cf79cab38ce0d2104c53af0c1fcf7a94250be7f56099122ef9962f6196ba",
     "tools/theme-bootstrap.mjs": "46681af79e14bfae17bf7385d799953bda82ce097d5cae4395c9e6b67a03aec7",
-    "ui/catalog-app.tsx": "1943bf54974326f79060cf0068b107fb01707c7c89da421a1e126eaabd60dab9",
+    "ui/catalog-app.tsx": "59cbd9d6b255b2215b2fb0d923c984bb669efce2a289c876ddea79a367c1771c",
     "ui/client.ts": "2d93dc92b9bc740a3a5e53dc18f3870afadc97c2017d9976b37b500aa843bd09",
     "ui/components/badge.tsx": "c11e6bb8b0de6c050544750cba6c8db7ec763b610be9589a7c36d1236031235d",
     "ui/components/button.tsx": "a87083f8ff596a91eaf85424e109254c8312e042b592071441b9428d58ccfbd6",
@@ -59,7 +59,7 @@
     "ui/components/separator.tsx": "ef6b77d69f54bfe8cc0e08252eade979e5e5ea798a03392840e589358580a7b3",
     "ui/components/skeleton.tsx": "ac061820c8f5311fe09fb146ff8fbbf92cf7231909c6e4fd46f80cbf9423aa50",
     "ui/components/tabs.tsx": "03698406e476e40fb34cdb134462de326691a89fdd0bab312a084a3811198e66",
-    "ui/styles.css": "ee748643b0492f771f38785b561acb3b1828dc09a759fdb245e9b634fc23e401",
+    "ui/styles.css": "4053a123f98b4a34f043fe72cd0d8330fd6999007aee65cf445e5ad0a66976c6",
     "ui/utils.ts": "64fc84c1be627f0d586fb4ba64d824a1604f44282381f5bae68cdf86e10bb6ec"
   }
 }

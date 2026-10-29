@@ -9,4 +9,6 @@ createRoot(document.getElementById("root")!).render(<React.StrictMode><CatalogAp
   apiBase: import.meta.env.VITE_CATALOG_API || undefined,
   catalogUrl: `${import.meta.env.BASE_URL}catalog.json`,
   guideUrl: "https://github.com/covel-ai/covel-plugins/blob/main/docs/publishing.md",
+  projectUrl: "https://covel.cc/", demoUrl: "https://demo.covel.cc/",
+  docsUrl: "https://covel.cc/docs/en/", projectRepository: "https://github.com/ackness/covel",
 }} /></React.StrictMode>);
