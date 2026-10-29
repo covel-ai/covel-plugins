@@ -34,7 +34,7 @@ export async function collectRemote({ get = createGitHubClient(), config, overri
   const excluded = new Set(Object.keys(config.excludeRepositories).map((name) => name.toLowerCase()));
   const names = [...new Set([...discovered, ...seeds].map((name) => name.toLowerCase()))].filter((name) => !excluded.has(name)).sort();
   const fetchedAt = now.toISOString();
-  const round = await collectRound({ names, config: { ...config, adapterVersion: 1, overrides }, checkpoint, now: () => fetchedAt,
+  const round = await collectRound({ names, config: { ...config, adapterVersion: 2, overrides }, checkpoint, now: () => fetchedAt,
     collect: async (name) => {
       const repo = await get(repositoryPath(name), { optional: true });
       if (!repo || repo.private !== false || repo.disabled) return null;
@@ -45,18 +45,29 @@ export async function collectRemote({ get = createGitHubClient(), config, overri
       if (!topic && !seeds.has(name)) return null;
       const discovery = topic ? "topic" : "seed";
       const source = await repositoryTree(get, repo);
-      if (!source) return { repo, entries: [candidate(repo, { config, discovery, fetchedAt, problems: ["empty-repository"] })], issues: [] };
-      return { repo, ...await extractPlugins({ repo, ...source, read: (file) => readBlob(get, repositoryPath(repo.full_name), file), config, overrides, discovery, fetchedAt }) };
+      if (!source) return { repo, seed: seeds.has(name), entries: [candidate(repo, { config, discovery, fetchedAt, problems: ["empty-repository"] })], issues: [] };
+      return { repo, seed: seeds.has(name), ...await extractPlugins({ repo, ...source, read: (file) => readBlob(get, repositoryPath(repo.full_name), file), config, overrides, discovery, fetchedAt }) };
     },
     finalize: (results, { completedAt }) => {
       const repositories = [...new Map(results.filter(Boolean).map((r) => [r.repo.id, r])).values()];
-      return { repositories: repositories.map((r) => r.repo), catalog: createCatalog({ kind: "plugins", mode: "github", generatedAt: completedAt, topics: config.topics, entries: repositories.flatMap((r) => r.entries), issues: repositories.flatMap((r) => r.issues) }) };
+      return { repositories, catalog: createCatalog({ kind: "plugins", mode: "github", generatedAt: completedAt, topics: config.topics, entries: repositories.flatMap((r) => r.entries), issues: repositories.flatMap((r) => r.issues) }) };
     },
   });
+  // A fixed seed can survive membership reconciliation after a budget restart.
+  // Recheck the small seed list before publishing any previously completed data.
+  const unavailable = new Set();
+  for (const { repo, seed } of round.result.repositories) {
+    if (!seed) continue;
+    const live = await get(`/repositories/${repo.id}`, { optional: true });
+    if (!live || live.private !== false || live.disabled || live.id !== repo.id || live.owner?.id !== repo.owner?.id || live.full_name !== repo.full_name || live.archived !== repo.archived) unavailable.add(repo.id);
+  }
+  const repositories = round.result.repositories.filter(({ repo }) => !unavailable.has(repo.id)).map(({ repo }) => repo);
+  const original = round.result.catalog;
+  const catalog = createCatalog({ ...original, entries: original.entries.filter((entry) => !unavailable.has(entry.repositoryId)), issues: original.issues.filter((issue) => !round.result.repositories.some(({ repo }) => unavailable.has(repo.id) && repo.full_name === issue.repository)) });
   let releaseRound;
   if (withReleases) {
     const { collectReleases } = await import("../../packages/catalog-kit/src/releases.mjs");
-    releaseRound = await collectReleases({ get, repositories: round.result.repositories, entries: round.result.catalog.entries, checkpoint: releaseCheckpoint, config: { ...config, adapterVersion: 1 }, now,
+    releaseRound = await collectReleases({ get, repositories, entries: catalog.entries, checkpoint: releaseCheckpoint, config: { ...config, adapterVersion: 2 }, now,
       extractAtCommit: async (repo, commitSha) => {
         const base = repositoryPath(repo.full_name);
         const commit = await get(`${base}/commits/${commitSha}`, { immutable: true });
@@ -67,10 +78,10 @@ export async function collectRemote({ get = createGitHubClient(), config, overri
       },
     });
   }
-  await onComplete(round.result.catalog, releaseRound?.releases ?? [], releaseRound?.issues ?? []);
+  await onComplete(catalog, releaseRound?.releases ?? [], releaseRound?.issues ?? []);
   if (releaseRound) await releaseRound.acknowledge();
   await round.acknowledge();
-  return round.result.catalog;
+  return catalog;
 }
 export async function collectLocal({ directory = root, config, overrides = [] }) {
   validateConfig(config);
@@ -97,7 +108,7 @@ export const writeCatalog = (catalog, filename) => writeJson(parseCatalog(catalo
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.argv.slice(2).some((arg) => arg !== "--local")) throw new Error("Usage: node scripts/catalog/collect.mjs [--local]");
   const inputs = await loadInputs();
-  const get = process.env.CATALOG_API_URL && process.env.CATALOG_INGEST_TOKEN
+  const get = process.env.CATALOG_API_URL && !process.argv.includes("--local")
     ? createRegistryGitHubClient({ apiUrl: process.env.CATALOG_API_URL, token: process.env.CATALOG_INGEST_TOKEN, kind: "plugins" })
     : createGitHubClient({ cache: diskCache(path.join(root, ".cache/github")), maxRequests: Number(process.env.GITHUB_REQUEST_BUDGET ?? 900) });
   const output = path.join(root, "site/public/catalog.json");

@@ -29,10 +29,11 @@ for (const width of [390, 768, 1440]) test(`responsive directory and usable filt
     await expect(page.getByRole("heading", { name: "Plugins." })).toBeVisible();
     if (width === 390) {
       await page.locator(".mobile-filter").click(); const sheet = page.getByRole("dialog"); await expect(sheet).toBeVisible();
+      await expect(sheet.locator('a[href="https://worlds.covel.cc/"]')).toBeVisible();
       const bounds = await sheet.boundingBox(); expect(bounds!.y).toBe(0); expect(bounds!.x + bounds!.width).toBe(width);
       await sheet.getByRole("combobox", { name: "Category", exact: true }).click(); await page.getByRole("option", { name: "tools", exact: true }).click();
       await sheet.getByRole("button", { name: "Close", exact: true }).last().click();
-    }
+    } else await expect(page.locator('a[href="https://worlds.covel.cc/"]')).toBeVisible();
     expect(errors).toEqual([]);
   } finally { store.close(); }
 });

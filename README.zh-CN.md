@@ -4,9 +4,9 @@
 [English](README.md) · **简体中文**
 <!-- languages:end -->
 
-Covel 官方维护的插件目录、官方可选扩展与开发示例。社区插件代码由作者自己的仓库托管，欢迎通过 PR 提交收录。
+Covel 官方维护的插件目录、官方可选扩展与开发示例。社区插件代码由作者自己的仓库托管；给公开仓库添加 `covel-plugin` 或 `covel-plugins` Topic 即可自动发现。
 
-快速导航：[官方插件](#官方插件) · [社区插件](#社区插件) · [安装](#安装) · [投稿与开发](#投稿与开发)
+快速导航：[插件目录](https://plugins.covel.cc/) · [世界目录](https://worlds.covel.cc/) · [安装](#安装) · [投稿与开发](#投稿与开发)
 
 ## 插件分层
 
@@ -20,30 +20,11 @@ Covel 官方维护的插件目录、官方可选扩展与开发示例。社区�
 
 ## 插件目录
 
-官方插件优先展示，社区插件单独收录。各语言表格从 `registry/plugins/*.json` 生成，请修改条目而非直接编辑表格。
+[网页目录](https://plugins.covel.cc/)提供搜索、官方／社区筛选、版本、仓库 Star 和统一 ZIP 下载，与[世界目录](https://worlds.covel.cc/)共用采集核心、界面与服务。正式发布需要配置共享服务；本地预览会明确标注尚不可用的实时功能。
 
-<!-- registry:start -->
-### 官方插件
+每 6 小时、main 推送或手动触发采集。以当前 `PLUGIN.md`、`package.json` 为准，新包不需要新增 registry JSON 或申请收录 PR。`registry/plugins/` 仅保留迁移备注；官方身份由 `catalog/config.json` 指定，独立规则可以下架条目并停止平台下载。[架构与运维](docs/catalog.zh-CN.md)。
 
-| 插件 | 功能 | 作者 | Covel 版本 | 状态 | 演示 | 安装来源 |
-| --- | --- | --- | --- | --- | --- | --- |
-| [DashScope 剧情生图](https://github.com/covel-ai/covel-plugins) | LLM 提示词、万相图像生成与持久化画廊的两段式流水线。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/dashscope-image-gen/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen) |
-| [Jev 选项推荐 Demo](https://github.com/covel-ai/covel-plugins) | 复杂开发示例：类型化输入、evaluation 模型、公共服务与舞台概率 UI。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/jev-choice-demo/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo) |
-| [MiMo 旁白朗读](https://github.com/covel-ai/covel-plugins) | 自动或手动朗读剧情，演示自定义 speech wire、后台任务与音轨面板。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/mimo-tts/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts) |
-| [笔记清理示例](https://github.com/covel-ai/covel-plugins) | 纯 entry 格式化服务：清理行首行尾空白与多余空行，保留段落。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-clean/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-clean) |
-| [笔记大纲示例](https://github.com/covel-ai/covel-plugins) | 纯 entry 格式化服务：将非空行整理成纯文本项目符号列表。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-outline/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-outline) |
-| [记录工作台示例](https://github.com/covel-ai/covel-plugins) | 记录面板发现独立格式化服务，处理成功后保存结果。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/notes-workbench/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/notes-workbench) |
-| [OpenAI 兼容剧情生图](https://github.com/covel-ai/covel-plugins) | 通过 OpenAI 兼容图像管线生成剧情插图并展示画廊。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/plugins/openai-image-gen/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen) |
-| [Story Note / 叙事便签示例](https://github.com/covel-ai/covel-plugins) | 演示通过 PostContextAssembly 为 story 提示词追加一句叙事建议。 | covel-ai | 0.0.50 | 可用 | [演示](https://github.com/covel-ai/covel-plugins/blob/main/examples/story-note/README.md) | [安装来源](https://github.com/covel-ai/covel-plugins/tree/main/examples/story-note) |
-
-### 社区插件
-
-| 插件 | 功能 | 作者 | Covel 版本 | 状态 | 演示 | 安装来源 |
-| --- | --- | --- | --- | --- | --- | --- |
-| [Anti-AI-Flavor / 去 AI 味](https://github.com/charlesli1989/anti-ai-flavor) | 按中英文会话语言注入可配置的叙事文风约束。 | charlesli1989 | 待确认 | 待确认 | — | [来源](https://github.com/charlesli1989/anti-ai-flavor) |
-<!-- registry:end -->
-
-“待确认”条目用于跟踪投稿，不作为可安装推荐；“已归档”不再维护。
+“待完善”表示元数据不完整；“已索引”不代表安全或兼容认证。归档条目可筛选查看，平台不提供安装推荐和下载。
 
 ## 安装
 
@@ -65,27 +46,30 @@ Covel 官方维护的插件目录、官方可选扩展与开发示例。社区�
 
 **官方收录不代表安全审计，也不授予内置插件权限。** 插件的服务端 JavaScript 不运行在进程沙箱中，允许执行后可能访问后端进程可访问的文件、环境变量和网络。提示词插件也可能影响模型行为、发送到模型的数据与调用费用。仅安装信任的作者和版本。
 
-官方目录不托管或执行投稿代码。在线 demo 只考虑由官方选择、独立部署的插件；目前采用说明、截图和录屏链接。
+采集和下载服务不执行投稿代码；可将经过布局校验的固定版本 ZIP 保存在私有缓存中供下载。在线 demo 只考虑由官方选择、独立部署的插件；目前采用说明、截图和录屏链接。
 
 ## 投稿与开发
 
 参见 [投稿规范](CONTRIBUTING.zh-CN.md)、[安全说明](SECURITY.zh-CN.md)、[发布规范](docs/publishing.zh-CN.md)、[叙事便签示例](examples/story-note/README.zh-CN.md) 和 [Jev 复杂示例](examples/jev-choice-demo/README.zh-CN.md)。这些指南和[官方插件说明](plugins/README.zh-CN.md)均提供英文与简体中文，默认入口为英文。
 
-只检查目录无需安装依赖：
+使用 Node 26+ / pnpm 11.22：
 
 ```sh
-node scripts/registry.mjs          # Generate navigation and all README tables
-node scripts/registry.mjs --check  # Validate entries and generated output
-node --test scripts/registry.test.mjs
+pnpm install --frozen-lockfile
+pnpm collect:local       # 真实本地清单，不伪造社区数据
+pnpm test:catalog       # 公共契约、适配器、服务及故障测试
+pnpm build:site
+pnpm test:site          # 需要 Playwright Chromium
+pnpm test              # 原有官方插件回归测试
 ```
 
-官方插件开发：Node 26+ / pnpm 11.22，运行 `pnpm install --frozen-lockfile` 和 `pnpm test`。Jev 随包包含 Zod，更新依赖后运行 `pnpm build:vendor` 并提交生成产物与许可证。静态目录 CI 不执行 PR 提供的插件代码；维护者审核后本地运行完整测试。
+采集／构建只有仓库只读权限。Pages 独立发布，必须先有完整快照被已配置的共享服务接受；失败保留旧站，持久检查点支持续跑。[部署与备份说明](docs/catalog.zh-CN.md)。
 
 Agent 开发技能位于 [`.agents/skills/create-plugin/SKILL.md`](.agents/skills/create-plugin/SKILL.md)，支持发现该目录的 Agent 可直接使用 `$create-plugin`。
 
 翻译文档或新增首页语言，请参见 [多语言维护](docs/localization.zh-CN.md)。页面语言与插件本身支持的语言独立。
 
-JSON 条目是唯一索引来源；后续网页和应用内目录可直接复用。当前不提供自动更新、评分、账号或在线执行服务。
+注册表更新 API 定义可信安装锁与显式版本选择；Covel 客户端集成单独处理。下载离线 ZIP 保持本地／固定版本，不会自动建立更新追踪。当前不提供评分、账号或在线执行服务。
 
 ## License
 

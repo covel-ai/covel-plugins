@@ -1,4 +1,4 @@
-name: Validate directory
+name: Validate catalog and Pages offline
 on:
   pull_request:
   push:
@@ -12,8 +12,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
-      - run: node scripts/registry.mjs --check
-      - run: node --test scripts/registry.test.mjs
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm check
+      - run: pnpm test:catalog
+      - run: pnpm collect:local
+      - run: pnpm build:site
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:site

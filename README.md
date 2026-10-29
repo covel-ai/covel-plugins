@@ -4,9 +4,9 @@
 **English** · [简体中文](README.zh-CN.md)
 <!-- languages:end -->
 
-The official Covel plugin directory, optional extensions, and authoring examples. Community authors host their own code and can submit a pull request to list their plugins here.
+The official Covel plugin directory, optional extensions, and authoring examples. Community authors host their own code. Add `covel-plugin` or `covel-plugins` to the public repository’s GitHub Topics for automatic discovery.
 
-Quick links: [Official plugins](#official-plugins) · [Community plugins](#community-plugins) · [Installation](#installation) · [Contributing](#contributing)
+Quick links: [Plugin directory](https://plugins.covel.cc/) · [World directory](https://worlds.covel.cc/) · [Installation](#installation) · [Contributing](#contributing)
 
 ## Plugin groups
 
@@ -20,30 +20,11 @@ Maintenance, feature category, and runtime trust are separate concepts. All exte
 
 ## Plugin directory
 
-Official plugins appear first, followed by a separate community list. Tables in every language are generated from `registry/plugins/*.json`; edit the entries rather than the tables.
+The [web directory](https://plugins.covel.cc/) supports search, official/community filters, versions, repository Stars and a shared ZIP download service. Its frontend and collection core are shared with [Covel Worlds](https://worlds.covel.cc/). Production publication requires a configured shared service; the local preview clearly identifies unavailable live features.
 
-<!-- registry:start -->
-### Official plugins
+Topics are discovered every six hours and on main pushes/manual runs. Current `PLUGIN.md` and `package.json` are authoritative; new packages need no registry JSON or listing PR. `registry/plugins/` preserves migration notes only. Official identity comes from `catalog/config.json`, and independent policy rules can withdraw entries and downloads. [Architecture and operations](docs/catalog.md).
 
-| Plugin | Description | Author | Covel version | Status | Demo | Install source |
-| --- | --- | --- | --- | --- | --- | --- |
-| [DashScope Images](https://github.com/covel-ai/covel-plugins) | A two-stage workflow combining LLM prompts, Wan image generation, and a persistent gallery. | covel-ai | 0.0.50 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/plugins/dashscope-image-gen/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen) |
-| [Jev Choice Recommendations Demo](https://github.com/covel-ai/covel-plugins) | An advanced example combining typed inputs, evaluation models, public services, and a stage probability UI. | covel-ai | 0.0.50 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/examples/jev-choice-demo/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo) |
-| [MiMo Narration](https://github.com/covel-ai/covel-plugins) | Automatic and manual narration with a custom speech wire, background jobs, and an audio panel. | covel-ai | 0.0.50 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/plugins/mimo-tts/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts) |
-| [Clean Note Example](https://github.com/covel-ai/covel-plugins) | Entry-only note formatter that trims line whitespace and excess blank lines while preserving paragraphs. | covel-ai | 0.0.50 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-clean/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-clean) |
-| [Outline Note Example](https://github.com/covel-ai/covel-plugins) | Entry-only note formatter that turns nonblank lines into a plain-text bullet list. | covel-ai | 0.0.50 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-outline/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-outline) |
-| [Notes Workbench Example](https://github.com/covel-ai/covel-plugins) | A notes panel that discovers independent formatter services and saves results after successful processing. | covel-ai | 0.0.50 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/examples/notes-workbench/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/examples/notes-workbench) |
-| [OpenAI Images](https://github.com/covel-ai/covel-plugins) | Generates story illustrations through the OpenAI-compatible image pipeline and displays a gallery. | covel-ai | 0.0.50 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/plugins/openai-image-gen/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen) |
-| [Story Note Example](https://github.com/covel-ai/covel-plugins) | Demonstrates adding a narrative suggestion to story prompts through PostContextAssembly. | covel-ai | 0.0.50 | Available | [Demo](https://github.com/covel-ai/covel-plugins/blob/main/examples/story-note/README.md) | [Install source](https://github.com/covel-ai/covel-plugins/tree/main/examples/story-note) |
-
-### Community plugins
-
-| Plugin | Description | Author | Covel version | Status | Demo | Install source |
-| --- | --- | --- | --- | --- | --- | --- |
-| [Anti-AI-Flavor](https://github.com/charlesli1989/anti-ai-flavor) | Adds configurable narrative style constraints for English and Chinese sessions. | charlesli1989 | Not confirmed | Pending review | — | [Source](https://github.com/charlesli1989/anti-ai-flavor) |
-<!-- registry:end -->
-
-Pending entries track submissions awaiting confirmation and are not installation recommendations. Archived entries are no longer maintained.
+Pending entries have incomplete metadata. Indexed means metadata is complete, not a security or compatibility certification. Archived packages are filterable and unavailable for platform download.
 
 ## Installation
 
@@ -63,27 +44,30 @@ For installed plugins, use **Check for updates** in settings. Branch installatio
 
 **Directory inclusion does not constitute a security audit or grant builtin privileges.** Plugin server-side JavaScript does not run in a process sandbox. Once approved, it may access files, environment variables, and networks available to the backend process. Prompt-only plugins can also affect model behavior, the data sent to models, and usage costs. Install only authors and versions you trust.
 
-The directory does not host or execute submitted third-party code. Demos currently use documentation, screenshots, or recordings; any future hosted demos would be selected and deployed separately by the official team.
+The collection and download service never executes submitted third-party code. It may cache validated, immutable package ZIPs privately for download. Demos currently use documentation, screenshots, or recordings; any future hosted demos would be selected and deployed separately by the official team.
 
 ## Contributing
 
 See the [contribution guide](CONTRIBUTING.md), [security policy](SECURITY.md), [publishing contract](docs/publishing.md), [Story Note example](examples/story-note/README.md), and [advanced Jev example](examples/jev-choice-demo/README.md). These guides and the [official plugin READMEs](plugins/README.md) are available in English and Simplified Chinese, with English as the default.
 
-Directory checks require no dependency installation:
+Use Node 26+ and pnpm 11.22:
 
 ```sh
-node scripts/registry.mjs          # Generate navigation and all README tables
-node scripts/registry.mjs --check  # Validate entries and generated output
-node --test scripts/registry.test.mjs
+pnpm install --frozen-lockfile
+pnpm collect:local       # Real local manifests; no fabricated community data
+pnpm test:catalog       # Shared contracts, adapters, service and fault cases
+pnpm build:site
+pnpm test:site          # Requires Playwright Chromium
+pnpm test              # Existing official-plugin regression suite
 ```
 
-For official plugin development, use Node 26+ and pnpm 11.22, then run `pnpm install --frozen-lockfile` and `pnpm test`. Jev includes bundled Zod; after updating that dependency, run `pnpm build:vendor` and commit the generated artifact and license. Directory CI performs static checks without executing submitted plugin code. Maintainers run the full tests locally after reviewing changes.
+Collection/build CI has read-only repository permissions. The Pages job is separate and runs only after a complete snapshot is accepted by the configured service. Failures retain the previous publication; checkpoints allow later runs to resume. See [deployment and backup instructions](docs/catalog.md).
 
 The authoring skill lives at [`.agents/skills/create-plugin/SKILL.md`](.agents/skills/create-plugin/SKILL.md). Agents that discover this directory can use `$create-plugin`.
 
 To translate documentation or add a homepage language, see [Localization](docs/localization.md). Documentation languages are independent of the languages supported by a plugin.
 
-JSON entries are the single index source and can later power a website or in-app directory. Automatic updates, ratings, accounts, and online execution are not currently provided.
+The registry update API defines trusted install locks and explicit version selection. Covel client integration is separate: downloading an offline ZIP leaves it local/pinned and does not automatically establish update tracking. Ratings, accounts and online execution are not provided.
 
 ## License
 

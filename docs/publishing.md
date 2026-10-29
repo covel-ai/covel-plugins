@@ -16,7 +16,7 @@ Declare versioned contracts (`provides`, `requires`, `optional`, `conflicts`), `
 
 ## Maintaining official plugins
 
-Official plugins provide English manifests with Simplified Chinese labels in `locales/zh-CN.yaml`, English and Simplified Chinese READMEs covering installation, model configuration, data and network behavior, an MIT license, standalone JavaScript, regression tests, and directory entries. Use `README.md` as the default English entry and `README.zh-CN.md` for Chinese, with language links at the top. Keep both versions in sync; see [Localization](localization.md). Advanced authoring examples belong in `examples/`, optional features in `plugins/`, and framework primitives in the main Covel repository. When changing dependencies or bundled artifacts, verify that each package can be copied to a temporary directory and imported independently of this repository's or the main repository's `node_modules`.
+Official plugins provide English manifests with Simplified Chinese labels in `locales/zh-CN.yaml`, English and Simplified Chinese READMEs covering installation, model configuration, data and network behavior, an MIT license, standalone JavaScript, regression tests, and discovery Topics. Use `README.md` as the default English entry and `README.zh-CN.md` for Chinese, with language links at the top. Keep both versions in sync; see [Localization](localization.md). Advanced authoring examples belong in `examples/`, optional features in `plugins/`, and framework primitives in the main Covel repository. When changing dependencies or bundled artifacts, verify that each package can be copied to a temporary directory and imported independently of this repository's or the main repository's `node_modules`.
 
 Preserve plugin identities, setting keys, and the original Covel Contributors license. Each plugin maintains its own `package.json` version; the index's `covelVersion` describes host compatibility, not the plugin release version. Trust sources differ before and after installation, so existing sessions need renewed approval. If an older development copy is installed, back up your source edits, then uninstall and reinstall through settings. Do not overwrite installation records manually.
 
@@ -27,3 +27,7 @@ Branch installations track that branch, and repository-root links track the defa
 Maintain release notes for each plugin and use separate tags, such as `mimo-tts/v0.0.40`; do not move published tags. Encode `/` in tag names as `%2F` in installation links, for example `/tree/mimo-tts%2Fv0.0.40/plugins/mimo-tts`. The installer does not automatically find the next release tag; users select an upgrade through an explicit version link.
 
 READMEs serve users and developers: explain functionality, installation and configuration, data and network behavior, limitations, and reproducible test commands. Keep dated manual acceptance records, personal test sessions, provider connection results, and timing logs out of plugin introductions.
+
+## Automatic directory discovery
+
+Add `covel-plugin` or `covel-plugins` to the public repository Topics. A collection reads package manifests; new entries need no JSON listing PR. ZIP downloads stay local/pinned unless Covel explicitly verifies and binds their source. See [catalog operations](catalog.md) for policy, counters, immutable version history and the client integration boundary.

@@ -79,7 +79,7 @@ function getFixture(repos, override) {
     if (endpoint.includes("/git/trees/")) return { truncated: false, tree: files.tree };
     if (endpoint.includes("/git/blobs/")) { const file = files.tree.find((f) => f.sha === endpoint.split("/").at(-1)); return { encoding: "base64", content: Buffer.from(await files.read(file)).toString("base64") }; }
     if (endpoint.includes("/tags?")) return [];
-    return repos.find((repo) => `/repos/${repo.full_name}` === endpoint) ?? null;
+    return repos.find((repo) => `/repos/${repo.full_name}` === endpoint || `/repositories/${repo.id}` === endpoint) ?? null;
   };
 }
 test("remote topic OR, public status and topic removals are reconciled", async () => {
@@ -93,4 +93,16 @@ test("budget failure preserves old publication and next run advances completed r
   assert.equal(published, "old snapshot");
   await collectRemote({ ...options, get: getFixture(repos, (endpoint) => { if (endpoint === "/repos/author/plugins-1") throw new Error("Completed repository fetched twice"); }) });
   assert.equal(published.stats.repositories, 2);
+});
+test("resumed migration seeds are rechecked for privacy, transfer, rename and archival", async () => {
+  for (const live of [null, { ...repo(1), private: true }, { ...repo(1), owner: { id: 99, login: "new-owner" } }, { ...repo(1), full_name: "author/renamed" }, { ...repo(1), archived: true }]) {
+    const checkpoint = memoryCheckpoint(), repos = [repo(1), repo(2)];
+    const options = { config: { ...config, seedRepositories: [repos[0].full_name] }, now, checkpoint };
+    await assert.rejects(collectRemote({ ...options, get: getFixture(repos, (endpoint) => { if (endpoint === "/repos/author/plugins-2") throw new GitHubError("budget", 429); }) }), /budget/);
+    const catalog = await collectRemote({ ...options, get: getFixture(repos, (endpoint) => {
+      if (endpoint === "/repos/author/plugins-1") throw new Error("Completed seed should only need its numeric identity recheck");
+      if (endpoint === "/repositories/1") return live;
+    }) });
+    assert.deepEqual(catalog.entries.map((entry) => entry.repositoryId), [2]);
+  }
 });

@@ -259,12 +259,6 @@ export async function generate(check = false, directory = root) {
       renderLanguages(locales, locale.locale),
       locale.readme,
     );
-    updated = replaceSection(
-      updated,
-      "registry",
-      renderDirectory(entries, locale),
-      locale.readme,
-    );
     if (check && updated !== original)
       throw new Error(
         `${locale.readme} is stale; run node scripts/registry.mjs`,
@@ -274,7 +268,7 @@ export async function generate(check = false, directory = root) {
   if (!check)
     for (const page of pages) await writeFile(page.filename, page.updated);
   console.log(
-    `Validated ${entries.length} plugin entries across ${locales.length} README languages`,
+    `Validated ${entries.length} legacy migration records across ${locales.length} README languages`,
   );
 }
 

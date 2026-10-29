@@ -140,7 +140,7 @@ test("generates and checks every locale, links added languages, and validates pa
     const en = await readFile(path.join(root, "README.md"), "utf8");
     assert.ok(en.includes("[日本語](README.ja.md)"));
     const ja = await readFile(path.join(root, added.readme), "utf8");
-    assert.ok(ja.includes(entry.description));
+    assert.ok(!ja.includes(entry.description));
     assert.ok(ja.includes("**日本語**"));
     await writeFile(path.join(root, "README.zh-CN.md"), template);
     await assert.rejects(generate(true, root), /README.zh-CN.md is stale/);

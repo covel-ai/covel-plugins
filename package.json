@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node scripts/registry.mjs --check",
+    "check": "node scripts/registry.mjs --check && node scripts/catalog/workflow.mjs",
     "generate": "node scripts/registry.mjs",
     "test": "pnpm run check:vendor && pnpm run test:registry && pnpm run test:plugins",
     "build:vendor": "node scripts/build-vendor.mjs",
@@ -16,7 +16,8 @@
     "collect:local": "node scripts/catalog/collect.mjs --local",
     "build:site": "pnpm --filter @covel/directory-site build",
     "test:site": "playwright test",
-    "serve:catalog": "node service/main.mjs"
+    "serve:catalog": "node service/main.mjs",
+    "build:pages": "pnpm build:site && node scripts/catalog/copy-pages.mjs"
   },
   "engines": {
     "node": ">=26"

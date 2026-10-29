@@ -1,0 +1,7 @@
+{
+  "topics": ["covel-plugin", "covel-plugins"],
+  "officialRepositories": ["covel-ai/covel-plugins"],
+  "seedRepositories": ["covel-ai/covel-plugins", "charlesli1989/anti-ai-flavor"],
+  "excludeRepositories": {},
+  "maxPluginsPerRepository": 200
+}

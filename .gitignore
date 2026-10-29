@@ -16,3 +16,5 @@ playwright-report/
 service/data/
 service/backups/
 service/.env
+!service/.env.example
+/dist/

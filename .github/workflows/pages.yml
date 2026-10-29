@@ -1,0 +1,96 @@
+name: Collect plugins and publish Pages
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: plugins-catalog-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  collect-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      deploy: ${{ steps.ingest.outcome == 'success' && vars.CATALOG_API_URL != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm check && pnpm test:catalog
+      - uses: actions/cache/restore@v4
+        id: resume
+        if: vars.CATALOG_API_URL != ''
+        with:
+          path: |
+            .cache/github
+            .cache/round
+          key: ${{ runner.os }}-plugins-v1-${{ hashFiles('packages/catalog-kit/**', 'catalog/config.json', 'scripts/catalog/**', 'registry/plugins/**') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ runner.os }}-plugins-v1-${{ hashFiles('packages/catalog-kit/**', 'catalog/config.json', 'scripts/catalog/**', 'registry/plugins/**') }}-
+      - name: Collect complete public catalog and releases
+        if: vars.CATALOG_API_URL != ''
+        run: pnpm collect
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REQUEST_BUDGET: 900
+          CATALOG_API_URL: ${{ vars.CATALOG_API_URL }}
+          CATALOG_INGEST_TOKEN: ${{ secrets.CATALOG_INGEST_TOKEN }}
+      - name: Preserve progress even when GitHub collection failed
+        if: always() && steps.resume.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .cache/github
+            .cache/round
+          key: ${{ steps.resume.outputs.cache-primary-key }}
+      - name: Build local preview when the service is not configured
+        if: vars.CATALOG_API_URL == ''
+        run: pnpm collect:local
+      - name: Build Pages artifact
+        run: pnpm build:pages
+        env:
+          VITE_CATALOG_API: ${{ vars.CATALOG_API_URL }}
+      - name: Ingest complete snapshot into the shared service
+        id: ingest
+        if: vars.CATALOG_API_URL != ''
+        run: node packages/catalog-kit/src/publish.mjs --catalog site/public/catalog.json --releases artifacts/releases.json --receipt artifacts/publish-receipt.json
+        env:
+          CATALOG_API_URL: ${{ vars.CATALOG_API_URL }}
+          CATALOG_INGEST_TOKEN: ${{ secrets.CATALOG_INGEST_TOKEN }}
+      - name: Upload reviewable build and diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugins-catalog-${{ github.run_id }}
+          path: |
+            dist
+            artifacts
+          retention-days: 14
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.ingest.outcome == 'success'
+        with:
+          path: dist
+  deploy:
+    needs: collect-build
+    if: needs.collect-build.outputs.deploy == 'true'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
