@@ -1,28 +1,21 @@
 ---
-id: dashscope-image-gen
-kind: plugin
-version: 0.1.0
-covel: ">=0.0.50"
+version: 0.2.0
+covel: ">=0.0.54"
 displayName: DashScope Images
 description: >-
   Generates illustrations from the current story, useful when you want artwork
   for a scene.
-tags:
-  - "cost:llm"
-  - "ui:right-panel"
 author:
   name: Covel Contributors
   url: https://github.com/covel-ai
 license: MIT
 homepage: https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen
-entry: ./server/index.js
 contributes:
   tools:
     - submit-dashscope-text-prompt
     - submit-dashscope-structured-prompt
   extensions:
-    - point: media.image-flow@1
-      id: flow
+    - media.image-flow@1/flow
   settings:
     - key: composition
       type: select

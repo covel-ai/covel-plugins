@@ -1,5 +1,4 @@
 ---
-type: function
 description: >-
   Generates an illustration from the prepared scene brief and saves it to the
   gallery.
@@ -7,12 +6,8 @@ schedule:
   trigger:
     type: event
     topic: openai-image.generate.requested
-  manual:
-    execution: background
-io:
-  visibility: plugin
+  background: true
 function:
-  handler: ./handler.js
   timeoutMs: 360000
 ---
 

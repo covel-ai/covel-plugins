@@ -1,33 +1,24 @@
 ---
-type: function
 description: Automatically narrates each turn's story output as speech.
 schedule:
   stage: post-turn
-  trigger:
-    type: auto
   # Engine-agnostic gate: runs only when the active narrative engine
   # (narrator or chat-mode-narrator) succeeded this turn.
   needs:
-    - contract: narrative-engine@1
+    - contract: narrative-engine@2
   # The turn does not wait for synthesis: the job is queued durably and runs
   # after the turn commits.
-  completion:
-    mode: detached
+  detached:
     maxQueueMs: 120000
     maxExecutionMs: 120000
-    overlap: serial
-    stalePolicy: reject
 io:
   inputs:
     narrative:
       from:
-        contract: narrative-engine@1
-        cardinality: one
+        contract: narrative-engine@2
       select: /narrativeOutput
       required: false
-  visibility: plugin
 function:
-  handler: ./handler.js
   # The default speech slot, read by the detached job's credential check.
   # The handler passes the `modelPresetId` setting to ctx.speech itself.
   model: mimo-tts

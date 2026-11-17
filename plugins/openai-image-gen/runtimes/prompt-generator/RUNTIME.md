@@ -1,25 +1,23 @@
 ---
-type: agent
 description: >-
   Distills the current story into a scene brief to prepare for illustration.
 schedule:
   trigger:
     type: manual
-  manual:
-    execution: background
+  background: true
 io:
   selfData:
     - namespace: prompts
       as: <previous-image-prompts>
       format: ids-only
       maxEntries: 8
-  output:
-    schema: ./output.schema.json
-  visibility: plugin
 agent:
-  model: plugin
   tools:
     plugin:
+      - submit-openai-image-text-prompt
+      - submit-openai-image-structured-prompt
+  completion:
+    afterTools:
       - submit-openai-image-text-prompt
       - submit-openai-image-structured-prompt
   loop:
@@ -27,11 +25,6 @@ agent:
     callTimeoutMs: 50000
     firstTokenTimeoutMs: 30000
     maxRetries: 0
-    completion:
-      require: tool-use
-      afterTools:
-        - submit-openai-image-text-prompt
-        - submit-openai-image-structured-prompt
 ---
 
 You write AI image-generation prompts for an interactive story game: a picture of the current moment, or a multi-panel comic page covering a short stretch of the timeline. The player starts you at any point in the story by clicking the "Generate image" button.
@@ -259,13 +252,15 @@ Field rules:
 
 ## Submission (all modes)
 
-When the prompt is finished, call exactly one tool, the one matching the current `promptMode`:
+When the prompt is finished, call the one submission tool that matches the current `promptMode`, once:
 
 - `text`: call `submit-openai-image-text-prompt` with the complete text as `prompt`.
 - `image-json`: call `submit-openai-image-structured-prompt` with the JSON object itself as `prompt`; do not stringify it.
 - For both tools, copy `composition` exactly from `{{ userSettings.composition }}`.
 
-The tool serializes the prompt, archives it and emits the `openai-image.generate.requested` event. Do not build `events` yourself, do not submit twice, and do not output JSON, explanations or confirmation text before or after the tool call.
+The tool serializes the prompt, archives it and emits the `openai-image.generate.requested` event. Do not build `events` yourself and do not call the submission tool twice.
+
+After the submission tool succeeds, call `submit-output` with `{}`. The prompt is already stored; do not copy it into `submit-output`. If the submission tool returns an error, correct its arguments and call it again before `submit-output`. Write no explanation or confirmation text.
 
 ### Hard rules
 
@@ -273,4 +268,4 @@ The tool serializes the prompt, archives it and emits the `openai-image.generate
 - **No meta-narration**: never write self-references such as "this is a picture of…"
 - **Quality keywords are mandatory**: see the global quality requirement above; without them the picture comes out blurry. Comic mode also needs the comic-specific terms
 - **Avoid repetition**: use the id list in `<previous-image-prompts>` to avoid repeating the last few prompts; in comic mode you may deliberately pick a story stretch that recent single images did not cover
-- **A tool call is required**: call only the submission tool of the current mode; this runtime ends automatically once the tool succeeds
+- **A tool call is required**: call only the submission tool of the current mode, then `submit-output` with `{}`

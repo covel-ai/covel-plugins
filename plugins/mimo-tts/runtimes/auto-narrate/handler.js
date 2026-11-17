@@ -1,6 +1,6 @@
 /**
  * mimo-tts/auto-narrate — runs after the active narrative engine succeeded
- * (`schedule.needs: narrative-engine@1`), as a detached post-turn job.
+ * (`schedule.needs: narrative-engine@2`), as a detached post-turn job.
  *
  * It reads the turn's `narrativeOutput` from the `narrative` input binding.
  * Every turn, even with auto synthesis off, it records `{ turnId, text }` in

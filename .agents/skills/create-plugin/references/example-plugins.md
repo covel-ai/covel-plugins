@@ -4,6 +4,11 @@ Use maintained packages rather than copied historic manifests.
 
 Main checkout:
 
+- `tests/third-party/declarative-notebook`: clean declarative community distribution;
+  own dataset tools, settings/world-data acceptance, JSON panel, browser page and
+  optional service import. Test runners stay outside the package. The exact files
+  are in `docs/plugins/prompt-only.md`; start here when no server code is needed.
+
 - `templates/plugin-with-tools`: inline grouped agent runtime and a declared entry tool.
 - `templates/plugin-multi-runtime`: root contributions plus child `RUNTIME.md` files, own data, and a post-turn analyst with a narrative input binding.
 - `plugins/memory`: detached `turn-digest@1`, `prompt.segment@1`, and public block-definition services.
@@ -15,7 +20,7 @@ Community checkout (`covel-plugins`, https://github.com/covel-ai/covel-plugins):
 - `examples/story-note`: declared context hook with no store access; plugin ID is `story-note`.
 - `examples/notes-workbench`: RPC action + slash command, scoped data writes, optional service discovery.
 - `examples/note-format-clean` and `note-format-outline`: `examples.note-format@1` service providers.
-- `examples/jev-choice-demo`: required `scene-prompts@1`/`narrative-engine@1` inputs and an evaluation service.
+- `examples/jev-choice-demo`: required `scene-prompts@1`/`narrative-engine@2` inputs and an evaluation service.
 - `plugins/openai-image-gen` and `dashscope-image-gen`: `media.image-flow@1`, explicit tools, event followers, generic gallery/job props.
 - `plugins/mimo-tts`: declared speech wire, detached post-turn narration, manual playback.
 

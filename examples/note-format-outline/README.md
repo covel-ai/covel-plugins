@@ -19,7 +19,7 @@ The service treats content as plain text. It does not interpret HTML or write ca
 ```text
 PLUGIN.md          id, kind, version, covel, credits, contributes.services
 locales/zh.yaml    Simplified Chinese name and description (locales/lock.json records the English they translate)
-server/index.js    entry: registers the format-note service
+server/index.js    entry (found by convention): registers the format-note service
 server/format.js   the pure formatting function
 tests/             node --test suites
 ```
@@ -28,7 +28,7 @@ tests/             node --test suites
 
 ## Compatibility and validation
 
-Requires Covel **0.0.50 or later** (`covel: ">=0.0.50"` in `PLUGIN.md`); an older host does not install or load it. Version 2.0.0 moves to the current package format and renames the contract from `examples/note-format@1` to `examples.note-format@1`; install it together with Notes Workbench 2.0.0 or later. Run `pnpm test` from this repository root. With a Covel checkout at `$COVEL_REPO`:
+Requires Covel **0.0.52 or later** (`covel: ">=0.0.52"` in `PLUGIN.md`); an older host does not install or load it. Version 3.0.0 leaves out `id`, `kind` and `entry`, which Covel 0.0.52 works out from the directory name and `server/index.js`; the service is unchanged. Version 2.0.0 moves to the current package format and renames the contract from `examples/note-format@1` to `examples.note-format@1`; install it together with Notes Workbench 2.0.0 or later. Run `pnpm test` from this repository root. With a Covel checkout at `$COVEL_REPO`:
 
 ```sh
 pnpm --dir "$COVEL_REPO" validate:plugin "$PWD/examples/note-format-outline"

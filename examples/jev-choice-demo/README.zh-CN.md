@@ -6,7 +6,7 @@
 
 ## 安装与授权
 
-这是官方维护的社区插件，适配 Covel `0.0.50` 及以上（`PLUGIN.md` 中的 `covel: ">=0.0.50"`），不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
+这是官方维护的社区插件，适配 Covel `0.0.54` 及以上（`PLUGIN.md` 中的 `covel: ">=0.0.54"`），不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo
@@ -16,11 +16,13 @@ https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo
 
 从内置版本迁移时，插件 ID、runtime ID 和设置键保持不变。0.1.0 把服务契约从 `demo/choice-recommendation@1` 改名为 `jev-choice-demo.recommendation@1`（当前契约 ID 不能含 `/`），调用方需改用新 ID；已有会话需安装后重新授权。迁移不会主动删除存档、配置或媒体，不会自动把旧的内置信任转成社区授权。
 
+0.2.0 版按 Covel 0.0.54 契约编写：通过 `narrative-engine@2` 读取故事（`select: /narrativeOutput` 仍然得到故事正文），并在 `post-turn` 阶段每轮运行，不再使用已移除的 `scheduled` 触发方式。服务契约、设置键和 `recommendations/current` 记录都不变。Covel 0.0.53 及更早版本不会加载此版本。
+
 ## 使用
 
 1. 在模型设置中配置 TypeSafe 官方、OpenRouter、Vercel AI Gateway 或其他已支持 wire 的 provider，并添加一个 Evaluation 模型。具体配置可参考[Covel 的 llm.toml.example](https://github.com/ackness/covel/blob/main/llm.toml.example)。
 2. 把该模型绑定到 `evaluation` 用途，或在插件的“评估模型用途”设置中选择其他已绑定用途。可选填“推荐目标”。协议、base URL 和模型名称都由配置决定，代码没有写死 Jev 或某个供应商。
-3. 在会话中启用此插件及提供 `scene-prompts@1`、`narrative-engine@1` 契约的插件（内置 `guide` 与一个叙事插件），完成一个新回合。两者列在 `requires` 中，已安装提供者时会话解析器会自动补入。右侧面板和舞台决策区都会显示插件 UI。
+3. 在会话中启用此插件及提供 `scene-prompts@1`、`narrative-engine@2` 契约的插件（内置 `guide` 与一个叙事插件），完成一个新回合。两者列在 `requires` 中，已安装提供者时会话解析器会自动补入。右侧面板和舞台决策区都会显示插件 UI。
 
 刚启用插件不会对旧回合补跑。未配置模型或供应商出错时显示不可用状态，普通选项继续可用。provider 只返回优胜选项而没有概率分布时，仅标识推荐项，不伪造百分比。概率是模型对给定候选的偏好分布，不能解释为行动成功率。
 
@@ -28,7 +30,7 @@ https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo
 
 | 文件                       | 职责                                                                                            |
 | -------------------------- | ----------------------------------------------------------------------------------------------- |
-| `PLUGIN.md` / `schemas/`   | 声明包（`id`、`kind`、契约、`contributes`）与内联 function `runtime`：必需的 `io.inputs` 及校验，上游完成后才执行 |
+| `PLUGIN.md` / `schemas/`   | 声明包（版本、契约、`contributes`）与内联 function `runtime`：必需的 `io.inputs` 及校验，上游完成后才执行 |
 | `locales/zh.yaml`          | 清单标签和 UI spec 文字（`messages`）的简体中文译文                                             |
 | `server.js`                | 注册 `recommend` 公共服务；协议契约 `jev-choice-demo.recommendation@1`；调用 `ctx.gateway.evaluate` |
 | `handler.js`               | 将当轮叙事、场景、玩家意图交给服务；通过 effects 写本插件的 `recommendations/current`           |

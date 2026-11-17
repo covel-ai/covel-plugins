@@ -226,13 +226,15 @@ professional photography, award-winning, fine texture
 
 ## 提交规范（所有模式共用）
 
-完成提示词后必须只调用一次与当前 `promptMode` 匹配的工具：
+完成提示词后只调用一次与当前 `promptMode` 匹配的提交工具：
 
 - `text`：调用 `submit-dashscope-text-prompt`，`prompt` 传完整文本。
 - `image-json`：调用 `submit-dashscope-structured-prompt`，`prompt` 直接传 JSON 对象，不要 stringify。
 - 两种工具的 `composition` 都必须照抄 `{{ userSettings.composition }}`。
 
-工具会统一完成提示词序列化、留档和 `image.generate.requested` 事件发射。不要自行构造 `events`，不要重复提交，也不要在工具调用前后输出 JSON、解释或确认文本。
+工具会统一完成提示词序列化、留档和 `image.generate.requested` 事件发射。不要自行构造 `events`，也不要重复调用提交工具。
+
+提交工具成功后，用 `{}` 调用 `submit-output`。提示词已经保存，不要把它抄进 `submit-output`。提交工具返回错误时，先修正参数再调用一次，然后才调用 `submit-output`。不要输出解释或确认文本。
 
 ### 硬规则
 
@@ -240,4 +242,4 @@ professional photography, award-winning, fine texture
 - **不写元叙事**：不要说"这是一张……的画面"这种自我指涉
 - **画质词必带**：见上方「全局画质要求」，缺失会导致画面糊；漫画模式还需附加漫画专属词
 - **避免雷同**：参考 `<previous-image-prompts>` 中的 id 列表避免和最近几次重复；漫画模式可故意挑近期单图未覆盖的剧情段落
-- **工具调用必需**：只能调用当前模式对应的提交工具；工具成功后本 runtime 会自动结束
+- **工具调用必需**：只调用当前模式对应的提交工具，成功后用 `{}` 调用 `submit-output`

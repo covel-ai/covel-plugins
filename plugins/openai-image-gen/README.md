@@ -8,7 +8,7 @@ An image-generation plugin for the OpenAI Images API. Generation uses the framew
 
 ## Installation and approval
 
-This officially maintained community plugin targets the Covel `0.0.50` development contract (`covel: ">=0.0.50"` in `PLUGIN.md`; hosts outside that range do not load it) and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
+This officially maintained community plugin targets the Covel `0.0.54` development contract (`covel: ">=0.0.54"` in `PLUGIN.md`; hosts outside that range do not load it) and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/plugins/openai-image-gen
@@ -22,17 +22,19 @@ When migrating from the builtin version, plugin IDs, runtime IDs, and setting ke
 
 ```text
 openai-image-gen/
-├── PLUGIN.md                       # id, version, covel range, tools, media.image-flow@1, settings, UI
+├── PLUGIN.md                       # version, covel range, tools, media.image-flow@1, settings, UI
 ├── locales/zh.yaml                 # Chinese labels and UI text (locales/lock.json records their English source)
 ├── server/index.js                 # entry: registers the two submission tools and the image-flow extension
 ├── tools/submit-image-prompt.js
 ├── lib/covel-helpers.js            # bundled SDK helpers (image generation, proposals, tool results)
 └── runtimes/
-    ├── prompt-generator/           # agent: RUNTIME.md (English), RUNTIME.zh.md, output.schema.json, ui/
+    ├── prompt-generator/           # agent: RUNTIME.md (English), RUNTIME.zh.md, ui/
     └── image-generator/            # function: RUNTIME.md, handler.js, ui/
 ```
 
 Version 0.1.0 moves the package to the Covel 0.0.50 format: the runtimes are `runtimes/<id>/RUNTIME.md` with grouped fields, settings and UI specs are declared once in the root `contributes`, labels and UI text are English with Chinese translations in `locales/zh.yaml`, and the English prompt body has a Simplified Chinese variant in `RUNTIME.zh.md`. Plugin, runtime, tool and setting IDs are unchanged. After updating an installed copy, restart the backend and approve the plugin in your session as for a new installation.
+
+Version 0.2.0 follows the Covel 0.0.54 contract: `prompt-generator` finishes through the host's `submit-output` tool (it calls the submission tool, then `submit-output` with `{}`) and has no private output schema; both runtimes use `schedule.background: true`; the gallery and job panels use the generic `MediaGallery` and `JobList` components. Plugin, runtime, tool and setting IDs, the `prompts` and `images` namespaces and stored gallery records are unchanged. Covel 0.0.53 and earlier do not load this version.
 
 ## Comparison with dashscope-image-gen
 
@@ -102,7 +104,7 @@ By default, dashscope-image-gen uses `modelPresetId = "image"` → wan2.7, while
 
 | Runtime | Type | Trigger | Responsibility |
 | --- | --- | --- | --- |
-| `openai-image-gen/prompt-generator` | agent (background) | manual | Read recent prompt history in the background, combine `composition` and `promptMode` to write an image prompt, then call the matching submission tool to archive it, emit a fixed event, and wake the downstream runtime. Entry runtime of `media.image-flow@1` |
+| `openai-image-gen/prompt-generator` | agent (background) | manual | Read recent prompt history in the background, combine `composition` and `promptMode` to write an image prompt, then call the matching submission tool to archive it, emit a fixed event, and wake the downstream runtime; the agent then finishes with `submit-output` `{}`. Entry runtime of `media.image-flow@1` |
 | `openai-image-gen/image-generator` | function (background) | event: `openai-image.generate.requested` | Call `ctx.images.generate()` for wire selection, requests, MediaStore persistence, and promptHash deduplication; write index records containing `ref` from the returned `MediaRef[]` to the `images` namespace and return one `assetGenerations[]` effect per image. Asset runtime of `media.image-flow@1` |
 
 ## Settings

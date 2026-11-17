@@ -1,6 +1,6 @@
 {
   "name": "@covel/plugin-dashscope-image-gen",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "DashScope story illustrations using prompt tools, background generation, and a persistent gallery.",

@@ -1,16 +1,11 @@
 ---
-type: function
 description: Save a note as written, or format it through a selected provider first.
 schedule:
   trigger:
     type: manual
-  manual:
-    execution: sync
 io:
   payloadSchema: ./payload.schema.json
-  visibility: plugin
 function:
-  handler: ./handler.js
   timeoutMs: 5000
 effects:
   writes:

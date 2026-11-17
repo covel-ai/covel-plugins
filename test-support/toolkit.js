@@ -1,3 +1,18 @@
+// packages/plugin-handlers-utils/src/tool.ts
+import { z } from "zod";
+
+// packages/plugin-handlers-utils/src/tool-error.ts
+var ToolError = class extends Error {
+  name = "ToolError";
+  code;
+  hint;
+  constructor(code, message, options) {
+    super(message);
+    this.code = code;
+    this.hint = options?.hint;
+  }
+};
+
 // packages/plugin-handlers-utils/src/json-text.ts
 var EXTRA_CLOSERS = 4;
 var AFTER_STRING = /* @__PURE__ */ new Set([",", "}", "]", ":"]);
@@ -178,16 +193,15 @@ function parseJsonText(text, options) {
 }
 
 // packages/plugin-handlers-utils/src/tool.ts
-var ToolValidationError = class extends Error {
-  code = "VALIDATION_ERROR";
+var ToolValidationError = class extends ToolError {
+  name = "ToolValidationError";
   details;
   /**
    * @param messages - A more specific message for an issue path, used in
    *   place of Zod's when one exists.
    */
   constructor(zodError, messages) {
-    super("Tool parameter validation failed");
-    this.name = "ToolValidationError";
+    super("invalid-input", "Tool parameter validation failed");
     this.details = zodError.issues.map((issue) => {
       const path = issue.path.join(".");
       return {
@@ -268,12 +282,42 @@ function withPortablePatterns(schema) {
   }
   return portable;
 }
+function toolParametersJsonSchema(schema) {
+  const { $schema: _drop, ...rest } = schema.toJSONSchema({ io: "input" });
+  return withPortablePatterns(rest);
+}
+var annotationsSchema = z.object({
+  readOnly: z.boolean().default(false),
+  stagesWrites: z.boolean().optional(),
+  idempotent: z.boolean().default(false),
+  concurrencySafe: z.boolean().default(false)
+});
+var timeoutSchema = z.number().int().min(1).max(6e5);
 function tool(definition) {
+  const parsed = annotationsSchema.safeParse(
+    definition.annotations === void 0 ? {} : definition.annotations
+  );
+  if (!parsed.success)
+    throw new Error(`Tool "${definition.name}": annotations must be booleans`);
+  const annotations = Object.freeze({
+    ...parsed.data,
+    stagesWrites: parsed.data.stagesWrites ?? !parsed.data.readOnly
+  });
+  if (annotations.readOnly && annotations.stagesWrites)
+    throw new Error(
+      `Tool "${definition.name}": readOnly cannot be combined with stagesWrites`
+    );
+  if (annotations.concurrencySafe && !annotations.readOnly)
+    throw new Error(
+      `Tool "${definition.name}": concurrencySafe requires readOnly`
+    );
+  if (definition.timeoutMs !== void 0 && !timeoutSchema.safeParse(definition.timeoutMs).success)
+    throw new Error(
+      `Tool "${definition.name}": timeoutMs must be an integer in [1, 600000]`
+    );
   let jsonSchema;
   try {
-    const raw = definition.parameters.toJSONSchema({ io: "input" });
-    const { $schema: _drop, ...rest } = raw;
-    jsonSchema = withPortablePatterns(rest);
+    jsonSchema = toolParametersJsonSchema(definition.parameters);
   } catch (cause) {
     throw new Error(
       `Tool "${definition.name}" parameters cannot be represented as JSON Schema: ${cause instanceof Error ? cause.message : String(cause)}`,
@@ -286,14 +330,16 @@ function tool(definition) {
     description: definition.description,
     parametersSchema: definition.parameters,
     jsonSchema,
+    annotations,
+    ...definition.timeoutMs !== void 0 ? { timeoutMs: definition.timeoutMs } : {},
     async execute(params, context) {
       let result = definition.parameters.safeParse(params);
       let problems;
       if (!result.success) {
-        const parsed = withParsedJsonText(params, result.error.issues);
-        problems = parsed.problems;
-        if (parsed.repaired !== void 0)
-          result = definition.parameters.safeParse(parsed.repaired);
+        const parsed2 = withParsedJsonText(params, result.error.issues);
+        problems = parsed2.problems;
+        if (parsed2.repaired !== void 0)
+          result = definition.parameters.safeParse(parsed2.repaired);
       }
       if (!result.success)
         throw new ToolValidationError(result.error, problems);
@@ -308,7 +354,7 @@ function tool(definition) {
 
 // packages/plugin-handlers-utils/src/short-id.ts
 var MAX_SLUG_LENGTH = 32;
-var randomPart = (random) => random ? random.int(0, 2 ** 32).toString(16).padStart(8, "0") : crypto.randomUUID().replaceAll("-", "").slice(0, 8);
+var randomPart = (random) => random.int(0, 2 ** 32).toString(16).padStart(8, "0");
 function wordSlug(label) {
   return (label.toLowerCase().match(/[a-z0-9]+/g) ?? []).join("-").slice(0, MAX_SLUG_LENGTH).replace(/-$/, "");
 }
@@ -331,12 +377,12 @@ function getEmittedEvents(value) {
 }
 
 // <stdin>
-import { z } from "zod";
+import { z as z2 } from "zod";
 export {
   getEmittedEvents,
   getPendingProposals,
   getToolContent,
   shortId,
   tool,
-  z
+  z2 as z
 };

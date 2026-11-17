@@ -1,8 +1,6 @@
 ---
-id: note-format-clean
-kind: plugin
-version: 2.0.0
-covel: ">=0.0.50"
+version: 3.0.0
+covel: ">=0.0.52"
 displayName: Clean Note
 description: Trims line whitespace and excess blank lines while preserving paragraphs.
 author:
@@ -10,7 +8,6 @@ author:
   url: https://github.com/covel-ai
 license: MIT
 homepage: https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-clean
-entry: ./server/index.js
 contributes:
   services:
     - examples.note-format@1

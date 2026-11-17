@@ -24,9 +24,10 @@ test("local manifests generate eight real plugins without fabricated metrics or 
   const catalog = await collectLocal(inputs);
   assert.equal(catalog.stats.packages, 8);
   assert.equal(catalog.stats.indexed, 8);
-  for (const entry of catalog.entries) { assert.equal(entry.stars, null); assert.equal(entry.downloadRequests, null); assert.equal(entry.contentHash, null); assert.equal(entry.covelVersion, ">=0.0.50"); }
+  const covel054 = new Set(["dashscope-image-gen", "openai-image-gen", "mimo-tts", "jev-choice-demo"]);
+  for (const entry of catalog.entries) { assert.equal(entry.stars, null); assert.equal(entry.downloadRequests, null); assert.equal(entry.contentHash, null); assert.equal(entry.covelVersion, covel054.has(entry.id) ? ">=0.0.54" : ">=0.0.52"); }
   const story = catalog.entries.find((e) => e.id === "story-note");
-  assert.equal(story.version, "0.2.0"); assert.equal(story.legacyMetadata.covelVersion, "0.0.50");
+  assert.equal(story.version, "0.3.0"); assert.equal(story.legacyMetadata.covelVersion, "0.0.52");
 });
 test("every official package validates its ZIP layout including runtime handlers without executing code", async () => {
   const catalog = await collectLocal(inputs);

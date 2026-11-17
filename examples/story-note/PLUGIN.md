@@ -1,8 +1,6 @@
 ---
-id: story-note
-kind: plugin
-version: 0.2.0
-covel: ">=0.0.50"
+version: 0.3.0
+covel: ">=0.0.52"
 displayName: Story Note Example
 description: Adds a short story note to demonstrate a community hook plugin.
 author:
@@ -10,11 +8,9 @@ author:
   url: https://github.com/covel-ai
 license: MIT
 homepage: https://github.com/covel-ai/covel-plugins/tree/main/examples/story-note
-entry: ./server/index.js
 contributes:
   hooks:
-    - event: PostContextAssembly
-      enforce: normal
+    - PostContextAssembly
 ---
 
 # Story Note

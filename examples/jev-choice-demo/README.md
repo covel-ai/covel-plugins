@@ -2,11 +2,11 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
-This optional plugin demonstrates evaluation models, public plugin services, scheduled inputs, and custom UI. It displays the model's recommendation probabilities below the current scene's quick replies. The UI and algorithm live entirely in this plugin; it does not choose or submit actions for the player.
+This optional plugin demonstrates evaluation models, public plugin services, typed inputs, and custom UI. It displays the model's recommendation probabilities below the current scene's quick replies. The UI and algorithm live entirely in this plugin; it does not choose or submit actions for the player.
 
 ## Installation and approval
 
-This officially maintained community plugin targets Covel `0.0.50` or later (`covel: ">=0.0.50"` in `PLUGIN.md`) and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
+This officially maintained community plugin targets Covel `0.0.54` or later (`covel: ">=0.0.54"` in `PLUGIN.md`) and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo
@@ -16,11 +16,13 @@ Resolution and downloads use Covel's configured network proxy. Review the source
 
 When migrating from the builtin version, the plugin ID, runtime ID, and setting keys remain unchanged. Version 0.1.0 renames the service contract from `demo/choice-recommendation@1` to `jev-choice-demo.recommendation@1`, because current contract IDs cannot contain `/`; callers must use the new ID. Existing sessions require approval again after installation. Migration does not proactively delete saves, configuration, or media, and it does not automatically convert builtin trust into community code approval.
 
+Version 0.2.0 follows the Covel 0.0.54 contract: it reads the story through `narrative-engine@2` (`select: /narrativeOutput` still yields the story text) and runs every turn at stage `post-turn` without the removed `scheduled` trigger. The service contract, setting keys and the `recommendations/current` record are unchanged. Covel 0.0.53 and earlier do not load this version.
+
 ## Usage
 
 1. In model settings, configure TypeSafe's official provider, OpenRouter, Vercel AI Gateway, or another provider with a supported wire, and add an Evaluation model. See [Covel's llm.toml.example](https://github.com/ackness/covel/blob/main/llm.toml.example) for configuration examples.
 2. Bind the model to the `evaluation` role, or select another bound role in the plugin's evaluation model setting. You can optionally specify a recommendation goal. The protocol, base URL, and model name come from configuration; the code does not hardcode Jev or any provider.
-3. Enable this plugin and plugins providing the `scene-prompts@1` and `narrative-engine@1` contracts (the bundled `guide` and a narrator), then complete a new turn. Both are listed in `requires`, so the session resolver adds a provider when one is installed. The plugin UI appears in both the right panel and the stage decision area.
+3. Enable this plugin and plugins providing the `scene-prompts@1` and `narrative-engine@2` contracts (the bundled `guide` and a narrator), then complete a new turn. Both are listed in `requires`, so the session resolver adds a provider when one is installed. The plugin UI appears in both the right panel and the stage decision area.
 
 Enabling the plugin does not rerun earlier turns. Missing model configuration or provider errors produce an unavailable state; ordinary choices remain usable. If a provider returns only a winning option without a probability distribution, the UI marks that option without inventing percentages. Probabilities describe the model's preferences among the given candidates, not the chance that an action will succeed.
 
@@ -28,7 +30,7 @@ Enabling the plugin does not rerun earlier turns. Missing model configuration or
 
 | File | Responsibility |
 | --- | --- |
-| `PLUGIN.md` / `schemas/` | Declare the package (`id`, `kind`, contracts, `contributes`) and the inline function `runtime`: required `io.inputs` with validation, so it runs after its upstream providers |
+| `PLUGIN.md` / `schemas/` | Declare the package (version, contracts, `contributes`) and the inline function `runtime`: required `io.inputs` with validation, so it runs after its upstream providers |
 | `locales/zh.yaml` | Simplified Chinese labels for the manifest and the UI spec (`messages`) |
 | `server.js` | Register the `recommend` public service using the `jev-choice-demo.recommendation@1` protocol and call `ctx.gateway.evaluate` |
 | `handler.js` | Pass the current narrative, scene, and player intent to the service; write this plugin's `recommendations/current` through effects |

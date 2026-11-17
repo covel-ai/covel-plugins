@@ -10,9 +10,16 @@
   },
   "alwaysRender": true,
   "view": {
-    "component": "ImageGallery",
+    "component": "MediaGallery",
     "props": {
-      "pluginId": "dashscope-image-gen"
+      "items": {
+        "$state": "/entries"
+      },
+      "idField": "key",
+      "refField": "value.ref",
+      "statusField": "value.status",
+      "errorField": "value.error",
+      "durationField": "value.durationMs"
     }
   }
 }

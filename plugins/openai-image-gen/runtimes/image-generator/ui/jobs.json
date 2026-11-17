@@ -10,9 +10,16 @@
   },
   "alwaysRender": true,
   "view": {
-    "component": "ImageJobs",
+    "component": "JobList",
     "props": {
-      "pluginId": "openai-image-gen"
+      "items": {
+        "$state": "/entries"
+      },
+      "idField": "key",
+      "statusField": "value.status",
+      "messageField": "value.message",
+      "errorField": "value.error",
+      "durationField": "value.durationMs"
     }
   }
 }

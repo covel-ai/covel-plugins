@@ -1,27 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { tool, z } from "../../../test-support/toolkit.js";
+import { shortId, tool, z } from "../../../test-support/toolkit.js";
 import {
   getEmittedEvents,
   getPendingProposals,
   getToolContent,
 } from "../lib/covel-helpers.js";
 import makeSubmitImagePromptTools from "../tools/submit-image-prompt.js";
-
-// The host's shortId (plugin SDK short-id.ts): the label's words plus eight hex
-// digits, drawn from the context's random source when one is passed.
-function shortId(prefix, label, _sessionId, random) {
-  const slug = (label.toLowerCase().match(/[a-z0-9]+/g) ?? [])
-    .join("-")
-    .slice(0, 32)
-    .replace(/-$/, "");
-  const part = random
-    ? random
-        .int(0, 2 ** 32)
-        .toString(16)
-        .padStart(8, "0")
-    : crypto.randomUUID().replaceAll("-", "").slice(0, 8);
-  return [prefix, slug, part].filter(Boolean).join("-");
-}
 
 const context = {
   sessionId: "session-image-prompt",
@@ -123,7 +107,7 @@ describe("dashscope image prompt submission tools", () => {
     await expect(
       submit.execute({ prompt: {}, composition: "single-scene" }, context),
     ).rejects.toMatchObject({
-      code: "VALIDATION_ERROR",
+      code: "invalid-input",
       details: expect.arrayContaining([
         expect.objectContaining({ path: "prompt" }),
       ]),

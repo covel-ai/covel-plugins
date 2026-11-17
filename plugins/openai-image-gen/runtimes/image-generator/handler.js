@@ -15,7 +15,7 @@
  * `composition` prompt field, the size normalization, and the
  * style-into-prompt folding.
  *
- * Execution: `schedule.manual.execution: background` (RUNTIME.md). The host
+ * Execution: `schedule.background: true` (RUNTIME.md). The host
  * runs it as a durable runtime job, which the `_jobs` panel data source shows.
  * The gallery re-renders on `plugin-data.changed` for the `images` namespace.
  */

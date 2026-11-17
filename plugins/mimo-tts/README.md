@@ -6,7 +6,7 @@ Read narrator output aloud with Xiaomi **MiMo TTS**. The plugin automatically ge
 
 ## Installation and approval
 
-This officially maintained community plugin targets Covel `0.0.50` and later (`covel: ">=0.0.50"` in `PLUGIN.md`) and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
+This officially maintained community plugin targets Covel `0.0.54` and later (`covel: ">=0.0.54"` in `PLUGIN.md`) and is no longer bundled with the main repository. In **Settings → Plugins → Install & manage**, enter:
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts
@@ -16,22 +16,24 @@ Resolution and downloads use Covel's configured network proxy. Review the source
 
 When migrating from the builtin version, plugin IDs, runtime IDs, and setting keys remain unchanged. Existing sessions require approval again after installation. Migration does not proactively delete saves, configuration, or media, and it does not automatically convert builtin trust into community code approval.
 
+Version 0.1.0 follows the Covel 0.0.54 contract: both runtimes read the story through `narrative-engine@2`, and auto-narrate runs as `schedule.detached` (one job at a time per runtime and rejection of stale jobs, which `overlap` and `stalePolicy` used to declare, are now fixed host behavior). Setting keys, the `tracks` and `message` namespaces and stored tracks are unchanged. Covel 0.0.53 and earlier do not load this version.
+
 ## Package contents
 
 ```text
 mimo-tts/
-├── PLUGIN.md                     # package: id, version, requires, entry, contributes (wires, settings, ui)
+├── PLUGIN.md                     # package: version, covel, requires, contributes (wires, settings, ui)
 ├── locales/zh.yaml               # Chinese labels (settings, descriptions) and UI/code text (messages)
 ├── locales/lock.json             # the English each label translation is for (pnpm i18n lock)
-├── server/index.js               # entry: covel.registerWires(...) -> speech wire mimo-tts/mimo
+├── server/index.js               # entry (found by convention): covel.registerWires(...) -> speech wire mimo-tts/mimo
 ├── lib/                          # wires.js (MiMo HTTP wire), mimo-tts.js (track helpers), i18n.js (translate / labelText)
 ├── runtimes/auto-narrate/        # RUNTIME.md + handler.js
 ├── runtimes/manual-narrate/      # RUNTIME.md + handler.js
 └── ui/                           # audio-tab.json (right panel), play-button.json (message area)
 ```
 
-- `mimo-tts/auto-narrate` (function · `schedule.trigger: auto` · `schedule.stage: post-turn` · `schedule.completion.mode: detached` · `schedule.needs: narrative-engine@1`): after the active narrative engine (narrator or chat-mode-narrator) succeeds, the turn finishes and a durable background job narrates the turn's `narrativeOutput` (bound through `io.inputs.narrative`). It also writes the message data for the **Read aloud** button, even when automatic narration is disabled, so the button remains available.
-- `mimo-tts/manual-narrate` (function · `schedule.trigger: manual` · `schedule.manual.execution: background`): triggered by the **Read aloud** button. Paragraph text arrives through the button payload; manual activation does not resolve turn inputs, so `payload.text` is required.
+- `mimo-tts/auto-narrate` (function · `auto` trigger · `schedule.stage: post-turn` · `schedule.detached` · `schedule.needs: narrative-engine@2`): after the active narrative engine (narrator or chat-mode-narrator) succeeds, the turn finishes and a durable background job narrates the turn's `narrativeOutput` (bound through `io.inputs.narrative`). It also writes the message data for the **Read aloud** button, even when automatic narration is disabled, so the button remains available.
+- `mimo-tts/manual-narrate` (function · `schedule.trigger.type: manual` · `schedule.background: true`): triggered by the **Read aloud** button. Paragraph text arrives through the button payload; manual activation does not resolve turn inputs, so `payload.text` is required.
 - Both runtimes return every write as `HandlerResult.effects` (`pluginData`, `assetGenerations`); a failed synthesis is stored as a `failed` track. They declare their `effects` and `permissions.http` (`POST` to `https://api.xiaomimimo.com` and `https://token-plan-cn.xiaomimimo.com`).
 - `lib/wires.js`: the MiMo TTS HTTP wire (`api-key` header, OpenAI-style `chat/completions`, and `audio.format/voice`), declared in `contributes.wires` as `mimo`. `lib/mimo-tts.js`: helpers for track records and display fields.
 - `ui/audio-tab.json`: a playlist tab with one row per track, a header (turn, AUTO/MANUAL, voice, and byte count), a short text preview, and an `AudioPlayer`. It avoids repeating the full narrator text already in the chat stream; users select playback by turn.
