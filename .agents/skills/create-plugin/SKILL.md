@@ -3,23 +3,25 @@ name: create-plugin
 description: Create or update installable Covel plugins using the current grouped manifest, runtime, service, extension, and UI contracts. Use when the user wants a new plugin, gameplay mechanic, runtime, tool, or plugin UI panel, or asks to change an existing plugin's manifest or behavior.
 license: MIT
 metadata:
-  covel-contract: "0.0.50"
+  covel-contract: "0.0.54"
 ---
 
 # Create a Covel plugin
 
 This copy mirrors `.claude/skills/create-plugin` of
-[ackness/covel](https://github.com/ackness/covel) at v0.0.50. Paths such as
-`docs/…`, `packages/…`, `templates/…` and the `pnpm validate:plugin`,
-`pnpm check:*` and `node scripts/create-plugin.js` commands refer to a Covel
-checkout of that version; in this repository, run them there and pass the
-absolute path of the package here. Packages in this repository are standalone:
-read [the publishing contract](../../../docs/publishing.md) as well.
+[ackness/covel](https://github.com/ackness/covel) at v0.0.54. Paths such as
+`docs/…`, `packages/…`, `templates/…`, `tests/…` and the `pnpm validate:plugin`,
+`pnpm plugin:extract`, `pnpm check:*` and `node scripts/create-plugin.js`
+commands refer to a Covel checkout of that version; in this repository, run them
+there and pass the absolute path of the package here. Packages in this
+repository are standalone: read [the publishing contract](../../../docs/publishing.md)
+as well. It keeps `version` in `package.json` equal to `PLUGIN.md` for the
+directory, even though Covel itself reads only `PLUGIN.md`.
 
 Contracts live in `docs/`, kept in sync with the code: manifest fields in
-`docs/reference/plugins.md`, authoring in `docs/guide/plugin-authoring.md`, UI
+`docs/reference/plugins.md`, authoring in `docs/plugins/essentials.md`, UI
 components in `docs/reference/ui-components.md`, model slots in
-`docs/reference/slots.md`, testing in `docs/guide/plugin-testing.md`. The
+`docs/reference/slots.md`, testing in `docs/plugins/testing.md`. The
 references in this skill are agent-oriented guides; when they disagree with the
 docs or the schemas, the docs and schemas win.
 
@@ -35,7 +37,24 @@ change requires new ones.
 
 ### 2. Scaffold
 
-Start from a maintained template rather than a copied historic manifest:
+Choose declarative authoring first when prompts, own datasets, settings,
+world-data receivers, declarative UI and optional service imports meet the need.
+Use the complete, validated example in `docs/plugins/prompt-only.md` and the clean
+distribution in `tests/third-party/declarative-notebook/`. Write `PLUGIN.md` and
+its referenced data/UI files directly; no entry, extraction or dummy function is
+needed. Keep test scripts and build configuration outside the distribution.
+
+The loader derives `declarative`, `code` or `unknown` from actual declarations
+and files, never an authored mode flag. Only exact files in a validated browser
+asset list are exempt from executable-file detection. Declarative runtimes write
+only their own datasets and validated character records through `sync-characters`;
+other plugins' data changes only through their independently admitted write
+services. Normal proposal validation and narrower resume/sub-agent rules apply.
+Explain model use and cadence before enable; there is no cost-consent grant.
+Session-reading sandbox views still need separate consent bound to current
+content, including multi-file asset digests. See `docs/reference/plugin-installation.md`.
+
+When server code is necessary, start from a maintained template:
 
 ```bash
 node scripts/create-plugin.js <id> -t ./plugins                 # multi-runtime workbench
@@ -47,6 +66,10 @@ Without `-t` (or `--with-tools`) the scaffolder writes to the user plugin
 directory (`~/.covel/plugins`), not the repository. See
 [examples](references/example-plugins.md) for packages that show each pattern.
 
+Every mode starts `PLUGIN.md` at version `0.1.0`; the version lives only there (a `--with-tools` `package.json` has none). The default mode writes no `package.json`: the directory name is the plugin ID, and the loader runs the package's `.js` files as ES modules. Generated runtime case files include `$schema`; `name` and `runtimeId` are required, and unknown case/expectation/artifact fields fail before execution.
+
+The tools scaffold uses stable TypeScript 7.0.2 and Zod 4.6.7 or later compatible versions. Keep its Zod minimum aligned with the host SDK peer dependency; older declarations fail recursive JSON inference under TypeScript 7.1. Runtime dependencies still come from the host. Keep Vitest aligned with the workspace using the current template manifest.
+
 The default analyst runs automatically in `post-turn` and consumes the current narrative binding. Function notes remain manual; generate keys through `ctx.random` and timestamps in code.
 
 ### 3. Declare the manifest
@@ -55,11 +78,16 @@ Read [manifest fields](references/plugin-schema.md) first. Root `PLUGIN.md` is
 required and holds `id`, `kind`, package contracts, and `contributes`. A single
 inline `runtime` or child `runtimes/<id>/RUNTIME.md` files supply executable
 behavior; child `PLUGIN.md` files and old flat authoring fields are rejected.
-Declare scheduling with `stage` plus `needs` / `after` edges, and `io.visibility`.
+Declare scheduling with `stage` plus `needs` / `after` edges; set
+`io.visibility: story` only on a narrative provider (every other runtime is
+`system`, the default). A narrative provider returns story segments with
+speaker names; declare `io.output.schema: contract:narrative-engine@2` so the
+model is asked for them (story output in `docs/reference/plugins.md`). Leave
+out fields written with their default value.
 
 Write `PLUGIN.md`, `RUNTIME.md` and `ui/*.json` in English: labels, tool
 descriptions, UI text, and the prompt body. Put label translations
-(`displayName`, `description`, `label`, `title`, `summary`, `about`) in
+(`displayName`, `description`, `label`, `title`, `summary`, `about`, `placeholder`) in
 `locales/<locale>.yaml`, one section per manifest file, and UI text translations
 in the same file under `messages` (English text, then its translation). Code
 writes English too and reads the same `messages` through `translate(ctx, "…")`
@@ -70,7 +98,7 @@ and a bundled plugin needs a Chinese translation for every UI text. The
 Simplified Chinese prompt is `PLUGIN.zh.md` / `RUNTIME.zh.md` with an empty
 frontmatter; a bundled plugin must ship it for every prompt a model reads, then
 run `pnpm prompts:lock`. No other language has a prompt file. See
-`docs/reference/i18n.md`. Write the body as `docs/guide/prompt-style.md` says:
+`docs/reference/i18n.md`. Write the body as `docs/plugins/prompt-style.md` says:
 short imperative sentences, one term for one thing, each rule once, `must` /
 `must not` / `can`, and tone or examples under a `## Voice` heading.
 
@@ -88,10 +116,13 @@ proposals or handler effects.
 - Use `covel.toolkit` for local tools and validators
   ([tools](references/tool-factory.md)), `covel.registerService` for services, and
   `covel.provideExtension(point, id, {handler})` for extensions. Registration
-  factories only register; defer I/O to invocation handlers.
+  belongs in the entry factory. Defer session work to invocation handlers; if
+  initialization acquires resources, register `covel.onDispose` cleanup immediately
+  and use the activation `covel.signal` (see `docs/reference/plugin-extensions.md`).
 - Agent runtime bodies hold prompts. Function handlers return explicit
-  success / skipped / failed / blocked results
-  ([runtime context](references/runtime-context.md)). Preserve cancellation,
+  success / suspended / skipped / failed results
+  ([public HandlerResult](https://github.com/ackness/covel/blob/v0.0.54/packages/plugin-handlers-utils/src/handler-result.ts),
+  [runtime context](references/runtime-context.md)). Preserve cancellation,
   bounded work, and successful-commit-only domain writes.
 - Media goes through `ctx.images.generate` and `ctx.speech.generate` /
   `transcribe`. An image-flow entry declares `media.image-flow@1`, returning its
@@ -105,13 +136,25 @@ proposals or handler effects.
 
 ### 5. Package standalone plugins
 
-Standalone packages need `package.json` (`type: module`), the root manifest,
-executable ESM JavaScript, a README, and an authorized license. The installer does
-not install npm dependencies or run build scripts, so bundle helper libraries such
-as `@covel/plugin-handlers-utils` into the release and preserve their licenses. Do
-not ship workspace dependencies or sibling-plugin imports.
+Standalone packages need the root manifest, referenced files, a README,
+and an authorized license. Code packages also include their executable ESM
+JavaScript. A `package.json` is optional; when present it says
+`"type": "module"` and carries no `version`. Without an `id` in `PLUGIN.md`, an
+installed package takes the name of its folder (the archive's top-level folder or
+the repository directory), then the `package.json` name. The installer does
+not install npm dependencies or run build scripts, and it rejects nonempty
+`dependencies`. The host provides `@covel/plugin-handlers-utils` and `zod` to
+every plugin: import them directly and list them only under `devDependencies`.
+Bundle any other library into the release and preserve its license. Do not ship
+workspace dependencies or sibling-plugin imports.
 
 ### 6. Validate
+
+For declarative packages, run static validation and inspect classification and
+diagnostics; never create an entry just for extraction. Adding server code,
+executable registrations or HTTP permissions restores ordinary code/runtime
+approval. An earlier declarative enable is no code grant. For code packages,
+sync your own entry's declarations with `pnpm plugin:extract plugins/<id>` (executes code with your permissions); use `--check` for CI, and maintain `extensions` / `commands` metadata yourself. See [local code](https://github.com/ackness/covel/blob/v0.0.54/docs/plugins/local-code.md#4-写入口文件).
 
 ```bash
 pnpm validate:plugin plugins/<id>       # manifest + cross-runtime checks
@@ -121,14 +164,15 @@ pnpm check:prompts                      # English prompts and their Chinese vari
 ```
 
 Follow [testing](references/plugin-testing.md) for which layers to cover. Verify
-copied release files import without workspace dependencies. In this repository,
-`COVEL_DIR=<covel checkout> pnpm check:covel` runs that checkout's
-`validate:plugin` over every package; it is static and does not execute entries.
+copied release files import without workspace dependencies. The community
+repository also has `pnpm check:covel` for the real loader, registration
+declarations, and generic UI props.
 
 ### 7. Sync docs
 
 A bundled plugin added or changed in the main checkout updates
-`docs/reference/plugins.md` in the same change (see the documentation sync list
+`docs/reference/plugins.md`, its theme page under `docs/builtin/`, and the tables
+in `docs/builtin/index.md` in the same change (see the documentation sync list
 in `AGENTS.md`). Update bilingual user documentation, settings instructions,
 network/data behavior, and tests together. Publishing or installing outside the
 authorized workspace requires the user's explicit authorization.

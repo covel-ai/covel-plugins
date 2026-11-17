@@ -38,7 +38,7 @@ Fix: `tools.local` was removed — register the tool in the plugin's `entry`
 
 > 别改写成 `node -e "... import { validatePluginManifest } from '@covel/shared'"`：workspace 包直接导出 TS 源码（无构建产物），裸 `node` 会在解析 `@covel/shared` 时抛 `ERR_MODULE_NOT_FOUND`。`validate:plugin` 走的是 `tsx`。
 >
-> 注意有一类**不报错的失败**：rpc action 里出现未知字段时，loader 打印 `malformed rpc declaration skipped` 但整体仍判 `✓`——插件能加载，那个 action 却静默消失了。看到 `skipped` 就当失败处理。
+> 静态校验不会执行 entry。工具、RPC、服务等注册还要和 `contributes` 双向一致；用注册测试和真实加载检查，不能从 manifest 校验成功推断 entry 已能运行。
 
 ---
 
@@ -47,7 +47,7 @@ Fix: `tools.local` was removed — register the tool in the plugin's `entry`
 适用对象：
 
 - `tools/*.js` / `tools/*.ts`
-- `type: function` 的 `handler.js`
+- function runtime（有 `function` 块）的 `handler.js`
 - `hooks/*.js`
 - provider wire helper（建议放 `lib/*.js`）
 - trigger / guard helper
@@ -56,7 +56,7 @@ Fix: `tools.local` was removed — register the tool in the plugin's `entry`
 
 ```js
 import { describe, expect, it } from "vitest";
-import { getPendingProposals } from "@covel/tools";
+import { getPendingProposals } from "@covel/plugin-handlers-utils";
 import createMyTool from "../tools/my-tool.js";
 
 describe("my-tool", () => {
@@ -103,27 +103,13 @@ describe("image-generator handler", () => {
         runtimeId: "my-plugin/image-generator",
         manualPayload: { prompt: "a quiet harbor" },
       }),
-      gateway: {
-        resolveSlot: vi.fn().mockReturnValue({
-          presetId: "image",
-          provider: "dashscope",
-          protocol: "openai-chat-v1",
-          baseUrl: "https://dashscope.aliyuncs.com",
-          apiKey: "test-key",
-          model: "wan2.7-image-pro",
-          tag: "image",
-          metadata: {},
+      images: {
+        isAvailable: vi.fn().mockReturnValue(true),
+        generate: vi.fn().mockResolvedValue({
+          refs: [mediaRef],
+          warnings: [],
+          cached: false,
         }),
-      },
-      utils: {
-        validateBaseUrl: vi.fn().mockReturnValue({ ok: true }),
-        fetchWithRetry: vi.fn(),
-      },
-      media: {
-        put: vi.fn().mockResolvedValue(mediaRef),
-        get: vi.fn(),
-        resolveUrl: vi.fn(),
-        ingestUrl: vi.fn(),
       },
       logger: {
         debug: vi.fn(),
@@ -135,8 +121,8 @@ describe("image-generator handler", () => {
 
     const result = await handler(ctx);
 
-    expect(ctx.gateway.resolveSlot).toHaveBeenCalledWith(
-      expect.objectContaining({ presetId: "image", fallbackTag: "image" }),
+    expect(ctx.images.generate).toHaveBeenCalledWith(
+      expect.objectContaining({ prompt: "a quiet harbor" }),
     );
     expect(result.outcome).toBe("success");
     expect(result.effects.pluginData[0].namespace).toBe("images");
@@ -150,27 +136,9 @@ describe("image-generator handler", () => {
 
 ### 测 trigger helper
 
-```ts
-import { describe, expect, it } from "vitest";
-import { makeTriggerContext } from "@covel/plugin-test-utils";
-import { shouldRunOnInterval } from "../src/trigger.js";
+测试自己的触发 helper 时，用 `makeTriggerContext({ logicalTurn, turnNumber })` 明确设定时钟。框架的 `schedule.every: 3` 在逻辑回合 3、6、9 运行，不是 1、4、7；setup、开场和第一条玩家消息的逻辑回合都为 1。若业务规则使用另一种节奏，测试要说明这个区别。
 
-describe("trigger", () => {
-  it("fires every 3 turns", () => {
-    expect(shouldRunOnInterval(makeTriggerContext({ turnNumber: 1 }))).toBe(
-      true,
-    );
-    expect(shouldRunOnInterval(makeTriggerContext({ turnNumber: 2 }))).toBe(
-      false,
-    );
-    expect(shouldRunOnInterval(makeTriggerContext({ turnNumber: 4 }))).toBe(
-      true,
-    );
-  });
-});
-```
-
-`makeTriggerContext` 默认 `turnsSinceLastTrigger: 999`，多数 cooldown 分支会直接通过。
+`makeTriggerContext` 的默认 `turnsSinceLastTrigger: 999` 不能替代首次运行、冷却边界和已提交 trigger 台账的测试。调度规则以[触发方式](https://github.com/ackness/covel/blob/v0.0.54/docs/reference/plugins.md#触发方式)为准。
 
 ---
 
@@ -183,14 +151,14 @@ describe("trigger", () => {
 1. `discoverPlugins` / `loadPluginManifest` / `loadRuntime`（`@covel/plugin-loader`）加载真实插件 runtime；需要合成 runtime（如模拟 narrator 发 event）时手写 `RuntimeManifest` + `LLMAdapter`。
 2. `createMemoryStore()`（`@covel/store`）做后端，按需 `setPluginData` 预置数据。
 3. `createToolExecutor` + `executeTurn`（`@covel/runtime`）执行 turn，LLM 用 `MockLLM`（`responses[]` 按调用顺序消费，耗尽后回落 `defaultResponse`，多步 tool loop 优先用它）。
-4. 对每个 runtime result 调 `processRuntimeResult`（`@covel/runtime`）把 proposal commit 进 store，再断言 `store.listPluginData(...)` 等持久化结果。
+4. 把 `executeTurn` 返回的整个 `{ result, commit }` 交给 `commitExecution`（`@covel/runtime`），确认提交成功，再断言 `store.listPluginData(...)` 等持久化结果。不要逐条提交 runtime result：嵌套结果、journal、挂起、setup 和时钟必须共用完整提交计划，见[宿主执行与提交边界](https://github.com/ackness/covel/blob/v0.0.54/docs/reference/protocol.md#宿主执行与提交边界)。
 
 常用断言：
 
 | 目标                  | 写法                                                    |
 | --------------------- | ------------------------------------------------------- |
 | prompt 里包含注入内容 | `llm.calls[n].messages`                                 |
-| 工具顺序              | `result.runtimeResults[0].toolCalls.map((c) => c.name)` |
+| 工具顺序              | `execution.result.runtimeResults[0].toolCalls.map((c) => c.name)` |
 | plugin_data 写入      | `store.listPluginData(sessionId, pluginId, namespace)`  |
 | asset.generate 输出   | `expectAssetGenerated(result, { modality: "image" })`   |
 
@@ -241,7 +209,7 @@ pnpm test:runtime -- my-plugin \
 | `--config <json>`                | `getConfig()` 返回值                                                    |
 | `--user-settings <json>`         | 当前插件的 `ctx.userSettings` bucket                                    |
 | `--llm-content <text>`           | mock agent runtime 的最终文本                                           |
-| `--llm-object <json>`            | 自动 stringify 的 mock JSON 文本                                        |
+| `--llm-object <json>`            | 把对象作为 `submit-output` 参数的假模型提交                                        |
 | `--llm-response <json>`          | 完整 mock LLM response                                                  |
 | `--llm-responses <json>`         | 多次 LLM 调用脚本，按顺序消费                                           |
 | `--mock-preset-id <id>`          | mock `resolveSlot()` 暴露的 synthetic preset id                         |
@@ -257,7 +225,7 @@ pnpm test:runtime -- my-plugin \
 1. `tests/runtime-cases.json`
 2. `covel.test.json`
 
-文件可以是 `{ "cases": [...] }` 或直接数组。case 字段来自 `packages/test-runtime/src/cases.ts`：
+文件可以是 `{ "$schema": "…", "cases": [...] }` 或直接数组。严格 schema 位于 `packages/shared/src/schemas/runtime-cases.ts`，编辑器用的 JSON Schema 位于 `packages/shared/schemas/runtime-cases.schema.json`。`name` 和 `runtimeId` 必须非空，`mode` 只接受 `mock`、`live`、`both`。未知的用例、期望和 artifact 字段会带文件名和字段路径报错，不会忽略拼错的断言。
 
 ```json
 {
@@ -273,26 +241,22 @@ pnpm test:runtime -- my-plugin \
       "userSettings": {
         "enabled": true
       },
-      "llmResponses": [
-        {
-          "content": null,
-          "finishReason": "tool_calls",
-          "toolCalls": [
-            {
-              "id": "tc-runtime-done",
-              "name": "runtime-done",
-              "arguments": "{\"reason\":\"recorded\"}"
-            }
-          ],
-          "usage": { "inputTokens": 1, "outputTokens": 1 }
-        }
-      ],
       "expect": {
         "runtimeResults": [
-          { "runtimeId": "my-plugin/note", "status": "success" }
+          {
+            "runtimeId": "my-plugin/note",
+            "status": "success"
+          }
         ],
-        "pluginData": [{ "namespace": "notes", "field": "title" }],
-        "logs": ["note.recorded"]
+        "pluginData": [
+          {
+            "namespace": "notes",
+            "field": "title"
+          }
+        ],
+        "logs": [
+          "note.recorded"
+        ]
       }
     }
   ]
@@ -311,13 +275,15 @@ pnpm test:runtime -- my-plugin \
 
 ### Expected failure
 
-mock 模式里，图像/音频插件通常会走到 provider URL、SSRF guard 或 HTTP 层，合理失败也可以是绿色 case：
+mock 模式也可以验证明确的失败结果。下面的 `errorIncludes` 必须替换成插件实际返回的脱敏错误；失败不应向 plugin data 写入错误占位：
 
 ```json
 {
   "name": "invalid-base-url-is-visible",
   "runtimeId": "my-plugin/image-generator",
-  "payload": { "prompt": "a harbor" },
+  "payload": {
+    "prompt": "a harbor"
+  },
   "expect": {
     "runtimeResults": [
       {
@@ -325,8 +291,7 @@ mock 模式里，图像/音频插件通常会走到 provider URL、SSRF guard �
         "status": "failed",
         "errorIncludes": "invalid image baseUrl"
       }
-    ],
-    "pluginData": [{ "namespace": "images", "status": "failed" }]
+    ]
   }
 }
 ```
@@ -340,7 +305,9 @@ mock 模式里，图像/音频插件通常会走到 provider URL、SSRF guard �
   "name": "image-live",
   "runtimeId": "my-plugin/image-generator",
   "mode": "live",
-  "payload": { "prompt": "a harbor" },
+  "payload": {
+    "prompt": "a harbor"
+  },
   "artifacts": {
     "saveImages": {
       "namespace": "images",
@@ -349,7 +316,12 @@ mock 模式里，图像/音频插件通常会走到 provider URL、SSRF guard �
     }
   },
   "expect": {
-    "assetGenerations": [{ "modality": "image", "field": "ref" }]
+    "assetGenerations": [
+      {
+        "modality": "image",
+        "field": "ref"
+      }
+    ]
   }
 }
 ```
@@ -367,7 +339,7 @@ pnpm e2e:verify \
   --plugins my-plugin
 ```
 
-Artifacts 写到 `debugs/e2e-logs/`，包含 prompt、LLM raw response、runtime results、proposals、commit 结果。详细参数看 `docs/guide/e2e-plugin-verify.md`。
+Artifacts 写到 `debugs/e2e-logs/`，包含 prompt、LLM raw response、runtime results、proposals、commit 结果。详细参数看 `docs/ship/real-model.md`。
 
 ---
 
@@ -397,3 +369,14 @@ Artifacts 写到 `debugs/e2e-logs/`，包含 prompt、LLM raw response、runtime
 - L3 失败：先看 `MockLLM.responses[]` 和 tool call `arguments` 是否是 JSON 字符串。
 - L4 mock 失败：看 `runtimeResults[].error`、`pluginData._logs`、`jobs`。
 - L4 live / L5 失败：先确认 `llm.toml` slot、`~/.covel/keys.env`、provider baseUrl 和网络。
+
+Presentation functions use the restricted public-story context and durable dispatch allowance in [the presentation contract](https://github.com/ackness/covel/blob/v0.0.54/docs/reference/plugins.md#presentation-runtimes). Use the [selector and detached generator examples](https://github.com/ackness/covel/blob/v0.0.54/docs/plugins/advanced.md#呈现选择器), and test real manifest admission, forbidden capabilities, commit isolation, cache charging and supersession. Agents cannot declare presentation; a function still follows normal server-code approval.
+
+## Declarative distribution checks
+
+Run `pnpm validate:plugin <distribution>` and inspect `execution: declarative`.
+Keep executable tests and configuration outside that directory. Do not run entry
+extraction or create a dummy entry for a declarative package. Exercise it as a
+community package through real enable, model tools and commit; assert stored
+records and the absence of code/runtime grants. Retain per-tool approvals and
+content-bound sandbox session consent. See `docs/plugins/prompt-only.md`.

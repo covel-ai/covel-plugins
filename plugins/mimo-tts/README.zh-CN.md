@@ -6,7 +6,7 @@
 
 ## 安装与授权
 
-这是官方维护的社区插件，适配 Covel `0.0.50` 及以后的版本（`PLUGIN.md` 中的 `covel: ">=0.0.50"`），不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
+这是官方维护的社区插件，适配 Covel `0.0.54` 及以后的版本（`PLUGIN.md` 中的 `covel: ">=0.0.54"`），不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts
@@ -16,22 +16,24 @@ https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts
 
 从内置版本迁移时，插件 ID、runtime ID 和设置键保持不变；已有会话需安装后重新授权。迁移不会主动删除存档、配置或媒体，不会自动把旧的内置信任转成社区授权。
 
+0.1.0 版按 Covel 0.0.54 契约编写：两个 runtime 都通过 `narrative-engine@2` 读取故事，auto-narrate 以 `schedule.detached` 运行（原先由 `overlap`、`stalePolicy` 声明的“同一 runtime 的任务逐个执行、过期任务被拒绝”现在是宿主的固定行为）。设置键、`tracks` 与 `message` 命名空间和已存的音轨都不变。Covel 0.0.53 及更早版本不会加载此版本。
+
 ## 包含什么
 
 ```text
 mimo-tts/
-├── PLUGIN.md                     # 包：id、version、requires、entry、contributes（wires、settings、ui）
+├── PLUGIN.md                     # 包：version、covel、requires、contributes（wires、settings、ui）
 ├── locales/zh.yaml               # 中文标签（设置、说明）和界面/代码文字（messages）
 ├── locales/lock.json             # 每条标签译文对应的 English 原文（pnpm i18n lock）
-├── server/index.js               # entry：covel.registerWires(...) → speech wire mimo-tts/mimo
+├── server/index.js               # entry（按约定路径识别）：covel.registerWires(...) → speech wire mimo-tts/mimo
 ├── lib/                          # wires.js（MiMo HTTP wire）、mimo-tts.js（音轨辅助）、i18n.js（translate / labelText）
 ├── runtimes/auto-narrate/        # RUNTIME.md + handler.js
 ├── runtimes/manual-narrate/      # RUNTIME.md + handler.js
 └── ui/                           # audio-tab.json（右侧面板）、play-button.json（消息区）
 ```
 
-- `mimo-tts/auto-narrate`（function · `schedule.trigger: auto` · `schedule.stage: post-turn` · `schedule.completion.mode: detached` · `schedule.needs: narrative-engine@1`）：当前叙事引擎（narrator 或 chat-mode-narrator）成功后，回合先结束，再由持久的后台任务朗读本回合的 `narrativeOutput`（经 `io.inputs.narrative` 绑定）；同时写入「朗读」按钮的消息层数据（关闭自动朗读也会写，按钮始终可用）。
-- `mimo-tts/manual-narrate`（function · `schedule.trigger: manual` · `schedule.manual.execution: background`）：「朗读」按钮触发，段落文本经按钮 payload 传入（manual 激活不解析 turn inputs，`payload.text` 必需）。
+- `mimo-tts/auto-narrate`（function · `auto` 触发 · `schedule.stage: post-turn` · `schedule.detached` · `schedule.needs: narrative-engine@2`）：当前叙事引擎（narrator 或 chat-mode-narrator）成功后，回合先结束，再由持久的后台任务朗读本回合的 `narrativeOutput`（经 `io.inputs.narrative` 绑定）；同时写入「朗读」按钮的消息层数据（关闭自动朗读也会写，按钮始终可用）。
+- `mimo-tts/manual-narrate`（function · `schedule.trigger.type: manual` · `schedule.background: true`）：「朗读」按钮触发，段落文本经按钮 payload 传入（manual 激活不解析 turn inputs，`payload.text` 必需）。
 - 两个 runtime 的全部写入都通过 `HandlerResult.effects`（`pluginData`、`assetGenerations`）返回；合成失败时保存一条 `failed` 音轨。它们声明了 `effects` 和 `permissions.http`（对 `https://api.xiaomimimo.com`、`https://token-plan-cn.xiaomimimo.com` 的 `POST`）。
 - `lib/wires.js`：MiMo TTS HTTP wire（`api-key` header + OpenAI 风格 `chat/completions` + `audio.format/voice`），在 `contributes.wires` 中声明为 `mimo`；`lib/mimo-tts.js`：track 记录/展示字段辅助。
 - 右侧 Tab `ui/audio-tab.json`：playlist 风格 — 每条音轨一行，header（回合 + AUTO/MANUAL + voice + 字节数）+ 一句文本提示 + `AudioPlayer`。**故意不重复 narrator 全文**（聊天流里已有），用户按回合选择播放。

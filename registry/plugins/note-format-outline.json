@@ -10,7 +10,7 @@
   "category": "authoring",
   "locales": ["zh-CN", "en-US"],
   "license": "MIT",
-  "covelVersion": "0.0.50",
+  "covelVersion": "0.0.52",
   "status": "active",
   "demo": "https://github.com/covel-ai/covel-plugins/blob/main/examples/note-format-outline/README.md",
   "notes": "Official composable-notes example. Provides the examples.note-format@1 service; version 2.0.0 requires Notes Workbench 2.0.0 or later. Install independently and approve server code per session.",

@@ -27,7 +27,7 @@ export function speechUnavailable() {
   return {
     outcome: "failed",
     error:
-      "ctx.speech is unavailable: this Covel host gives function runtimes no speech pipeline (Covel >=0.0.50 is required).",
+      "ctx.speech is unavailable: this Covel host gives function runtimes no speech pipeline (Covel >=0.0.54 is required).",
   };
 }
 
@@ -66,27 +66,16 @@ export function clampText(text, maxChars) {
  * The active narrative engine's `narrativeOutput`, bound by the
  * `io.inputs.narrative` declaration (`ctx.inputs.narrative.value`, after
  * `select: /narrativeOutput`). The binding resolves the provider of
- * `narrative-engine@1`, so it works for narrator and chat-mode-narrator
+ * `narrative-engine@2`, so it works for narrator and chat-mode-narrator
  * alike. A manual activation resolves no turn bindings, so manual-narrate
  * takes its text from the Speak button payload instead.
  */
 export function pickNarratorText(ctx) {
   const slot = ctx.inputs?.narrative;
+  // The binding selects `/narrativeOutput`, which is always a string.
   const value = slot && typeof slot === "object" ? slot.value : undefined;
-  // The binding selects `/narrativeOutput` (a string); accept an object with
-  // `narrativeOutput` or `content` too, in case a provider projects one.
-  const candidate =
-    typeof value === "string"
-      ? value
-      : value && typeof value === "object"
-        ? typeof value.narrativeOutput === "string"
-          ? value.narrativeOutput
-          : typeof value.content === "string"
-            ? value.content
-            : null
-        : null;
-  if (!candidate) return null;
-  const trimmed = candidate.trim();
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
 

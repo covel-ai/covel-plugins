@@ -34,9 +34,9 @@ The workbench writes its own session-scoped `notes` plugin data only after a suc
 ## Package layout
 
 ```text
-PLUGIN.md                      id, kind, version, covel, credits, entry, contributes
+PLUGIN.md                      version, covel, credits, contributes
 locales/zh.yaml                Simplified Chinese labels and messages; lock.json records the English they translate
-server/index.js                entry: registers the open-notes action behind /notes
+server/index.js                entry (found by convention): registers the open-notes action behind /notes
 lib/                           the service contract name and the translate helper
 runtimes/providers/RUNTIME.md  manual function runtime: lists formatter services
 runtimes/save/RUNTIME.md       manual function runtime: formats and saves a note
@@ -48,13 +48,13 @@ tests/                         node --test suites
 ```
 
 - `PLUGIN.md` declares the package-level contributions: `actions: [open-notes]`, the `notes` command that calls it, the `notes` data namespace and the right-panel UI. The entry's registrations and these declarations must match in both directions, or the host refuses to load the package.
-- Each runtime is a `type: function` manual runtime (`schedule.trigger.type: manual`, `schedule.manual.execution: sync`, `io.visibility: plugin`). The host checks the `save` payload against `io.payloadSchema` before the handler runs, and the handler checks it again.
+- Each runtime is a manual function runtime: it has a `function` block and `schedule.trigger.type: manual`, and the caller waits for its result (`schedule.background` is left at its default, `false`). The host checks the `save` payload against `io.payloadSchema` before the handler runs, and the handler checks it again.
 - Manifests, the UI spec and code hold English. Chinese labels go in `locales/zh.yaml` under the manifest file they translate; text from code and the panel name go under `messages` and reach code as `ctx.messages` (read through `lib/text.js`, a dependency-free copy of the SDK's `translate`).
 - The host passes no translations into the sandboxed HTML document, so `ui/workbench.html` carries its own English and Simplified Chinese text and picks one from the `locale` the bridge sends; Traditional Chinese and other locales read English. It colours itself with the host's `--covel-*` theme variables.
 
 ## Compatibility and validation
 
-Requires Covel **0.0.50 or later** (`covel: ">=0.0.50"` in `PLUGIN.md`); an older host does not install or load it. Version 2.0.0 moves to the current package layout (`runtimes/<id>/RUNTIME.md`, `contributes`, locale files) and renames the service contract from `examples/note-format@1` to `examples.note-format@1`, because contract IDs may not contain slashes. Use it with Clean Note and Outline Note 2.0.0 or later; notes saved by 1.x keep the same record shape.
+Requires Covel **0.0.52 or later** (`covel: ">=0.0.52"` in `PLUGIN.md`); an older host does not install or load it. Version 3.0.0 drops the manifest fields that Covel 0.0.52 removed or works out itself (`type`, `schedule.manual`, `io.visibility: plugin`, `id`, `kind`, `entry`, the derived tags and defaults); the runtimes, data and service contract are unchanged. Version 2.0.0 moves to the current package layout (`runtimes/<id>/RUNTIME.md`, `contributes`, locale files) and renames the service contract from `examples/note-format@1` to `examples.note-format@1`, because contract IDs may not contain slashes. Use it with Clean Note and Outline Note 2.0.0 or later; notes saved by 1.x and 2.x keep the same record shape.
 
 From this repository root, run `pnpm test`. To validate against a Covel checkout, set `COVEL_REPO` to its absolute path, then run:
 
@@ -69,4 +69,4 @@ pnpm --dir "$COVEL_REPO" test:runtime notes-workbench/save \
   --pretty
 ```
 
-The CLI run executes the runtime and the selected provider's entry in a mock session; it does not exercise GitHub installation, session approval, or the browser panel. Run those flows in a Covel 0.0.50 host before treating it as a released integration. This package is MIT licensed; see [LICENSE](LICENSE).
+The CLI run executes the runtime and the selected provider's entry in a mock session; it does not exercise GitHub installation, session approval, or the browser panel. Run those flows in a Covel 0.0.52 or later host before treating it as a released integration. This package is MIT licensed; see [LICENSE](LICENSE).

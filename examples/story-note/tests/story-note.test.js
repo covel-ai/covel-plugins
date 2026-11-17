@@ -20,7 +20,7 @@ test("registers the public hook and modifies only story prompts", () => {
   );
   assert.equal(payload.systemPrompt, "Original");
   assert.deepEqual(
-    addStoryNote({ locale: "en-US" }, { ...payload, outputKind: "plugin" }),
+    addStoryNote({ locale: "en-US" }, { ...payload, outputKind: "system" }),
     { action: "continue" },
   );
 });
@@ -40,6 +40,8 @@ test("the manifest declares the hook it registers", async () => {
     new URL("../PLUGIN.md", import.meta.url),
     "utf8",
   );
-  assert.match(manifest, /^id: story-note$/m);
-  assert.match(manifest, /- event: PostContextAssembly\n\s+enforce: normal/);
+  // The ID is the directory name and `enforce: normal` is the default, so
+  // the manifest names only the event.
+  assert.doesNotMatch(manifest, /^id:/m);
+  assert.match(manifest, /^  hooks:\n    - PostContextAssembly$/m);
 });

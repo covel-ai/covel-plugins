@@ -36,6 +36,7 @@ function makeCtx(overrides = {}) {
     pluginData: { set: vi.fn() },
     logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
     images: makeImages(),
+    random: { int: vi.fn().mockReturnValue(0) },
     ...overrides,
   };
 }
@@ -64,7 +65,7 @@ describe("image-generator handler", () => {
     expect(ctx.pluginData.set).not.toHaveBeenCalled();
   });
 
-  it("draws the image ID suffix from ctx.random when the host supplies it", async () => {
+  it("draws the image ID suffix from ctx.random", async () => {
     const random = { int: vi.fn().mockReturnValue(35) };
     const ctx = makeCtx({ random });
     const result = await handler(ctx);

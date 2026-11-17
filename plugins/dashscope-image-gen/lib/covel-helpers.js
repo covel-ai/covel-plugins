@@ -1,4 +1,4 @@
-// Pure Covel 0.0.50 helpers (MIT, Covel Contributors). See LICENSE and lib/README.md.
+// Pure Covel 0.0.54 helpers (MIT, Covel Contributors). See LICENSE and lib/README.md.
 // Sources: packages/plugin-handlers-utils/src/{index,image-generation,tool-result}.ts
 
 export function optionalString(value) {
@@ -116,11 +116,9 @@ export async function runImageGeneration(ctx, config) {
     return { outcome: "skipped", skipReason: "image model unavailable" };
   }
   const suffix = ctx.random
-    ? ctx.random
-        .int(0, 36 ** 6)
-        .toString(36)
-        .padStart(6, "0")
-    : Math.random().toString(36).slice(2, 8);
+    .int(0, 36 ** 6)
+    .toString(36)
+    .padStart(6, "0");
   const imageId = `img-${Date.now().toString(36)}-${suffix}`;
   const startedAt = new Date().toISOString();
   const baseRecord = {
@@ -245,7 +243,9 @@ function isToolResult(value) {
 }
 export function withPendingProposals(content, pendingProposals) {
   const emittedEvents = getEmittedEvents(content);
+  const model = getModelView(content);
   return {
+    ...(model ? { model } : {}),
     kind: "covel.tool-result",
     content: getToolContent(content),
     pendingProposals: [...pendingProposals],
@@ -253,7 +253,9 @@ export function withPendingProposals(content, pendingProposals) {
   };
 }
 export function withEmittedEvents(content, emittedEvents) {
+  const model = getModelView(content);
   return {
+    ...(model ? { model } : {}),
     kind: "covel.tool-result",
     content: getToolContent(content),
     pendingProposals: [...getPendingProposals(content)],
@@ -268,4 +270,7 @@ export function getPendingProposals(value) {
 }
 export function getEmittedEvents(value) {
   return isToolResult(value) ? value.emittedEvents : undefined;
+}
+export function getModelView(value) {
+  return isToolResult(value) ? value.model : undefined;
 }

@@ -34,9 +34,9 @@ https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-outline
 ## 包结构
 
 ```text
-PLUGIN.md                      id、kind、version、covel、作者信息、entry、contributes
+PLUGIN.md                      version、covel、作者信息、contributes
 locales/zh.yaml                简体中文标签与 messages；lock.json 记录译文对应的英文原文
-server/index.js                entry：注册 /notes 调用的 open-notes action
+server/index.js                entry（按约定路径识别）：注册 /notes 调用的 open-notes action
 lib/                           服务契约名与 translate 辅助函数
 runtimes/providers/RUNTIME.md  手动 function runtime：列出格式化服务
 runtimes/save/RUNTIME.md       手动 function runtime：格式化并保存记录
@@ -48,13 +48,13 @@ tests/                         node --test 测试
 ```
 
 - `PLUGIN.md` 声明包级贡献：`actions: [open-notes]`、调用它的 `notes` 命令、`notes` 数据 namespace 和右侧面板。entry 的注册与这些声明必须双向一致，否则宿主拒绝加载。
-- 两个 runtime 都是 `type: function` 的手动 runtime（`schedule.trigger.type: manual`、`schedule.manual.execution: sync`、`io.visibility: plugin`）。宿主先按 `io.payloadSchema` 校验 `save` 的 payload，handler 再校验一次。
+- 两个 runtime 都是手动 function runtime：带 `function` 块，`schedule.trigger.type: manual`，调用方等待结果（`schedule.background` 保持默认值 `false`）。宿主先按 `io.payloadSchema` 校验 `save` 的 payload，handler 再校验一次。
 - 清单、UI spec 和代码只写英文。中文标签写在 `locales/zh.yaml` 中对应清单文件的一节；代码文字和面板名写在 `messages`，以 `ctx.messages` 交给代码（经 `lib/text.js` 读取，它是 SDK `translate` 的无依赖副本）。
 - 宿主不向沙箱 HTML 传译文，所以 `ui/workbench.html` 自带英文与简体中文文字，按桥接传来的 `locale` 选择；繁体中文和其他语言显示英文。面板用宿主的 `--covel-*` 主题变量配色。
 
 ## 兼容性与验证
 
-需要 Covel **0.0.50 或更高版本**（`PLUGIN.md` 的 `covel: ">=0.0.50"`），更早的宿主不会安装或加载它。2.0.0 改用当前包结构（`runtimes/<id>/RUNTIME.md`、`contributes`、语言文件），并因契约 ID 不能含斜杠，把服务契约从 `examples/note-format@1` 改名为 `examples.note-format@1`。请与笔记清理、笔记大纲 2.0.0 及以上版本配合使用；1.x 保存的记录结构不变。
+需要 Covel **0.0.52 或更高版本**（`PLUGIN.md` 的 `covel: ">=0.0.52"`），更早的宿主不会安装或加载它。3.0.0 删去了 Covel 0.0.52 已移除或能自行推导的清单字段（`type`、`schedule.manual`、`io.visibility: plugin`、`id`、`kind`、`entry`、推导标签和默认值）；runtime、数据和服务契约都不变。2.0.0 改用当前包结构（`runtimes/<id>/RUNTIME.md`、`contributes`、语言文件），并因契约 ID 不能含斜杠，把服务契约从 `examples/note-format@1` 改名为 `examples.note-format@1`。请与笔记清理、笔记大纲 2.0.0 及以上版本配合使用；1.x、2.x 保存的记录结构不变。
 
 在本仓根目录运行 `pnpm test`。要用 Covel checkout 验证，先将 `COVEL_REPO` 设为其绝对路径，再运行：
 
@@ -69,4 +69,4 @@ pnpm --dir "$COVEL_REPO" test:runtime notes-workbench/save \
   --pretty
 ```
 
-CLI 在模拟会话中执行 runtime 和所选提供者的 entry，不涵盖 GitHub 安装、会话授权或浏览器面板；确认已发布集成前仍需在 Covel 0.0.50 宿主中走通这些流程。本包采用 MIT 许可，见 [LICENSE](LICENSE)。
+CLI 在模拟会话中执行 runtime 和所选提供者的 entry，不涵盖 GitHub 安装、会话授权或浏览器面板；确认已发布集成前仍需在 Covel 0.0.52 及以上宿主中走通这些流程。本包采用 MIT 许可，见 [LICENSE](LICENSE)。

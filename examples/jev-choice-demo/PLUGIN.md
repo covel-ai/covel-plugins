@@ -1,21 +1,17 @@
 ---
-id: jev-choice-demo
-kind: plugin
-version: 0.1.1
-covel: ">=0.0.50"
+version: 0.2.0
+covel: ">=0.0.54"
 displayName: Jev Choice Recommendations Demo
 description: >-
   Evaluates current quick replies and displays recommendation probabilities on
   stage; an example for plugin authors.
-tags:
-  - "cost:llm"
 author:
   name: Covel Contributors
   url: https://github.com/covel-ai
 license: MIT
 homepage: https://github.com/covel-ai/covel-plugins/tree/main/examples/jev-choice-demo
 requires:
-  - narrative-engine@1
+  - narrative-engine@2
   - scene-prompts@1
 entry: ./server.js
 contributes:
@@ -39,29 +35,21 @@ contributes:
     right:
       - ./ui/recommendations.json
 runtime:
-  type: function
   description: >-
     Ranks the current suggested actions with an evaluation model and publishes
     the result to its own recommendations namespace.
   schedule:
     stage: post-turn
-    trigger:
-      type: scheduled
-      interval: 1
   io:
     inputs:
       choices:
-        from: { contract: scene-prompts@1, cardinality: one }
+        from: { contract: scene-prompts@1 }
         accepts: ./schemas/choices.schema.json
-        required: true
       narrative:
-        from: { contract: narrative-engine@1, cardinality: one }
+        from: { contract: narrative-engine@2 }
         select: /narrativeOutput
         accepts: ./schemas/narrative.schema.json
-        required: true
-    visibility: system
   function:
-    handler: ./handler.js
     timeoutMs: 15000
   effects:
     writes:

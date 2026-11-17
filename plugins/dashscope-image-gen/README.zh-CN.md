@@ -8,7 +8,7 @@
 
 ## 安装与授权
 
-这是官方维护的社区插件，适配 Covel `0.0.50` 开发契约（`PLUGIN.md` 里的 `covel: ">=0.0.50"`；范围之外的宿主不加载它），不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
+这是官方维护的社区插件，适配 Covel `0.0.54` 开发契约（`PLUGIN.md` 里的 `covel: ">=0.0.54"`；范围之外的宿主不加载它），不再随主仓内置分发。在 **设置 → 插件 → 安装与管理** 输入：
 
 ```text
 https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen
@@ -22,17 +22,19 @@ https://github.com/covel-ai/covel-plugins/tree/main/plugins/dashscope-image-gen
 
 ```text
 dashscope-image-gen/
-├── PLUGIN.md                       # id、版本、covel 范围、工具、media.image-flow@1、设置、UI
+├── PLUGIN.md                       # 版本、covel 范围、工具、media.image-flow@1、设置、UI
 ├── locales/zh.yaml                 # 中文标签与界面文字（locales/lock.json 记录对应的英文原文）
 ├── server/index.js                 # entry：注册两个提交工具和 image-flow 扩展
 ├── tools/submit-image-prompt.js
 ├── lib/covel-helpers.js            # 随包的 SDK 辅助函数（图像生成、proposal、工具结果）
 └── runtimes/
-    ├── prompt-generator/           # agent：RUNTIME.md（英文）、RUNTIME.zh.md、output.schema.json、ui/
+    ├── prompt-generator/           # agent：RUNTIME.md（英文）、RUNTIME.zh.md、ui/
     └── image-generator/            # function：RUNTIME.md、handler.js、ui/
 ```
 
 0.1.0 版把插件迁到 Covel 0.0.50 格式：runtime 改为 `runtimes/<id>/RUNTIME.md` 并使用分组字段；设置和 UI spec 只在根 `contributes` 声明一次；标签和界面文字写英文，中文译文放在 `locales/zh.yaml`；提示词正文以英文为准，简体中文变体在 `RUNTIME.zh.md`。插件、runtime、工具和设置的 ID 都不变。更新已安装的副本后，重启后端，并像新安装一样在会话中授权。
+
+0.2.0 版按 Covel 0.0.54 契约编写：`prompt-generator` 通过宿主的 `submit-output` 工具结束（先调用提交工具，再用 `{}` 调用 `submit-output`），不再带私有输出 schema；两个 runtime 都用 `schedule.background: true`；画廊和任务面板改用通用的 `MediaGallery`、`JobList` 组件。插件、runtime、工具和设置 ID，`prompts`、`images` 命名空间以及已存的画廊记录都不变。Covel 0.0.53 及更早版本不会加载此版本。
 
 ## 用途
 
@@ -50,7 +52,7 @@ dashscope-image-gen/
 
 | Runtime                                | 类型                  | 触发                             | 职责                                                                                                                                                                                                                                    |
 | -------------------------------------- | --------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dashscope-image-gen/prompt-generator` | agent (background)    | manual                           | 后台读取最近的 prompt 历史，按 `promptMode` 调用对应提交工具；工具统一留档并发出 `image.generate.requested`，唤醒下游。`media.image-flow@1` 的入口 runtime                                                                              |
+| `dashscope-image-gen/prompt-generator` | agent (background)    | manual                           | 后台读取最近的 prompt 历史，按 `promptMode` 调用对应提交工具；工具统一留档并发出 `image.generate.requested`，唤醒下游；agent 随后用 `{}` 调用 `submit-output` 结束。`media.image-flow@1` 的入口 runtime                                                                              |
 | `dashscope-image-gen/image-generator`  | function (background) | event:`image.generate.requested` | 调用 `ctx.images.generate()`（框架选 wire、发请求、落 MediaStore、按 promptHash 去重）→ 拿到 `MediaRef[]` 后写索引记录（含 `ref`）进 `images` 命名空间，每张图返回一条 `assetGenerations[]` effect。`media.image-flow@1` 的资产 runtime |
 
 ## 设置

@@ -1,21 +1,15 @@
 ---
-id: notes-workbench
-kind: plugin
-version: 2.0.0
-covel: ">=0.0.50"
+version: 3.0.0
+covel: ">=0.0.52"
 displayName: Notes Workbench
 description: >-
   Save session notes and optionally format them through an active note
   formatter service.
-tags:
-  - "ui:right-panel"
-  - "cost:function"
 author:
   name: Covel Contributors
   url: https://github.com/covel-ai
 license: MIT
 homepage: https://github.com/covel-ai/covel-plugins/tree/main/examples/notes-workbench
-entry: ./server/index.js
 contributes:
   actions:
     - open-notes
@@ -26,7 +20,6 @@ contributes:
   data:
     notes:
       schema: ./schemas/note.schema.json
-      version: 1
       description: Notes saved by this plugin in the current session.
   ui:
     right:

@@ -1,8 +1,6 @@
 ---
-id: note-format-outline
-kind: plugin
-version: 2.0.0
-covel: ">=0.0.50"
+version: 3.0.0
+covel: ">=0.0.52"
 displayName: Outline Note
 description: Turns nonblank lines into a plain-text bullet list without duplicate markers.
 author:
@@ -10,7 +8,6 @@ author:
   url: https://github.com/covel-ai
 license: MIT
 homepage: https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-outline
-entry: ./server/index.js
 contributes:
   services:
     - examples.note-format@1

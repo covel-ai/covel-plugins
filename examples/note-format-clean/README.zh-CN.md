@@ -19,7 +19,7 @@ https://github.com/covel-ai/covel-plugins/tree/main/examples/note-format-clean
 ```text
 PLUGIN.md          id、kind、version、covel、作者信息、contributes.services
 locales/zh.yaml    简体中文名称与说明（locales/lock.json 记录译文对应的英文原文）
-server/index.js    entry：注册 format-note 服务
+server/index.js    entry（按约定路径识别）：注册 format-note 服务
 server/format.js   纯格式化函数
 tests/             node --test 测试
 ```
@@ -28,7 +28,7 @@ tests/             node --test 测试
 
 ## 兼容性与验证
 
-需要 Covel **0.0.50 或更高版本**（`PLUGIN.md` 的 `covel: ">=0.0.50"`），更早的宿主不会安装或加载它。2.0.0 改用当前包格式，并把契约从 `examples/note-format@1` 改名为 `examples.note-format@1`，须与记录工作台 2.0.0 及以上版本配合使用。在本仓根目录运行 `pnpm test`。有 Covel checkout（路径设为 `$COVEL_REPO`）时：
+需要 Covel **0.0.52 或更高版本**（`PLUGIN.md` 的 `covel: ">=0.0.52"`），更早的宿主不会安装或加载它。3.0.0 不再写 `id`、`kind` 和 `entry`，Covel 0.0.52 会按目录名和 `server/index.js` 推导；服务本身不变。2.0.0 改用当前包格式，并把契约从 `examples/note-format@1` 改名为 `examples.note-format@1`，须与记录工作台 2.0.0 及以上版本配合使用。在本仓根目录运行 `pnpm test`。有 Covel checkout（路径设为 `$COVEL_REPO`）时：
 
 ```sh
 pnpm --dir "$COVEL_REPO" validate:plugin "$PWD/examples/note-format-clean"

@@ -1,15 +1,8 @@
 ---
-id: mimo-tts
-kind: plugin
-version: 0.0.50
-covel: ">=0.0.50"
+version: 0.1.0
+covel: ">=0.0.54"
 displayName: MiMo TTS
 description: Reads story text aloud, either automatically or one paragraph at a time.
-tags:
-  - "ui:right-panel"
-  - "ui:message-block"
-  - "ui:manual-action"
-  - "cost:llm"
 author:
   name: covel-ai
   url: https://github.com/covel-ai
@@ -18,9 +11,9 @@ homepage: https://github.com/covel-ai/covel-plugins/tree/main/plugins/mimo-tts
 # Both runtimes read the story text of the active narrative engine, whichever
 # plugin provides it (narrator or chat-mode-narrator).
 requires:
-  - narrative-engine@1
-# Registers the MiMo speech wire (`mimo-tts/mimo`) with covel.registerWires().
-entry: ./server/index.js
+  - narrative-engine@2
+# The entry, server/index.js, registers the MiMo speech wire (`mimo-tts/mimo`)
+# with covel.registerWires().
 contributes:
   wires:
     - mimo
@@ -83,12 +76,11 @@ contributes:
 This root file declares the package only. The two function runtimes live under
 `runtimes/`:
 
-- `mimo-tts/auto-narrate` (`auto`, stage `post-turn`, `completion.mode:
-detached`, needs `narrative-engine@1`) records the text of the turn for the
-  Speak button and, unless the `enabled` setting is off, synthesizes the turn's
+- `mimo-tts/auto-narrate` (`auto`, stage `post-turn`, `detached`, needs
+  `narrative-engine@2`) records the text of the turn for the Speak button and, unless the `enabled` setting is off, synthesizes the turn's
   story text in a durable background job through `ctx.speech` and stores a
   track.
-- `mimo-tts/manual-narrate` (`manual`, `manual.execution: background`) runs when
+- `mimo-tts/manual-narrate` (`manual`, `background: true`) runs when
   the player clicks the Speak button under a story message; it reads the
   paragraph text from the button payload.
 

@@ -1,5 +1,4 @@
 ---
-type: function
 description: Generates speech for the current passage when the Speak button is clicked.
 # No `io.inputs` on purpose: a manual activation resolves no turn input
 # bindings, so the paragraph text arrives only through the Speak button's
@@ -8,12 +7,8 @@ description: Generates speech for the current passage when the Speak button is c
 schedule:
   trigger:
     type: manual
-  manual:
-    execution: background
-io:
-  visibility: plugin
+  background: true
 function:
-  handler: ./handler.js
   # The default speech slot, read by the background job's credential check.
   model: mimo-tts
   timeoutMs: 120000

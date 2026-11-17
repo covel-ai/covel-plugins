@@ -9,7 +9,7 @@
  * auto-narrate writes. `payload.text` is required: a manual activation
  * resolves no turn input bindings, so there is no narrative to fall back to.
  *
- * `schedule.manual.execution: background` answers the request with a job ID
+ * `schedule.background: true` answers the request with a job ID
  * at once and runs this handler as a durable job; the right-panel tab picks
  * the new track up through `plugin-data.changed`. Speaking the same paragraph
  * again returns the stored track (`ctx.speech` promptHash dedup) instead of

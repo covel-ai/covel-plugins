@@ -1,6 +1,6 @@
 # Plugin invocation context
 
-Function handlers default-export `async function (ctx)`. Type a handler with `PluginFunctionHandler` and `PluginFunctionContext` from `@covel/plugin-handlers-utils`; bundle runtime helpers into standalone plugin artifacts. A helper's types are structural and do not grant authority.
+Function handlers default-export `async function (ctx)`. Type a handler with `PluginFunctionHandler` and `PluginFunctionContext` from `@covel/plugin-handlers-utils`; the host provides that package and `zod` to every plugin at run time. A helper's types are structural and do not grant authority.
 
 ## Identity, inputs, and state
 
@@ -9,20 +9,18 @@ Function handlers default-export `async function (ctx)`. Type a handler with `Pl
 ```yaml
 schedule:
   stage: post-turn
-  trigger: {type: auto}
 io:
   inputs:
     narrative:
-      from: {contract: narrative-engine@1, cardinality: one}
+      from: {contract: narrative-engine@2}
       select: /narrativeOutput
-      required: true
 ```
 
 Read `ctx.inputs.narrative.value`; an `all` binding contains `items[].value`. These slots also carry source provenance. Committed bindings use `scope: committed` and `recordAs`; the producer uses `io.output.recordAs`. Detached memory work receives a frozen `turn-digest@1` input. Do not reconstruct upstream output from another plugin's private data.
 
-All plugin stores are scoped, including built-ins. Calls are bound to the current session and plugin: `getSession()`, `getWorld()`, `listTurnMessages(limit?)`, `listPlayerInputs()`, `getPluginData(namespace,key)`, and `listPluginData(namespace?)`. Do not pass `sessionId` or `pluginId`. The facade is read-only; raw DataStore is not a plugin API.
+All plugin stores are scoped to the current session and plugin. Use the read-only methods in the public [FunctionStoreView](https://github.com/ackness/covel/blob/v0.0.54/packages/plugin-handlers-utils/src/function-runtime.ts); do not pass session or plugin IDs. Read the world record through `ctx.world.worldRecord`. The raw DataStore is not a plugin API. See [the invocation context](https://github.com/ackness/covel/blob/v0.0.54/docs/reference/plugins.md#world-model-与数据边界).
 
-`ctx.world` exposes read-only characters, character schema, and the world record. Its execution view combines committed state, successfully completed upstream domain proposals, and valid buffered changes. It does not expose failed or merely running upstream mutations. Domain writes use proposals/effects and pass kernel validation; one player and the current character schema remain enforced.
+`ctx.world` exposes read-only characters, character schema, and the world record. Its execution view combines committed state, successfully completed upstream domain proposals, and valid buffered changes. It does not expose failed or merely running upstream mutations. Domain writes use proposals/effects and pass kernel validation; the current character schema remains enforced. A session may have several player characters; use `primarySeat` and `currentCharacterOf` to find the one currently being played.
 
 ## Results and effects
 
@@ -39,13 +37,15 @@ export default async function (ctx) {
 }
 ```
 
-Supported outcomes are `success`, `skipped`, `failed`, and `blocked`. Domain effects commit only on success. `ctx.pluginData.set(namespace,key,value)` writes the execution buffer, not immediately committed state. `ctx.pluginData.get(namespace,key)` returns the stored value or `null`, and `list(namespace)` returns `{key, value, createdAt, updatedAt}` entries; an extension handler reads with the same two methods. One value is at most 256 KiB of JSON; a larger one fails the write with the size and the limit, and nothing is truncated. Draw dice and other game randomness from `ctx.random.int(min, max)`, never `node:crypto` or `Math.random`. `effects.pluginData` likewise targets only the owning plugin. Other effects include domain proposals, emitted events, UI interactions, notifications, and asset generation records, according to the host's public `HandlerResult` schema. Never write reserved `_jobs`/`_logs` namespaces as business data.
+Supported outcomes are `success`, `suspended`, `skipped`, and `failed`; their fields are defined by the public [HandlerResult](https://github.com/ackness/covel/blob/v0.0.54/packages/plugin-handlers-utils/src/handler-result.ts). Domain effects commit only on success. `ctx.pluginData.set(namespace,key,value)` writes the execution buffer, not immediately committed state. `ctx.pluginData.get(namespace,key)` returns the stored value or `null`, and `list(namespace)` returns `{key, value, createdAt, updatedAt}` entries; an extension handler reads with the same two methods. One value is at most 256 KiB of JSON; a larger one fails the write with the size and the limit, and nothing is truncated. Draw dice and other game randomness from `ctx.random.int(min, max)`, never `node:crypto` or `Math.random`. `effects.pluginData` likewise targets only the owning plugin. Other effects include domain proposals, emitted events, UI interactions, notifications, and asset generation records, according to the host's public `HandlerResult` schema. Never write reserved `_jobs`/`_logs` namespaces as business data.
 
 `ctx.progress.report` and `ctx.logger` report bounded execution diagnostics. Preserve the cancellation signal when invoking providers or services. Rethrow cancellation instead of converting it into a successful domain write. Return a failed/skipped result for unsupported configuration rather than inventing output.
 
 ## Public services and extensions
 
-The entry declares each service in `contributes.services` and registers it with `covel.registerService({name,contract,description,input,output,handler})`. Use runtime `ctx.services` to discover and call approved active providers. Service boundaries validate and sanitize input/output, enforce cancellation/timeouts/cycle protection, and preserve caller authority. Provider gateways do not expose credentials through service slot results.
+The entry declares each service in `contributes.services` and registers it with `covel.registerService({name,contract,description,input,output,handler})`. Use runtime `ctx.services`, or a tool's `context.services`, to discover and call approved active providers. A read-only service an agent may call as a tool registers `modelFacing: true` with a `description` and a Zod `input` (or an explicit `inputSchema` whose root is an object), and is declared as `{contract, modelFacing: true}`; agents import it in `agent.tools.services`. See [model-facing services](https://github.com/ackness/covel/blob/v0.0.54/docs/reference/plugin-extensions.md#给模型用的服务). Service boundaries validate and sanitize input/output, enforce cancellation/timeouts/cycle protection, and preserve caller authority. Provider gateways do not expose credentials through service slot results.
+
+A service that changes its provider's own data for the caller is a write service: `access: "write"` in the registration and `{contract, access: write}` in `contributes.services` (default `read`). Its context drops `gateway` and `utils` and adds `pluginData` (`get`/`list`/`set`/`delete`/`update` over the provider's own data, with what the same caller staged earlier and this call's writes on top), `random` (stream `service:<name>`) and `turnId`. It cannot write `_` namespaces (`invalid-input`), an `update` that does not fit throws `ToolError("conflict")`, and it may call read services only. A successful call stages one operation on the caller's result, committed with the caller's commit unit (next to a story each operation stands or drops alone). Calls from detached/background/resumed runs, scoped retries, guards, hooks, RPC handlers, extension providers and agents that can suspend answer `unavailable`; a plugin calling its own write service gets `refused`. Test one with `callTestService` from `@covel/plugin-test-utils`. See [write services](https://github.com/ackness/covel/blob/v0.0.54/docs/reference/plugin-extensions.md#写服务).
 
 The entry declares extension `{point,id}` pairs in `contributes.extensions`, then calls `covel.provideExtension(point,id,{handler})`. Extension contexts expose an immutable execution snapshot of the provider's own plugin data and World Model, plus session/turn/locale and a bounded service context. Extension handlers do not receive a writable store. Point definitions own mode, schemas, timeout, merge rules, and diagnostics.
 
@@ -54,3 +54,5 @@ The entry declares extension `{point,id}` pairs in `contributes.extensions`, the
 Use `ctx.gateway.generateText`, `generateObject`, or `evaluate` for model work. Use `ctx.images.generate` and `ctx.speech.generate`/`transcribe` for media: the host chooses a configured wire, enforces its network policy, persists bytes, and returns MediaRef values. Register custom protocol wires from the entry and list their local IDs in `contributes.wires`.
 
 Use `ctx.media.put` or approved remote ingestion for already obtained media bytes. Persist references in own plugin data and return `effects.assetGenerations`. Do not store base64 blobs in plugin data. Custom network requests must use host helpers and declared runtime HTTP origins/methods; redirects need their own authorization. Keep credentials and provider responses out of public diagnostics and fixtures.
+
+Presentation functions use the restricted public-story context and durable dispatch allowance in [the presentation contract](https://github.com/ackness/covel/blob/v0.0.54/docs/reference/plugins.md#presentation-runtimes). Use the [selector and detached generator examples](https://github.com/ackness/covel/blob/v0.0.54/docs/plugins/advanced.md#呈现选择器), and test real manifest admission, forbidden capabilities, commit isolation, cache charging and supersession. Agents cannot declare presentation; a function still follows normal server-code approval.
