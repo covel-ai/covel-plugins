@@ -2,7 +2,7 @@
 
 [English](publishing.md) · **简体中文**
 
-本仓的插件包需要 `package.json`（name、version、type: module）和根 `PLUGIN.md`。插件 ID 就是包目录名；`id`、`kind`、`entry` 与 Covel 推导的值（`plugin`、`server/index.js`）相同时不写。单 runtime 写在根文件的 `runtime:` 下，多 runtime 放在 `runtimes/<id>/RUNTIME.md`。子目录 `PLUGIN.md`、旧的平铺清单字段以及 Covel 已移除的字段（如 `type`、`schedule.manual`、`schedule.completion`、`scheduled` 触发方式和 `io.visibility: plugin`）都会被拒绝。Covel 本身只从 `PLUGIN.md` 读取版本；本目录仍要求 `PLUGIN.md` 的 `version` 与 `package.json` 相同。`covel: ">=0.0.54"` 声明适配的宿主范围，范围之外的宿主不安装也不加载该包；把它提高到引入该包所依赖的最新契约的 Covel 版本。包名的 `plugin-` 前缀可省略。
+插件包需要根 `PLUGIN.md`。`package.json` 可选，有的话要声明 `type: module`（本仓的包为此和 `devDependencies` 保留它）。插件 ID 就是包目录名；`id`、`kind`、`entry` 与 Covel 推导的值（`plugin`、`server/index.js`）相同时不写。单 runtime 写在根文件的 `runtime:` 下，多 runtime 放在 `runtimes/<id>/RUNTIME.md`。子目录 `PLUGIN.md`、旧的平铺清单字段以及 Covel 已移除的字段（如 `type`、`schedule.manual`、`schedule.completion`、`scheduled` 触发方式和 `io.visibility: plugin`）都会被拒绝。Covel 和目录都只从 `PLUGIN.md` 读取版本；`package.json` 如果还写着 `version`，保持一致或删掉。`covel: ">=0.0.54"` 声明适配的宿主范围，范围之外的宿主不安装也不加载该包；把它提高到引入该包所依赖的最新契约的 Covel 版本。包名的 `plugin-` 前缀可省略。
 
 发布目录的 JavaScript 必须直接可运行且自包含。开发工具放在 devDependencies；用于 GitHub 自动安装的 package.json 不保留 dependencies、optionalDependencies 或 peerDependencies。需要这些依赖的插件请在作者侧打包依赖并生成独立发布目录，再链接到该目录。不要依赖 Covel monorepo 的 workspace 解析。安装器不会执行脚本。
 
@@ -18,7 +18,7 @@
 
 官方插件统一提供 English 清单与 `locales/zh.yaml` 中的简体中文标签、中英文 README 安装与模型配置、数据和网络说明、MIT LICENSE、可独立执行的 JavaScript、回归测试与索引条目。`README.md` 为默认英文入口，`README.zh-CN.md` 为中文版，顶部提供语言切换链接。两个版本同步维护，详见[多语言维护](localization.zh-CN.md)。复杂开发示例放在 `examples/`，按需功能放在 `plugins/`；框架原语保留在 Covel 主仓。更改依赖或打包产物时验证每个目录单独复制到临时目录后可导入，不依赖本仓或主仓的 node_modules。
 
-保留插件身份、设置键和原 Covel Contributors 许可证。各插件独立维护 `package.json` 的版本，索引中的 `covelVersion` 表示宿主兼容版本，不是插件发布版本。安装前后的信任来源不同，旧会话必须重新授权。已安装旧开发副本时，先备份自行修改的源码，再通过设置卸载并重装；不要手工覆盖安装记录。
+保留插件身份、设置键和原 Covel Contributors 许可证。各插件在 `PLUGIN.md` 里独立维护版本，索引中的 `covelVersion` 表示宿主兼容版本，不是插件发布版本。安装前后的信任来源不同，旧会话必须重新授权。已安装旧开发副本时，先备份自行修改的源码，再通过设置卸载并重装；不要手工覆盖安装记录。
 
 ## 版本与更新来源
 

@@ -27,3 +27,26 @@ test("worlds YAML errors stay distinct from operational errors", async () => {
   for (const yaml of ["a: &loop [*loop]", "a: 1\na: 2", "[1, 2]"]) assert.throws(() => parseYaml(yaml));
   await assert.rejects(extractWorlds({ ...input(), read: async () => { throw new GitHubError("API failure", 503); } }), GitHubError);
 });
+
+// Covel 0.0.52+ worlds: no schemaVersion, no supportedLocales (editions come from
+// files), and an id that defaults to the directory name.
+const current = "name: Current\nsummary: A current-contract world\nversion: 1.0.0\ndefaultLocale: en-US\nplugins:\n  - pack:traditional-story\n  - plugin:dice-check\n";
+test("current-contract worlds derive id and editions from their files", async () => {
+  const { entries } = await extractWorlds(input({
+    "demo/world.yaml": current, "demo/world.zh-CN.yaml": "name: 当前\nsummary: 当前契约\n", "demo/WORLD.ja.md": "# ja",
+    "demo/WORLD.en.md": "# misnamed", "demo/data/world.fr-FR.yaml": "name: nested",
+  }));
+  const world = entries[0];
+  assert.equal(world.status, "indexed"); assert.equal(world.id, "demo");
+  assert.deepEqual(world.locales, ["en-US", "ja", "zh-CN"]);
+  assert.deepEqual(world.translations["zh-CN"], { name: "当前", description: "当前契约" });
+  assert.equal(world.pluginPreset, "traditional-story");
+  // Legacy fields are ignored, not required; a written id still wins.
+  const legacy = (await extractWorlds(input())).entries[0];
+  assert.equal(legacy.status, "indexed"); assert.deepEqual(legacy.locales, ["en-US"]);
+  const named = (await extractWorlds(input({ "demo/world.yaml": `id: other\n${current}` }))).entries[0];
+  assert.equal(named.id, "other");
+  const invalid = await extractWorlds(input({ "Bad_Dir/world.yaml": current, "Bad_Dir/WORLD.md": "#" }));
+  assert.equal(invalid.entries.find(e => e.path === "Bad_Dir").status, "pending");
+  assert.match(invalid.issues.find(i => i.path === "Bad_Dir").message, /no valid world id/);
+});

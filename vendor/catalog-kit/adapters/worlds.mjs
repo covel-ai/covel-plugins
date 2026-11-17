@@ -9,6 +9,37 @@ const CATEGORIES = ["fantasy", "science-fiction", "mystery", "slice-of-life", "h
 const LOCALE = /^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$/;
 const text = (value, max = 4000) => typeof value === "string" && value.trim() ? value.trim().slice(0, max) : null;
 const encodedPath = (value) => value.split("/").map(encodeURIComponent).join("/");
+// Covel's world ID rule, bounded for catalog storage.
+const ID_PATTERN = /^[a-z][a-z0-9-]{0,63}$/;
+const EDITION_FILE = /^(?:world\.(.+)\.yaml|WORLD\.(.+)\.md)$/;
+
+/** The pack a world starts with: the first `pack:` reference of its ordered `plugins` list. */
+const firstPack = (plugins) => Array.isArray(plugins) ? text(plugins.find((ref) => typeof ref === "string" && ref.startsWith("pack:"))?.slice(5), 200) : null;
+
+/** The world ID as Covel reads it: the written `id`, else the name of the
+ * world's directory (the repository name for a root world). */
+export function worldId(manifest, packagePath, repoName) {
+  const id = manifest.id ?? (packagePath ? packagePath.split("/").at(-1) : repoName);
+  if (typeof id !== "string" || !ID_PATTERN.test(id)) throw new MetadataError(manifest.id === undefined ? "World id is not written and the world directory name is no valid world id" : "Invalid world id");
+  return id;
+}
+
+/** A world's editions, as Covel derives them: the default locale, then each
+ * locale with a `world.<locale>.yaml` or `WORLD.<locale>.md` beside
+ * `world.yaml`. A bare language of another edition is a misnamed
+ * translation, not an edition. `supportedLocales` is no longer read. */
+export function worldLocales(files, prefix, defaultLocale) {
+  const found = new Set();
+  for (const name of files.keys()) {
+    if (!name.startsWith(prefix) || name.slice(prefix.length).includes("/")) continue;
+    const match = EDITION_FILE.exec(name.slice(prefix.length));
+    const locale = match?.[1] ?? match?.[2];
+    if (locale && LOCALE.test(locale) && locale !== defaultLocale) found.add(locale);
+  }
+  const all = [defaultLocale, ...found];
+  const languageOfAnother = (locale) => all.some((other) => other !== locale && other.split("-")[0] === locale);
+  return [defaultLocale, ...[...found].filter((locale) => !languageOfAnother(locale)).sort()].slice(0, 20);
+}
 
 export function parseYaml(source) {
   if (Buffer.byteLength(source) > MAX_FILE_BYTES) throw new MetadataError("Manifest exceeds 256 KiB");
@@ -74,15 +105,13 @@ export function candidate(repo, { config, discovery, packagePath = null, commitS
 
 export function normalizeWorld(source, item, repo, options) {
   const manifest = parseYaml(source);
-  if (manifest.schemaVersion !== "1.0") throw new MetadataError("Unsupported world schemaVersion");
-  for (const field of ["id", "name", "summary", "version", "defaultLocale"]) {
+  // `schemaVersion` and `supportedLocales` left the world contract in Covel 0.0.52; a written one is ignored.
+  for (const field of ["name", "summary", "version", "defaultLocale"]) {
     if (!text(manifest[field])) throw new MetadataError(`Missing or invalid ${field}`);
   }
-  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(manifest.id)) throw new MetadataError("Invalid world id");
+  const id = worldId(manifest, item.path, repo.name || repo.full_name.split("/")[1]);
   if (manifest.version.length > 100) throw new MetadataError("Version exceeds 100 characters");
-  if (!Array.isArray(manifest.supportedLocales) || !manifest.supportedLocales.length || manifest.supportedLocales.length > 20 ||
-    !manifest.supportedLocales.every((locale) => typeof locale === "string" && LOCALE.test(locale)) ||
-    !manifest.supportedLocales.includes(manifest.defaultLocale)) throw new MetadataError("Invalid supportedLocales");
+  if (!LOCALE.test(manifest.defaultLocale)) throw new MetadataError("Invalid defaultLocale");
   const entry = candidate(repo, { ...options, packagePath: item.path });
   const prefix = item.path ? `${item.path}/` : "";
   const problems = [];
@@ -92,10 +121,10 @@ export function normalizeWorld(source, item, repo, options) {
   // Schema URLs or legacy directory claims do not establish compatibility.
   const tags = Array.isArray(manifest.tags) ? [...new Set(manifest.tags.map((tag) => text(tag, 100)).filter(Boolean))].slice(0, 50) : [];
   Object.assign(entry, {
-    id: manifest.id, name: text(manifest.name, 200), description: text(manifest.summary),
+    id, name: text(manifest.name, 200), description: text(manifest.summary),
     version: manifest.version, author: text(manifest.author?.name ?? manifest.author, 200) ?? entry.author,
-    license: text(manifest.license, 200) ?? entry.license, pluginPreset: text(manifest.pluginPolicy?.presetId, 200),
-    locales: [...new Set(manifest.supportedLocales)], tags,
+    license: text(manifest.license, 200) ?? entry.license, pluginPreset: firstPack(manifest.plugins) ?? text(manifest.pluginPolicy?.presetId, 200),
+    locales: worldLocales(item.files, prefix, manifest.defaultLocale), tags,
     category: CATEGORIES.find((category) => tags.includes(category)) ?? "other",
     status: repo.archived ? "archived" : problems.length ? "pending" : "indexed", problems,
     readmeUrl: item.files.has(`${prefix}README.md`)

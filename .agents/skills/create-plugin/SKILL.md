@@ -15,8 +15,8 @@ This copy mirrors `.claude/skills/create-plugin` of
 commands refer to a Covel checkout of that version; in this repository, run them
 there and pass the absolute path of the package here. Packages in this
 repository are standalone: read [the publishing contract](../../../docs/publishing.md)
-as well. It keeps `version` in `package.json` equal to `PLUGIN.md` for the
-directory, even though Covel itself reads only `PLUGIN.md`.
+as well. Covel and the catalog read the version only from `PLUGIN.md`; a
+`package.json` that still writes `version` keeps it equal.
 
 Contracts live in `docs/`, kept in sync with the code: manifest fields in
 `docs/reference/plugins.md`, authoring in `docs/plugins/essentials.md`, UI

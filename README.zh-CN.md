@@ -35,7 +35,7 @@ Covel 官方维护的插件目录、官方可选扩展与开发示例。社区�
 - 普通仓库链接固定为解析时的默认分支提交；`/tree/<tag-or-commit>/<path>` 可以选择版本和子目录。
 - 分支名含 `/` 时，在链接的 ref 段写成 `%2F`，或使用提交 SHA。
 - 首期支持公开 GitHub 源码仓库中可直接运行的插件；不自动执行依赖安装、构建或生命周期脚本。Release 附件可先下载为 ZIP，再通过本地导入安装。
-- ZIP 顶层需要 `package.json` 和根 `PLUGIN.md`，不要额外包一层目录。多 runtime 包的 runtime 位于 `runtimes/<id>/RUNTIME.md`。
+- ZIP 顶层需要根 `PLUGIN.md`（包有 `package.json` 时也放在顶层），不要额外包一层目录。多 runtime 包的 runtime 位于 `runtimes/<id>/RUNTIME.md`。
 - 旧版 Covel 可将插件目录放到 `~/.covel/plugins/<id>`，然后重启。自定义插件目录以部署配置为准。
 - GitHub 解析与下载遵循 Covel 设置中的网络代理，支持系统代理、HTTP(S) 和 SOCKS5。
 - 桌面安装写入本机后端；连接远程服务器时写入远程后端，需管理员权限。

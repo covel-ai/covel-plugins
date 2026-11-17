@@ -33,7 +33,7 @@ In a Covel version that supports GitHub installation, open **Settings → Plugin
 - A repository link resolves to a fixed commit on its default branch. Use `/tree/<tag-or-commit>/<path>` to select a version and package directory.
 - Encode `/` inside a branch name as `%2F` in the ref segment, or use a commit SHA.
 - GitHub installation supports directly runnable plugins in public repositories. It does not install dependencies, build code, or run lifecycle scripts. Release assets can be downloaded separately and imported as a local ZIP.
-- A ZIP must contain `package.json` and the root `PLUGIN.md` at its root, without an extra wrapper directory. Runtimes of a multi-runtime package sit in `runtimes/<id>/RUNTIME.md`.
+- A ZIP must contain the root `PLUGIN.md` (and `package.json`, when the package has one) at its root, without an extra wrapper directory. Runtimes of a multi-runtime package sit in `runtimes/<id>/RUNTIME.md`.
 - On older Covel versions, copy the plugin directory to `~/.covel/plugins/<id>` and restart. Custom deployments may use a different plugin directory.
 - GitHub metadata requests and downloads follow Covel's network proxy settings, including system, HTTP(S), and SOCKS5 proxies.
 - Desktop installation writes to the local backend. When connected to a remote server, installation writes to that backend and requires administrator access.
