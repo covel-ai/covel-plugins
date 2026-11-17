@@ -154,3 +154,12 @@ test("the adapter rejects misleading revision identity and referenced external f
   const outside = fixture({ "worlds/lantern/world.yaml": `${manifest}cover: ../secret.png\n` });
   await assert.rejects(createPackager({ get: outside.get, cacheDir, validatePackage }).prepare(outside.entry), /unsafe/);
 }));
+
+test("current-contract world manifests pass the download validator", () => {
+  const current = "name: Lantern\nsummary: An island\nversion: 1.0.0\ndefaultLocale: en-US\n";
+  const files = (yaml) => new Map([["world.yaml", Buffer.from(yaml)], ["WORLD.md", Buffer.from("# Lore")]]);
+  validateWorldPackage(files(current), { id: "lantern", version: "1.0.0" });
+  validateWorldPackage(files(manifest), { id: "lantern", version: "1.0.0" });
+  assert.throws(() => validateWorldPackage(files(`id: other\n${current}`), { id: "lantern", version: "1.0.0" }), /differs/);
+  assert.throws(() => validateWorldPackage(files(current.replace("defaultLocale: en-US\n", "")), { id: "lantern", version: "1.0.0" }), /defaultLocale/);
+});

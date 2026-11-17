@@ -11,8 +11,9 @@ import { memoryCheckpoint } from "@covel/catalog-kit/round";
 const inputs = await loadInputs(), config = { ...inputs.config, seedRepositories: [] };
 const now = new Date("2026-10-29T00:00:00Z");
 const repo = (id = 1) => ({ id, owner: { id: 4, login: "author" }, name: `plugins-${id}`, full_name: `author/plugins-${id}`, private: false, topics: ["covel-plugin"], default_branch: "main", stargazers_count: 12 });
-const manifest = "---\nid: demo\nkind: plugin\nversion: 1.0.0\ncovel: '>=0.0.50'\nlicense: MIT\ndisplayName: Demo\nentry: ./server.js\n---\n# Demo";
-const packageJson = JSON.stringify({ name: "demo", version: "1.0.0", type: "module" });
+// Current Covel contract: id, kind and package.json version are not written.
+const manifest = "---\nversion: 1.0.0\ncovel: '>=0.0.52'\nlicense: MIT\ndisplayName: Demo\nentry: ./server.js\n---\n# Demo";
+const packageJson = JSON.stringify({ name: "demo", type: "module" });
 function source(extra = {}) {
   const files = { "PLUGIN.md": manifest, "package.json": packageJson, "server.js": "export default {}", "README.md": "# Demo", ...extra };
   const tree = Object.entries(files).map(([path, bytes]) => ({ path, type: "blob", mode: "100644", sha: createHash("sha1").update(bytes).digest("hex"), size: Buffer.byteLength(bytes) }));
@@ -42,20 +43,24 @@ test("every official package validates its ZIP layout including runtime handlers
     await walk(); validatePluginPackage(files, entry);
   }
 });
-test("missing package.json and malformed siblings remain pending instead of disappearing", async () => {
-  const files = source({ "bad/PLUGIN.md": "---\nid: [\n---", "nopkg/PLUGIN.md": manifest });
+test("malformed siblings remain pending; ids come from folders and package.json is optional", async () => {
+  const files = source({ "bad/PLUGIN.md": "---\nid: [\n---", "nopkg/PLUGIN.md": manifest, "named/PLUGIN.md": manifest.replace("version:", "id: other\nversion:") });
   const result = await extract(files);
-  assert.equal(result.entries.length, 3); assert.equal(result.entries.filter((e) => e.status === "pending").length, 2);
-  assert.equal(result.entries.find((e) => e.path === "").status, "indexed");
+  const by = (p) => result.entries.find((e) => e.path === p);
+  assert.equal(result.entries.length, 4);
+  assert.equal(by("").status, "indexed"); assert.equal(by("").id, "plugins-1");
+  assert.equal(by("nopkg").status, "indexed"); assert.equal(by("nopkg").id, "nopkg");
+  assert.deepEqual(by("named").problems, ["directory-id-mismatch"]);
+  assert.deepEqual(by("bad").problems, ["invalid-manifest"]);
 });
 test("invalid versions preserve raw text; mismatches, host range and dependencies prevent indexing", async () => {
-  for (const overrides of [{ "PLUGIN.md": manifest.replace("1.0.0", "tomorrow") }, { "package.json": packageJson.replace("1.0.0", "2.0.0") }, { "PLUGIN.md": manifest.replace(">=0.0.50", "unknown") }, { "package.json": JSON.stringify({ name: "demo", type: "module", version: "1.0.0", dependencies: { unsafe: "*" } }) }]) {
+  for (const overrides of [{ "PLUGIN.md": manifest.replace("1.0.0", "tomorrow") }, { "package.json": JSON.stringify({ name: "demo" }) }, { "PLUGIN.md": manifest.replace(">=0.0.52", "unknown") }, { "package.json": JSON.stringify({ name: "demo", type: "module", version: "1.0.0", dependencies: { unsafe: "*" } }) }]) {
     const result = await extract(source(overrides)); assert.equal(result.entries[0].status, "pending"); assert.equal(result.entries[0].installUrl, null);
   }
   assert.equal((await extract(source({ "PLUGIN.md": manifest.replace("1.0.0", "tomorrow") }))).entries[0].version, "tomorrow");
 });
 test("fixed-SHA README and topic data cannot self-assign official identity", async () => {
-  const e = (await extract(source({ "PLUGIN.md": manifest.replace("kind: plugin", "kind: plugin\nofficial: true") }))).entries[0];
+  const e = (await extract(source({ "PLUGIN.md": manifest.replace("license: MIT", "license: MIT\nofficial: true") }))).entries[0];
   assert.equal(e.official, false); assert.ok(e.readmeUrl.includes("a".repeat(40))); assert.equal(e.stars, 12);
 });
 test("translation syntax errors are isolated while API failures abort collection", async () => {

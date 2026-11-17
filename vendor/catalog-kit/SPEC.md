@@ -66,7 +66,22 @@ An entry contains identity, repository ID/current name/URL, owner ID, path, disp
 name/description/translations, version, source reference, commit, author, license,
 category/tags/locales, official/discovery/fork, metadata status/problems, repository
 Stars, source links and timestamps. Adapter fields include host range and world
-plugin preset. Unknown values are null, not fabricated zeros or compatibility.
+plugin preset.
+
+Adapters read manifests by the current Covel contract (0.0.52 and later) and derive
+what Covel derives instead of requiring it to be written. A package or world ID is the
+written `id`, else the package directory name (the repository name for a root
+package), else, for plugins, the `package.json` name without scope and one
+`plugin-` prefix; IDs follow Covel's pattern. A written plugin ID that differs from
+its directory is the `directory-id-mismatch` problem. Plugin `kind` defaults to
+`plugin`; any other written kind is rejected. A runtime with a `function` block is a
+function runtime, otherwise an agent; a written runtime `type` is ignored. The
+download validator resolves `function.handler` (default `./handler.js` beside the
+runtime manifest) and `entry` (default `server/index.js` when it exists). World
+`schemaVersion` and `supportedLocales` are not read: editions are the default
+locale plus each `world.<locale>.yaml` or `WORLD.<locale>.md` beside `world.yaml`,
+and the world preset is the first `pack:` of `plugins`. Manifests that still write
+the older fields remain accepted wherever Covel accepts them. Unknown values are null, not fabricated zeros or compatibility.
 `indexed` means minimum catalog metadata is valid; it is not review, compatibility,
 permission approval or successful installation. Moderation and artifact availability
 are separate dimensions. Archived entries are filterable and hidden by default.
@@ -81,8 +96,9 @@ Keep these separate in durable storage:
    of every package in that repository.
 2. Package revision: declared version, normalized package file-set content hash and
    hash algorithm version, host range (nullable), declarations and release evidence.
-   Plugins require matching versions in `package.json` and `PLUGIN.md`. Worlds
-   without a host declaration retain unknown compatibility.
+   The plugin version is read from `PLUGIN.md` only; `package.json` is optional and
+   its version is ignored, as in Covel. Worlds without a host declaration retain
+   unknown compatibility.
 3. Artifact: revision ID, packager version, ZIP SHA256, byte size and storage key.
    Repacking may add another artifact but cannot overwrite the old artifact or be
    presented as a new source-package version.

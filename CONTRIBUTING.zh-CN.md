@@ -5,7 +5,7 @@
 1. 在自己的公开 GitHub 仓库发布可运行插件，并提供 README、明确许可证、支持的 Covel 版本和联系方式。
 2. README 说明功能、使用方法、数据读写、网络访问、服务端代码、模型费用和已知限制；演示可用截图、视频或文档链接。
 3. 在仓库 About → Topics 添加 `covel-plugin` 或 `covel-plugins`，无需收录 PR 或新的 registry JSON。
-4. 保持 `PLUGIN.md` 与 `package.json` 版本一致；子包用 `<id>/v<version>` tag，根单包可用 `v<version>`。不要移动已发布 tag。
+4. 在 `PLUGIN.md` 里提升版本，Covel 和目录都只从这里读取；`package.json` 如果还写着 `version`，保持一致或删掉；子包用 `<id>/v<version>` tag，根单包可用 `v<version>`。不要移动已发布 tag。
 5. 阅读[发布规范](docs/publishing.zh-CN.md)。下一次完整采集会发现仓库；无效或缺失的元数据保留为待完善。
 
 插件 ID 必须与清单身份一致且不能冒用内置 ID，建议加作者前缀。清单 tags 可用 narrative、gameplay、world、media、tools、authoring 分类，语言使用标准 locale。许可证与 Covel 兼容范围由清单声明；未知值自动表示为 null，元数据不完整则保留为待完善。

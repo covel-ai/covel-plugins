@@ -5,7 +5,7 @@
 1. Publish a runnable plugin in your public GitHub repository with a README, an explicit license, supported Covel versions, and contact information.
 2. Document functionality, setup, data access, network requests, server-side code, model costs, and known limitations. Screenshots, recordings, or documentation links can serve as demos.
 3. In the repository's About → Topics, add `covel-plugin` or `covel-plugins`. No listing PR or registry JSON is required.
-4. Keep `PLUGIN.md` and `package.json` versions equal. Publish `<id>/v<version>` tags for subpackages; a root single-package repository can use `v<version>`. Do not move published tags.
+4. Raise the version in `PLUGIN.md`; Covel and the catalog read it only there. If `package.json` still writes a `version`, keep it equal or delete it. Publish `<id>/v<version>` tags for subpackages; a root single-package repository can use `v<version>`. Do not move published tags.
 5. Read the [publishing contract](docs/publishing.md). The next complete collection discovers the repository; missing or invalid metadata remains visible as pending.
 
 The plugin ID must match its manifest identity and must not impersonate a builtin plugin. An author prefix is recommended. Use manifest tags such as narrative, gameplay, world, media, tools, or authoring for classification. Use standard locale identifiers for supported plugin languages. Declare license and Covel compatibility in the manifest; unknown fields are represented as null and incomplete packages remain pending automatically.

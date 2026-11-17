@@ -69,9 +69,9 @@ function yamlObject(bytes) {
 export function validateWorldPackage(files, entry) {
   const content = (name) => { const value = files.get(name); return value instanceof Uint8Array ? value : value?.data; };
   const manifest = yamlObject(content("world.yaml"));
-  if (manifest.schemaVersion !== "1.0" || manifest.id !== entry.id || manifest.version !== entry.version || typeof manifest.name !== "string" || typeof manifest.summary !== "string") throw new MetadataError("World manifest differs from its indexed revision");
+  if ((manifest.id ?? entry.id) !== entry.id || manifest.version !== entry.version || typeof manifest.name !== "string" || typeof manifest.summary !== "string") throw new MetadataError("World manifest differs from its indexed revision");
   if (!content("WORLD.md")) throw new MetadataError("World package is missing WORLD.md at ZIP root");
-  if (!Array.isArray(manifest.supportedLocales) || !manifest.supportedLocales.includes(manifest.defaultLocale)) throw new MetadataError("World package has invalid locales");
+  if (typeof manifest.defaultLocale !== "string" || !manifest.defaultLocale.trim()) throw new MetadataError("World package has no defaultLocale");
   const requirePath = (filename) => {
     if (!safePath(filename) || !files.has(filename)) throw new MetadataError("World references a missing or unsafe package file");
   };
