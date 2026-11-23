@@ -1,0 +1,279 @@
+{
+  "id": "openai-codex-accounts",
+  "label": "OpenAI Codex",
+  "description": "Connect ChatGPT subscriptions via OAuth PKCE, device code, or ~/.codex/auth.json for openai-codex/codex.",
+  "sectionGroup": "llm",
+  "dataSource": {
+    "source": "instance.data",
+    "namespace": "accounts"
+  },
+  "view": {
+    "component": "Stack",
+    "props": {
+      "gap": "md"
+    },
+    "children": [
+      {
+        "component": "Card",
+        "props": {
+          "variant": "subtle"
+        },
+        "children": [
+          {
+            "component": "Stack",
+            "props": {
+              "gap": "sm"
+            },
+            "children": [
+              {
+                "component": "Text",
+                "props": {
+                  "content": "Sign in with a ChatGPT Plus, Pro, or Team account, or import credentials created by `codex login`. If automatic localhost callback fails or port 1455 is busy, paste the redirected callback URL into the fallback box.",
+                  "size": "xs",
+                  "variant": "muted"
+                }
+              },
+              {
+                "component": "Row",
+                "props": {
+                  "gap": "sm",
+                  "align": "center"
+                },
+                "children": [
+                  {
+                    "component": "Button",
+                    "props": {
+                      "label": "Sign in (Browser OAuth)",
+                      "variant": "primary",
+                      "size": "compact"
+                    },
+                    "on": {
+                      "click": {
+                        "action": "openFlow",
+                        "params": {
+                          "flowId": "oauth-sign-in"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "label": "Sign in (Device Code)",
+                      "variant": "default",
+                      "size": "compact"
+                    },
+                    "on": {
+                      "click": {
+                        "action": "openFlow",
+                        "params": {
+                          "flowId": "device-sign-in"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "label": "Import auth.json",
+                      "variant": "default",
+                      "size": "compact"
+                    },
+                    "on": {
+                      "click": {
+                        "action": "openFlow",
+                        "params": {
+                          "flowId": "import-auth-json"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "component": "Text",
+        "visible": {
+          "$state": "/summary/hasAccounts",
+          "not": true
+        },
+        "props": {
+          "content": "No ChatGPT Codex accounts connected yet.",
+          "size": "xs",
+          "variant": "muted"
+        }
+      },
+      {
+        "component": "Stack",
+        "visible": {
+          "$state": "/summary/hasAccounts"
+        },
+        "repeat": {
+          "statePath": "/summary/items",
+          "key": "id"
+        },
+        "props": {
+          "gap": "xs"
+        },
+        "children": [
+          {
+            "component": "Card",
+            "props": {
+              "variant": "subtle"
+            },
+            "children": [
+              {
+                "component": "Stack",
+                "props": {
+                  "gap": "xs"
+                },
+                "children": [
+                  {
+                    "component": "Row",
+                    "props": {
+                      "gap": "sm",
+                      "align": "center"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "content": {
+                            "$item": "label"
+                          },
+                          "weight": "bold",
+                          "size": "sm"
+                        }
+                      },
+                      {
+                        "component": "Badge",
+                        "props": {
+                          "label": {
+                            "$map": {
+                              "$item": "status"
+                            },
+                            "labels": {
+                              "ready": "Ready",
+                              "needs_reauth": "Needs sign-in",
+                              "rate_limited": "Rate limited",
+                              "disabled": "Disabled"
+                            },
+                            "fallback": "Unknown"
+                          },
+                          "color": {
+                            "$item": "statusColor"
+                          }
+                        }
+                      },
+                      {
+                        "component": "Badge",
+                        "visible": {
+                          "$item": "plan"
+                        },
+                        "props": {
+                          "label": {
+                            "$item": "plan"
+                          },
+                          "color": "purple"
+                        }
+                      },
+                      {
+                        "component": "Badge",
+                        "visible": {
+                          "$item": "isDefault"
+                        },
+                        "props": {
+                          "label": "Default",
+                          "color": "blue"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Row",
+                    "props": {
+                      "gap": "xs",
+                      "align": "center"
+                    },
+                    "children": [
+                      {
+                        "component": "Button",
+                        "visible": {
+                          "$item": "isDefault",
+                          "not": true
+                        },
+                        "props": {
+                          "label": "Set default",
+                          "variant": "default",
+                          "size": "compact"
+                        },
+                        "on": {
+                          "click": {
+                            "action": "appAction",
+                            "params": {
+                              "action": "set-default-account",
+                              "input": {
+                                "accountId": {
+                                  "$item": "id"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "component": "Button",
+                        "props": {
+                          "label": "Refresh session",
+                          "variant": "ghost",
+                          "size": "compact"
+                        },
+                        "on": {
+                          "click": {
+                            "action": "appAction",
+                            "params": {
+                              "action": "refresh-account",
+                              "input": {
+                                "accountId": {
+                                  "$item": "id"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "component": "Button",
+                        "props": {
+                          "label": "Remove",
+                          "variant": "danger",
+                          "size": "compact"
+                        },
+                        "on": {
+                          "click": {
+                            "action": "appAction",
+                            "params": {
+                              "action": "remove-account",
+                              "input": {
+                                "accountId": {
+                                  "$item": "id"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

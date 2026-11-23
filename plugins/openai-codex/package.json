@@ -1,0 +1,19 @@
+{
+  "name": "@covel/plugin-openai-codex",
+  "private": true,
+  "type": "module",
+  "description": "Use a ChatGPT Plus, Pro, or Team subscription as an OpenAI Codex model provider source.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=26"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/covel-ai/covel-plugins.git",
+    "directory": "plugins/openai-codex"
+  }
+}

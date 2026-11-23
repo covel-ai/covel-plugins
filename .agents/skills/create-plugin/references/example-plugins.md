@@ -18,10 +18,11 @@ Main checkout:
 Community checkout (`covel-plugins`, https://github.com/covel-ai/covel-plugins):
 
 - `examples/story-note`: declared context hook with no store access; plugin ID is `story-note`.
-- `examples/notes-workbench`: RPC action + slash command, scoped data writes, optional service discovery.
+- `examples/notes-workbench`: read-only RPC action + slash command, scoped data reads, optional service discovery.
 - `examples/note-format-clean` and `note-format-outline`: `examples.note-format@1` service providers.
 - `examples/jev-choice-demo`: required `scene-prompts@1`/`narrative-engine@2` inputs and an evaluation service.
 - `plugins/openai-image-gen` and `dashscope-image-gen`: `media.image-flow@1`, explicit tools, event followers, generic gallery/job props.
+- `plugins/openai-codex`: `apiVersion: 2`, `scope: instance`, `provider.source@1` multi-account ChatGPT Codex provider with OAuth PKCE (plus callback URL paste fallback), device code, `auth.json` import, and `SecretVault`.
 - `plugins/mimo-tts`: declared speech wire, detached post-turn narration, manual playback.
 
 Preserve ownership declarations when adapting an entry. Change package and runtime IDs consistently, including UI actions and extension output. A public contract may be shared by competing providers; private data namespaces are not a cross-plugin interface.

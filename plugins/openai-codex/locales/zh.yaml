@@ -1,0 +1,25 @@
+# Chinese labels and UI messages for the openai-codex plugin.
+PLUGIN.md:
+  displayName: OpenAI Codex
+  description: 通过 OAuth、设备码或 auth.json 接入 ChatGPT Plus / Pro / Team 订阅模型，并支持多账号自动切换。
+  contributes:
+    providerSources:
+      - id: codex
+        label: OpenAI Codex（ChatGPT 订阅）
+messages:
+  OpenAI Codex: OpenAI Codex
+  Connect ChatGPT subscriptions via OAuth PKCE, device code, or ~/.codex/auth.json for openai-codex/codex.: 通过 OAuth PKCE、设备码或 ~/.codex/auth.json 连接 ChatGPT 订阅，作为 openai-codex/codex 模型供应商。
+  Sign in with a ChatGPT Plus, Pro, or Team account, or import credentials created by `codex login`. If automatic localhost callback fails or port 1455 is busy, paste the redirected callback URL into the fallback box.: 使用 ChatGPT Plus / Pro / Team 账号登录，或直接导入 `codex login` 生成的凭据。若本地回调失败或 1455 端口被占用，可将跳转后的回调 URL 粘贴到保底输入框中自动完成。
+  Sign in (Browser OAuth): 浏览器 OAuth 登录
+  Sign in (Device Code): 设备码登录
+  Import auth.json: 导入 auth.json
+  No ChatGPT Codex accounts connected yet.: 尚未连接任何 ChatGPT Codex 账号。
+  label|Ready: 已就绪
+  label|Needs sign-in: 需重新登录
+  label|Rate limited: 已限流
+  label|Disabled: 已停用
+  fallback|Unknown: 未知
+  Default: 默认
+  Set default: 设为默认
+  Refresh session: 刷新令牌
+  Remove: 移除

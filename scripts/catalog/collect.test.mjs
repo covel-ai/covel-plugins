@@ -21,11 +21,11 @@ function source(extra = {}) {
 }
 const extract = (files, options = {}) => extractPlugins({ repo: repo(), ...files, config, discovery: "topic", commitSha: "a".repeat(40), ...options });
 
-test("local manifests generate eight real plugins without fabricated metrics or old compatibility", async () => {
+test("local manifests generate nine real plugins without fabricated metrics or old compatibility", async () => {
   const catalog = await collectLocal(inputs);
-  assert.equal(catalog.stats.packages, 8);
-  assert.equal(catalog.stats.indexed, 8);
-  const covel054 = new Set(["dashscope-image-gen", "openai-image-gen", "mimo-tts", "jev-choice-demo"]);
+  assert.equal(catalog.stats.packages, 9);
+  assert.equal(catalog.stats.indexed, 9);
+  const covel054 = new Set(["dashscope-image-gen", "openai-codex", "openai-image-gen", "mimo-tts", "jev-choice-demo"]);
   for (const entry of catalog.entries) { assert.equal(entry.stars, null); assert.equal(entry.downloadRequests, null); assert.equal(entry.contentHash, null); assert.equal(entry.covelVersion, covel054.has(entry.id) ? ">=0.0.54" : ">=0.0.52"); }
   const story = catalog.entries.find((e) => e.id === "story-note");
   assert.equal(story.version, "0.3.0"); assert.equal(story.legacyMetadata.covelVersion, "0.0.52");
