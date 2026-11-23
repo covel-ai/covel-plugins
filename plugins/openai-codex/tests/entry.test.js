@@ -122,6 +122,7 @@ describe("openai-codex entry", () => {
         async startLoopbackCallback() {
           return {
             port: 1455,
+            state: "host-loopback-state-123",
             callbackUrl: "http://127.0.0.1:1455/auth/callback",
             async close() {},
           };
@@ -134,7 +135,7 @@ describe("openai-codex entry", () => {
     expect(startStep.callbackUrl).toBe("http://localhost:1455/auth/callback");
     const authUrl = new URL(startStep.authorizeUrl);
     const expectedState = authUrl.searchParams.get("state");
-    expect(expectedState).toBeTruthy();
+    expect(expectedState).toBe("host-loopback-state-123");
 
     // Verify CSRF state mismatch is rejected.
     const badStateStep = await oauthFlow.step(
@@ -163,6 +164,7 @@ describe("openai-codex entry", () => {
         async startLoopbackCallback() {
           return {
             port: 54321,
+            state: "unused-ephemeral-state",
             callbackUrl: "http://127.0.0.1:54321/auth/callback",
             async close() {
               closedEphemeral = true;
@@ -174,6 +176,9 @@ describe("openai-codex entry", () => {
     expect(closedEphemeral).toBe(true);
     expect(pasteFallbackStart.completion).toBe("paste");
     expect(pasteFallbackStart.callbackUrl).toBe("http://localhost:1455/auth/callback");
+    expect(
+      new URL(pasteFallbackStart.authorizeUrl).searchParams.get("state"),
+    ).not.toBe("unused-ephemeral-state");
 
     const mismatchResult = await oauthFlow.step(
       {

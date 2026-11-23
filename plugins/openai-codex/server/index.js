@@ -127,14 +127,9 @@ export default function registerOpenAiCodexProvider(covel) {
 
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = deriveCodeChallenge(codeVerifier);
-      const state = generateOAuthState();
-      const authorizeUrl = buildCodexAuthorizeUrl({
-        redirectUri: OPENAI_REDIRECT_URI,
-        state,
-        codeChallenge,
-      });
 
       let loopbackActive = false;
+      let loopbackState = null;
       let fallbackNoteEn =
         "After signing in, paste the redirected URL from your browser address bar below.";
       let fallbackNoteZh =
@@ -145,6 +140,9 @@ export default function registerOpenAiCodexProvider(covel) {
           const loopback = await ctx.startLoopbackCallback();
           if (loopback.port === OPENAI_REDIRECT_PORT) {
             loopbackActive = true;
+            if (typeof loopback.state === "string" && loopback.state.length > 0) {
+              loopbackState = loopback.state;
+            }
           } else {
             await loopback.close().catch(() => {});
             fallbackNoteEn = `Local port ${OPENAI_REDIRECT_PORT} is busy. Complete sign-in in your browser, then paste the redirected URL below.`;
@@ -157,6 +155,13 @@ export default function registerOpenAiCodexProvider(covel) {
             "当前无法开启本地回调监听。在浏览器完成登录后，请将跳转后的回调 URL 粘贴到下方输入框自动解析完成。";
         }
       }
+
+      const state = loopbackState ?? generateOAuthState();
+      const authorizeUrl = buildCodexAuthorizeUrl({
+        redirectUri: OPENAI_REDIRECT_URI,
+        state,
+        codeChallenge,
+      });
 
       const expiresAtMs = nowMs + FLOW_TTL_MS;
       pendingOAuthRuns.set(ctx.runId, {
