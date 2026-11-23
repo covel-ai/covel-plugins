@@ -25,6 +25,7 @@ for (const folder of [
   "examples/note-format-clean",
   "examples/note-format-outline",
   "plugins/dashscope-image-gen",
+  "plugins/openai-codex",
   "plugins/openai-image-gen",
   "plugins/mimo-tts",
 ]) {

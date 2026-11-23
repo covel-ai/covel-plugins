@@ -1,0 +1,24 @@
+{
+  "id": "openai-codex",
+  "name": "OpenAI Codex",
+  "description": "Connects ChatGPT Plus, Pro, or Team subscriptions via OpenAI Codex OAuth, device code, or imported auth.json credentials with multi-account failover.",
+  "maintainer": "official",
+  "author": "covel-ai",
+  "repository": "https://github.com/covel-ai/covel-plugins",
+  "path": "plugins/openai-codex",
+  "ref": "main",
+  "category": "tools",
+  "locales": ["zh-CN", "en-US"],
+  "license": "MIT",
+  "covelVersion": "0.0.54",
+  "status": "active",
+  "demo": "https://github.com/covel-ai/covel-plugins/blob/main/plugins/openai-codex/README.md",
+  "notes": "Official instance-scoped provider source plugin (apiVersion 2, provider.source@1). Requires a Covel build with Plugin Platform v2 (PR #555 / >=0.0.55).",
+  "translations": {
+    "zh-CN": {
+      "name": "OpenAI Codex",
+      "description": "通过 OAuth、设备码或 auth.json 接入 ChatGPT Plus / Pro / Team 订阅模型，并支持多账号自动切换。",
+      "notes": "官方实例级供应商源插件（apiVersion 2、provider.source@1），需搭配支持 Plugin Platform v2（PR #555 / >=0.0.55）的 Covel 构建使用。"
+    }
+  }
+}
